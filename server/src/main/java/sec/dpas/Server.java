@@ -14,8 +14,11 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.io.FileInputStream;
+import javax.crypto.Cipher;
+import java.security.MessageDigest;
 
+import java.io.FileInputStream;
+import java.util.Arrays;
 /**
  * TODO!
  *
@@ -57,7 +60,7 @@ public class Server implements Hello {
 
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
         KeyFactory keyFac = KeyFactory.getInstance("RSA");
-        PublicKey pub = keyFac.generatePrivate(spec);
+        PrivateKey pub = keyFac.generatePrivate(spec);
 
         return pub;
     }
@@ -71,8 +74,32 @@ public class Server implements Hello {
 
         X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
         KeyFactory keyFac = KeyFactory.getInstance("RSA");
-        PrivateKey pub = keyFac.generatePublic(spec);
+        PublicKey pub = keyFac.generatePublic(spec);
 
         return pub;
+    }
+
+    public static byte[] sign(Key key, byte[] message) {
+    	
+	MessageDigest md = MessageDigest.getInstance("SHA-256");
+	md.update(message);
+	byte[] digest = md.digest();
+
+	Cipher cipher = Cipher.getInstance("RSA");
+	cipher.init(Cipher.ENCRYPT_MODE, key);
+	return cipher.doFinal(digest);
+    
+    }
+
+    public static boolean verifySignature(Key key, byte[] message, byte[] signature) {
+    	
+	MessageDigest md = MessageDigest.getInstance("SHA-256");
+	md.update(message);
+	byte[] digest = md.digest();
+
+	Cipher cipher = Cipher.getInstance("RSA");
+	cipher.init(Cipher.DECRYPT_MODE, key);
+	return Arrays.equals(digest, cipher.doFinal(digest));
+    
     }
 }
