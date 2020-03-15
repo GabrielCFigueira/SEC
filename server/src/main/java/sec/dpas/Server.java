@@ -1,4 +1,4 @@
-package src.hello;
+package sec.dpas;
 
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
@@ -16,6 +16,10 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.io.FileInputStream;
 
+/**
+ * TODO!
+ *
+ */
 public class Server implements Hello {
 
     public Server() {}
@@ -27,7 +31,7 @@ public class Server implements Hello {
     public static void main(String args[]) {
 
         try {
-            Server obj = new Server();
+            src.hello.Server obj = new src.hello.Server();
             Hello stub = (Hello) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
@@ -45,30 +49,30 @@ public class Server implements Hello {
 
 
     public static Key readPrivateKey(String keypath) {
-	    System.out.println("Reading key from file " + keypath + " ...");
-	    FileInputStream fis = new FileInputStream(keypath);
-	    byte[] encoded = new byte[fis.available()];
-	    fis.read(encoded);
-	    fis.close();
+        System.out.println("Reading key from file " + keypath + " ...");
+        FileInputStream fis = new FileInputStream(keypath);
+        byte[] encoded = new byte[fis.available()];
+        fis.read(encoded);
+        fis.close();
 
-	    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
-	    KeyFactory keyFac = KeyFactory.getInstance("RSA");
-	    PublicKey pub = keyFac.generatePrivate(spec);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
+        KeyFactory keyFac = KeyFactory.getInstance("RSA");
+        PublicKey pub = keyFac.generatePrivate(spec);
 
-	    return pub;
+        return pub;
     }
 
     public static Key readPublicKey(String keypath) {
-	    System.out.println("Reading key from file " + keypath + " ...");
-	    FileInputStream fis = new FileInputStream(keypath);
-	    byte[] encoded = new byte[fis.available()];
-	    fis.read(encoded);
-	    fis.close();
+        System.out.println("Reading key from file " + keypath + " ...");
+        FileInputStream fis = new FileInputStream(keypath);
+        byte[] encoded = new byte[fis.available()];
+        fis.read(encoded);
+        fis.close();
 
-	    X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
-	    KeyFactory keyFac = KeyFactory.getInstance("RSA");
-	    PrivateKey pub = keyFac.generatePublic(spec);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
+        KeyFactory keyFac = KeyFactory.getInstance("RSA");
+        PrivateKey pub = keyFac.generatePublic(spec);
 
-	    return pub;
+        return pub;
     }
 }
