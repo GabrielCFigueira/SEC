@@ -27,6 +27,11 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+        <groupId>sec.dpas</groupId>
+        <artifactId>clientAPI</artifactId>
+        <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
