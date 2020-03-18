@@ -60,6 +60,32 @@ public class CryptoTest
 		key = Crypto.readPublicKey("src/resources/test.key.pub");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		assertTrue(plaintext.equals(new String(cipher.doFinal(ciphertext))));
+	}
+
+		
+	@Test
+	public void testPublicKeyEncryption() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException {
+		String plaintext = "Jet fuel cant melt steel beams";
+		
+		Key key = Crypto.readPublicKey("src/resources/test.key.pub");
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		byte[] ciphertext = cipher.doFinal(plaintext.getBytes());
+
+
+		key = Crypto.readPrivateKey("src/resources/test.key");
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		assertTrue(plaintext.equals(new String(cipher.doFinal(ciphertext))));
 	}	
 
+	@Test
+	public void testSignature() throws FileNotFoundException, IOException {
+		String plaintext = "Everyday, we stray further from God";
+		Key key = Crypto.readPrivateKey("src/resources/test.key");
+
+		byte[] signature = Crypto.sign(key, plaintext.getBytes());
+
+		key = Crypto.readPublicKey("src/resources/test.key.pub");
+		assertTrue(Crypto.verifySignature(key, plaintext.getBytes(), signature));
+	}
 }
