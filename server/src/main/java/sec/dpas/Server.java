@@ -35,7 +35,7 @@ import java.util.Arrays;
  * TODO!
  *
  */
-public class Server implements ClientAPI{
+public class Server implements ServerAPI{
 
     public Server() {}
 
@@ -50,7 +50,7 @@ public class Server implements ClientAPI{
         try {
             Server obj = new Server();
             //src.hello.Server obj = new src.hello.Server();
-            ClientAPI stub = (ClientAPI) UnicastRemoteObject.exportObject(obj, 0);
+            ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
             //Registry registry = LocateRegistry.getRegistry();

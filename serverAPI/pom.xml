@@ -8,10 +8,10 @@
   </parent>
 
   <groupId>sec.dpas</groupId>
-  <artifactId>clientAPI</artifactId>
+  <artifactId>serverAPI</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>clientAPI</name>
+  <name>serverAPI</name>
   <url>https://github.com/Am4teur/SECproj</url>
 
   <properties>

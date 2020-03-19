@@ -33,7 +33,7 @@
     </dependency>
     <dependency>
         <groupId>sec.dpas</groupId>
-        <artifactId>clientAPI</artifactId>
+        <artifactId>serverAPI</artifactId>
         <version>${project.version}</version>
     </dependency>
   </dependencies>

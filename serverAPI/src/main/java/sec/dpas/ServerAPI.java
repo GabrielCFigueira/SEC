@@ -9,7 +9,7 @@ import java.rmi.Remote;
 import java.rmi.*;
 import java.rmi.registry.*;
 
-public interface ClientAPI extends Remote
+public interface ServerAPI extends Remote
 {
     //public static void main( String[] args )
     //{

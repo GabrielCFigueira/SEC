@@ -71,7 +71,7 @@
   </build>
 
   <modules>
-    <module>clientAPI</module>    
+    <module>serverAPI</module>    
     <module>client</module>
     <module>server</module>
 

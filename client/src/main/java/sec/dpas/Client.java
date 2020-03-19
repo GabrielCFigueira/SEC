@@ -20,8 +20,8 @@ public class Client
       try{
         //Registry reg = LocateRegistry.getRegistry();
 
-        ClientAPI stub = (ClientAPI) Naming.lookup("//localhost:1099/Hello");
-        //ClientAPI stub = (ClientAPI) reg.lookup("Hello");
+        ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/Hello");
+        //ServerAPI stub = (ServerAPI) reg.lookup("Hello");
         String response = stub.sayHello();
 
         System.out.println("response: " + response);
