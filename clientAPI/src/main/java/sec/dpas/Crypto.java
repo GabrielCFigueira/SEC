@@ -1,5 +1,6 @@
 package sec.dpas;
 
+import sec.dpas.exceptions.SignatureException;
 
 /* Java Crypto imports */
 import java.security.Key;
@@ -71,7 +72,7 @@ public class Crypto {
         return pub;
     }
 
-    public static byte[] sign(Key key, byte[] message) {
+    public static byte[] sign(Key key, byte[] message) throws SignatureException {
 
 	MessageDigest md = null;
 	Cipher cipher = null;
@@ -95,8 +96,7 @@ public class Crypto {
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		signature = cipher.doFinal(digest);
 	} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
-		System.err.println(e.getMessage());
-		System.exit(1);
+		throw new SignatureException(e.getMessage());
 	}
 
 	return signature;
@@ -124,8 +124,8 @@ public class Crypto {
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		res = Arrays.equals(digest, cipher.doFinal(signature));
 	} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
-		System.err.println(e.getMessage());
-		System.exit(1);
+		System.err.println(e.getMessage() + " when verifying the signature");
+		return false;
 	}
 	
 	return res;

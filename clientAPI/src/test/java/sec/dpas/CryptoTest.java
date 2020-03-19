@@ -1,6 +1,9 @@
 package sec.dpas;
 
+import sec.dpas.exceptions.SignatureException;
+
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
@@ -79,13 +82,37 @@ public class CryptoTest
 	}	
 
 	@Test
-	public void testSignature() throws FileNotFoundException, IOException {
-		String plaintext = "Everyday, we stray further from God";
+	public void testSignature() throws FileNotFoundException, IOException, SignatureException {
+		String plaintext = "Every day, we stray further from God";
 		Key key = Crypto.readPrivateKey("src/resources/test.key");
 
 		byte[] signature = Crypto.sign(key, plaintext.getBytes());
 
 		key = Crypto.readPublicKey("src/resources/test.key.pub");
 		assertTrue(Crypto.verifySignature(key, plaintext.getBytes(), signature));
+	}
+
+	@Test
+	public void testInvalidSignatureDifferentMessage() throws FileNotFoundException, IOException, SignatureException {
+		String plaintext = "Sauron was ok I guess";
+		String differentPlaintext = "Peace was never an option";
+		Key key = Crypto.readPrivateKey("src/resources/test.key");
+
+		byte[] signature = Crypto.sign(key, plaintext.getBytes());
+
+		key = Crypto.readPublicKey("src/resources/test.key.pub");
+		assertFalse(Crypto.verifySignature(key, differentPlaintext.getBytes(), signature));
+	}
+
+	@Test
+	public void testInvalidSignatureDifferentKeys() throws FileNotFoundException, IOException, SignatureException {
+		String plaintext = "Only the dead know peace from this evil";
+
+		Key key = Crypto.readPrivateKey("src/resources/test.key");
+
+		byte[] signature = Crypto.sign(key, plaintext.getBytes());
+
+		key = Crypto.readPublicKey("src/resources/test.key.pub1");
+		assertFalse(Crypto.verifySignature(key, plaintext.getBytes(), signature));
 	}
 }
