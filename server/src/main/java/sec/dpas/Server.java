@@ -44,13 +44,19 @@ public class Server implements ServerAPI{
 
   public Server() {
 
-      _announcements = new Hashtable<Key, Hashtable<String,Hashtable[]>>();
-    //  _generalB = new Hashtable<Key,
+      _announcements = new Hashtable<Key, Announcement>();
+      _generalB = new Hashtable<Key, Announcement>();
     }
 
     public String sayHello() {
         return "Hello, worldzzzzz!";
     }
+
+    public void register(Key pubkey){
+
+    }
+
+    public void addAnnouncement(){}
 
     public static void main(String args[]) {
       int registryPort = 1099;

@@ -3,8 +3,8 @@ SEC project
 
 RMI Instructions
 
-1)Server: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Server"
-2)Client: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Client"
+1)On the Server directory: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Server"
+2)On the Client directory: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Client"
 
 generate rsa keypairs:
 $ openssl genrsa -out priv.pem 4096
