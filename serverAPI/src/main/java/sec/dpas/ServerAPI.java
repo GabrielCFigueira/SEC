@@ -8,6 +8,7 @@ import java.rmi.Remote;
 import java.rmi.*;
 import java.rmi.registry.*;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
@@ -18,7 +19,7 @@ public interface ServerAPI extends Remote {
 
     String sayHello() throws RemoteException;
 
-    String register(PublicKey pubkey) throws RemoteException;
+    String register(PublicKey pubkey, Timestamp ts, byte[] signature) throws RemoteException;
 
     String post(PublicKey pubkey, char[] message, Announcement[] a) throws RemoteException;
 

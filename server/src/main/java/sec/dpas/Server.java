@@ -14,19 +14,12 @@ import java.security.PublicKey;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.BadPaddingException;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
-
+import java.sql.Timestamp;
 import java.util.Hashtable;
 import java.util.ArrayList;
 
@@ -54,9 +47,26 @@ public class Server implements ServerAPI{
     }
 
     //NOTA: esta com string como return para ver se o client recebe confirmacao
-    public String register(PublicKey pubkey){
-        _announcementB.put(pubkey,new ArrayList<Announcement>());
-        return "User registered";
+    public String register(PublicKey pubkey, Timestamp ts, byte[] signature){
+      
+      //verify signature
+      try {
+	Message message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature))
+	  return "Invalid Signature";
+      } catch(IOException e) {
+	return "Signature could not be verified";
+      }
+
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(ts.getTime() - currentTs.getTime() > 5000)
+	return "Invalid TimeStamp";
+
+
+      _announcementB.put(pubkey,new ArrayList<Announcement>());
+      return "User registered";
     }
 
     public String post(PublicKey pubkey, char[] message, Announcement[] a){

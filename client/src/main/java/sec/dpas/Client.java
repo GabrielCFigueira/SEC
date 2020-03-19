@@ -49,7 +49,7 @@ public class Client
         ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/Hello");
         //ServerAPI stub = (ServerAPI) reg.lookup("Hello");
       //  String response = stub.sayHello();
-        String response = stub.register(cli.getPublicKey());
+        String response = stub.register(cli.getPublicKey(), null, null);
 
         System.out.println("response: " + response);
       }
