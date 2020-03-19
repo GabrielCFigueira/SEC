@@ -21,7 +21,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException; 
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 
@@ -30,6 +30,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 
+import java.util.Hashtable;
+
 
 /**
  * TODO!
@@ -37,7 +39,14 @@ import java.util.Arrays;
  */
 public class Server implements ServerAPI{
 
-    public Server() {}
+  private Hashtable _announcements;
+  private Hashtable _generalB;
+
+  public Server() {
+
+      _announcements = new Hashtable<Key, Hashtable<String,Hashtable[]>>();
+    //  _generalB = new Hashtable<Key,
+    }
 
     public String sayHello() {
         return "Hello, worldzzzzz!";

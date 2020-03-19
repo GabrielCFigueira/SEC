@@ -5,14 +5,31 @@ package sec.dpas;
  *
  */
 
+
+ import java.security.Key;
+
+ import java.io.FileNotFoundException;
+ import java.io.IOException;
+
 import java.rmi.Naming;
 import java.rmi.Remote;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import java.util.Arrays;
+import java.util.Hashtable;
+
 public class Client
 {
     private Client() {}
+
+    private Key getPrivateKey() throws FileNotFoundException, IOException{
+        return Crypto.readPrivateKey("/src/resources/test.key");
+    }
+
+    public Key getPublicKey() throws FileNotFoundException, IOException{
+        return Crypto.readPublicKey("/src/resources/test.key.pub");
+    }
     public static void main( String[] args )
     {
       System.out.println( "Hello Worlds!" );
