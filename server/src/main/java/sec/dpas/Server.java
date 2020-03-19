@@ -59,7 +59,15 @@ public class Server implements ServerAPI{
       return "User registered";
     }
 
-    public String post(){ return "";}
+    public String post(PublicKey pubkey, char[] message, Announcement[] a){
+      getUserAnnouncements(pubkey).add(new Announcement(pubkey,message,a));
+      return "posted new announcement on board";
+    }
+
+    public String postGeneral(PublicKey pubkey, char[] message, Announcement[] a){
+      getUserGenAnnouncements(pubkey).add(new Announcement(pubkey,message,a));
+      return "posted new announcement on general board";
+    }
 
     public ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
       return _announcementB.get(pubkey);
@@ -69,9 +77,6 @@ public class Server implements ServerAPI{
       return _generalB.get(pubkey);
     }
 
-    public void addAnnouncement(PublicKey pubkey, Announcement a){
-      getUserAnnouncements(pubkey).add(a);
-    }
 
     public void addGenAnnouncement(PublicKey pubkey, Announcement a){
       getUserGenAnnouncements(pubkey).add(a);
