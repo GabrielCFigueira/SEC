@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import java.util.Hashtable;
+import java.util.ArrayList;
 
 
 /**
@@ -39,24 +40,42 @@ import java.util.Hashtable;
  */
 public class Server implements ServerAPI{
 
-  private Hashtable _announcements;
-  private Hashtable _generalB;
+  private Hashtable<Key, ArrayList<Announcement>> _announcementB;
+  private Hashtable<Key, ArrayList<Announcement>> _generalB;
 
   public Server() {
-
-      _announcements = new Hashtable<Key, Announcement>();
-      _generalB = new Hashtable<Key, Announcement>();
+      _announcementB = new Hashtable<Key, ArrayList<Announcement>>();
+      _generalB = new Hashtable<Key, ArrayList<Announcement>>();
     }
 
     public String sayHello() {
         return "Hello, worldzzzzz!";
     }
 
-    public void register(Key pubkey){
-
+    //NOTA: esta com string como return para ver se o client recebe confirmacao
+    public String register(Key pubkey){
+      _announcementB.put(pubkey,new ArrayList<Announcement>());
+      _generalB.put(pubkey,new ArrayList<Announcement>());
+      return "User registered";
     }
 
-    public void addAnnouncement(){}
+    public String post(){ return "";}
+
+    public ArrayList<Announcement> getUserAnnouncements(Key pubkey){
+      return _announcementB.get(pubkey);
+    }
+
+    public ArrayList<Announcement> getUserGenAnnouncements(Key pubkey){
+      return _generalB.get(pubkey);
+    }
+
+    public void addAnnouncement(Key pubkey, Announcement a){
+      getUserAnnouncements(pubkey).add(a);
+    }
+
+    public void addGenAnnouncement(Key pubkey, Announcement a){
+      getUserGenAnnouncements(pubkey).add(a);
+    }
 
     public static void main(String args[]) {
       int registryPort = 1099;
