@@ -40,12 +40,12 @@ import java.util.ArrayList;
  */
 public class Server implements ServerAPI{
 
-  private Hashtable<Key, ArrayList<Announcement>> _announcementB;
-  private Hashtable<Key, ArrayList<Announcement>> _generalB;
+  private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
+  private Hashtable<PublicKey, ArrayList<Announcement>> _generalB;
 
   public Server() {
-      _announcementB = new Hashtable<Key, ArrayList<Announcement>>();
-      _generalB = new Hashtable<Key, ArrayList<Announcement>>();
+      _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+      _generalB = new Hashtable<PublicKey, ArrayList<Announcement>>();
     }
 
     public String sayHello() {
@@ -53,7 +53,7 @@ public class Server implements ServerAPI{
     }
 
     //NOTA: esta com string como return para ver se o client recebe confirmacao
-    public String register(Key pubkey){
+    public String register(PublicKey pubkey){
       _announcementB.put(pubkey,new ArrayList<Announcement>());
       _generalB.put(pubkey,new ArrayList<Announcement>());
       return "User registered";
@@ -61,19 +61,19 @@ public class Server implements ServerAPI{
 
     public String post(){ return "";}
 
-    public ArrayList<Announcement> getUserAnnouncements(Key pubkey){
+    public ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
       return _announcementB.get(pubkey);
     }
 
-    public ArrayList<Announcement> getUserGenAnnouncements(Key pubkey){
+    public ArrayList<Announcement> getUserGenAnnouncements(PublicKey pubkey){
       return _generalB.get(pubkey);
     }
 
-    public void addAnnouncement(Key pubkey, Announcement a){
+    public void addAnnouncement(PublicKey pubkey, Announcement a){
       getUserAnnouncements(pubkey).add(a);
     }
 
-    public void addGenAnnouncement(Key pubkey, Announcement a){
+    public void addGenAnnouncement(PublicKey pubkey, Announcement a){
       getUserGenAnnouncements(pubkey).add(a);
     }
 

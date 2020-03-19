@@ -14,7 +14,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException; 
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.BadPaddingException;
 
@@ -29,7 +29,7 @@ import java.util.Arrays;
  */
 public class Crypto {
 
-    public static Key readPrivateKey(String keypath) throws FileNotFoundException, IOException {
+    public static PrivateKey readPrivateKey(String keypath) throws FileNotFoundException, IOException {
         System.out.println("Reading key from file " + keypath + " ...");
         FileInputStream fis = new FileInputStream(keypath);
         byte[] encoded = new byte[fis.available()];
@@ -37,7 +37,7 @@ public class Crypto {
         fis.close();
 
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
-	
+
 	KeyFactory keyFac;
 	PrivateKey priv = null;
 	try {
@@ -51,7 +51,7 @@ public class Crypto {
         return priv;
     }
 
-    public static Key readPublicKey(String keypath) throws FileNotFoundException, IOException {
+    public static PublicKey readPublicKey(String keypath) throws FileNotFoundException, IOException {
         System.out.println("Reading key from file " + keypath + " ...");
         FileInputStream fis = new FileInputStream(keypath);
         byte[] encoded = new byte[fis.available()];
@@ -92,7 +92,7 @@ public class Crypto {
 	byte[] signature = null;
 
 
-	try {	
+	try {
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		signature = cipher.doFinal(digest);
 	} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
@@ -127,7 +127,7 @@ public class Crypto {
 		System.err.println(e.getMessage() + " when verifying the signature");
 		return false;
 	}
-	
+
 	return res;
     }
 }

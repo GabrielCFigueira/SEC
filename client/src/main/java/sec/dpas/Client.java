@@ -6,7 +6,8 @@ package sec.dpas;
  */
 
 
- import java.security.Key;
+ import java.security.PrivateKey;
+  import java.security.PublicKey;
 
  import java.io.FileNotFoundException;
  import java.io.IOException;
@@ -21,8 +22,8 @@ import java.util.Hashtable;
 
 public class Client
 {
-    private Key _privKey;
-    private Key _pubkey;
+    private PrivateKey _privKey;
+    private PublicKey _pubkey;
 
     private Client() throws FileNotFoundException, IOException{
       _privKey = Crypto.readPrivateKey("/src/resources/test.key");
@@ -31,11 +32,11 @@ public class Client
 
 
 
-    private Key getPrivateKey() throws FileNotFoundException, IOException{
+    private PrivateKey getPrivateKey() throws FileNotFoundException, IOException{
         return _privKey;
     }
 
-    public Key getPublicKey() throws FileNotFoundException, IOException{
+    public PublicKey getPublicKey() throws FileNotFoundException, IOException{
         return _pubkey;
     }
     public static void main( String[] args )

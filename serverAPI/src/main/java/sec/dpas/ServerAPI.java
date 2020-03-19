@@ -5,7 +5,7 @@ package sec.dpas;
  *
  */
 
-import java.security.Key;
+import java.security.PublicKey;
 
 import java.rmi.Remote;
 import java.rmi.*;
@@ -17,7 +17,7 @@ public interface ServerAPI extends Remote
     //{
         String sayHello() throws RemoteException;
 
-        String register(Key pubkey) throws RemoteException;
+        String register(PublicKey pubkey) throws RemoteException;
 
     //}
 }
