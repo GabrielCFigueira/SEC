@@ -22,9 +22,7 @@ import java.util.Arrays;
 import java.sql.Timestamp;
 import java.util.Hashtable;
 import java.util.ArrayList;
-
-import java.util.Hashtable;
-import java.util.ArrayList;
+import java.util.List;
 
 import sec.dpas.exceptions.NegativeNumberException;
 
@@ -95,29 +93,24 @@ public class Server implements ServerAPI{
         getGenAnnouncements().add(a);
     }
 
-    public ArrayList<Announcement> read(PublicKey pubkey, int number) throws IndexOutOfBoundsException,
-                                                                             IllegalArgumentException,
-                                                                             NegativeNumberException {
+    public ArrayList<Announcement> read(PublicKey pubkey, int number)
+            throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {
         ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
         return readFrom(userAnn, number);
     }
 
-    public ArrayList<Announcement> readGeneral(int number) throws IndexOutOfBoundsException,
-                                                                  IllegalArgumentException,
-                                                                  NegativeNumberException {
+    public ArrayList<Announcement> readGeneral(int number)
+            throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {
         ArrayList<Announcement> genAnn = getGenAnnouncements();
         return readFrom(genAnn, number);
     }
 
-    public ArrayList<Announcement> readFrom(ArrayList<Announcement> ann, int number) throws IndexOutOfBoundsException,
-                                                                                            IllegalArgumentException,
-                                                                                            NegativeNumberException {
+    public ArrayList<Announcement> readFrom(ArrayList<Announcement> ann, int number)
+            throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {
         if (number < 0) {
             throw new NegativeNumberException("Tried to read with a negative number.");
         }
-        ann = number == 0 ? ann : (ArrayList<Announcement>) ann.subList(ann.size() + 1 - number, ann.size() + 1);
-
-        return ann;
+        return number == 0 ? ann : new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
     }
 
 

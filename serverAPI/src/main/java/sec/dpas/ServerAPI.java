@@ -25,10 +25,10 @@ public interface ServerAPI extends Remote {
 
     String postGeneral(PublicKey pubkey, char[] message, Announcement[] a) throws RemoteException;
 
-    ArrayList<Announcement> read(PublicKey pubkey, int number) throws RemoteException, IndexOutOfBoundsException,
-            IllegalArgumentException, NegativeNumberException;
+    ArrayList<Announcement> read(PublicKey pubkey, int number)
+            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException;
 
-    ArrayList<Announcement> readGeneral(int number) throws RemoteException, IndexOutOfBoundsException,
-            IllegalArgumentException, NegativeNumberException;
+    ArrayList<Announcement> readGeneral(int number)
+            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException;
 
 }
