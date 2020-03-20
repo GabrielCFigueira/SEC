@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 
 public class Message {
 
-	private byte[] _byteArray;
+	private byte[] _byteArray = null;
 
 	public byte[] getByteArray() { return _byteArray; }
 
@@ -21,7 +21,8 @@ public class Message {
 		out.close();
 
 		bos = new ByteArrayOutputStream();
-		bos.write(_byteArray);
+		if(_byteArray != null)
+			bos.write(_byteArray);
 		bos.write(array);
 		_byteArray = bos.toByteArray();
 	}
