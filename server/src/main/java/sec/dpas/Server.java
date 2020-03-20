@@ -27,6 +27,7 @@ import java.util.List;
 import sec.dpas.exceptions.NegativeNumberException;
 import sec.dpas.exceptions.InvalidSignatureException;
 import sec.dpas.exceptions.InvalidTimestampException;
+import sec.dpas.exceptions.AlreadyRegisteredException;
 
 /**
  * TODO!
@@ -42,7 +43,7 @@ public class Server implements ServerAPI{
         _generalB = new ArrayList<Announcement>();
     }
 
-    public void register(PublicKey pubkey, Timestamp ts, byte[] signature) throws InvalidSignatureException, InvalidTimestampException{
+    public void register(PublicKey pubkey, Timestamp ts, byte[] signature) throws InvalidSignatureException, InvalidTimestampException, AlreadyRegisteredException {
       
       //verify signature
       try {
@@ -59,6 +60,8 @@ public class Server implements ServerAPI{
       if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
 	throw new InvalidTimestampException("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
+      if(_announcementB.containsKey(pubkey))
+	throw new AlreadyRegisteredException("This public key is already registered");
 
       _announcementB.put(pubkey,new ArrayList<Announcement>());
     }

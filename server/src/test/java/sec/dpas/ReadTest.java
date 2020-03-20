@@ -4,6 +4,7 @@ import sec.dpas.exceptions.NegativeNumberException;
 import sec.dpas.exceptions.SigningException;
 import sec.dpas.exceptions.InvalidSignatureException;
 import sec.dpas.exceptions.InvalidTimestampException;
+import sec.dpas.exceptions.AlreadyRegisteredException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -24,7 +25,7 @@ import java.security.Key;
 public class ReadTest
 {
     @Test(expected = NegativeNumberException.class)
-    public void testReadNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
+    public void testReadNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -39,7 +40,7 @@ public class ReadTest
     }
 
     @Test
-    public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
+    public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -58,7 +59,7 @@ public class ReadTest
     }
 
     @Test
-    public void testReadAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
+    public void testReadAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -89,7 +90,7 @@ public class ReadTest
     }*/
 
     @Test(expected = NegativeNumberException.class)
-    public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
+    public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -104,7 +105,7 @@ public class ReadTest
     }
 
     @Test
-    public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
+    public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -123,7 +124,7 @@ public class ReadTest
     }
 
     @Test
-    public void testReadGeneralAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
+    public void testReadGeneralAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
