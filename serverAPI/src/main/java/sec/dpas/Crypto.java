@@ -1,6 +1,6 @@
 package sec.dpas;
 
-import sec.dpas.exceptions.SignatureException;
+import sec.dpas.exceptions.SigningException;
 
 /* Java Crypto imports */
 import java.security.Key;
@@ -73,7 +73,7 @@ public class Crypto {
         return pub;
     }
 
-    public static byte[] sign(Key key, byte[] message) throws SignatureException {
+    public static byte[] sign(Key key, byte[] message) throws SigningException {
 
 	MessageDigest md = null;
 	Cipher cipher = null;
@@ -97,7 +97,7 @@ public class Crypto {
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		signature = cipher.doFinal(digest);
 	} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
-		throw new SignatureException(e.getMessage());
+		throw new SigningException(e.getMessage());
 	}
 
 	return signature;

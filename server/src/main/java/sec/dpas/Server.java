@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sec.dpas.exceptions.NegativeNumberException;
+import sec.dpas.exceptions.InvalidSignatureException;
+import sec.dpas.exceptions.InvalidTimestampException;
 
 /**
  * TODO!
@@ -40,12 +42,7 @@ public class Server implements ServerAPI{
         _generalB = new ArrayList<Announcement>();
     }
 
-    public String sayHello() {
-        return "Hello, worldzzzzz!";
-    }
-
-    //NOTA: esta com string como return para ver se o client recebe confirmacao
-    public String register(PublicKey pubkey, Timestamp ts, byte[] signature){
+    public void register(PublicKey pubkey, Timestamp ts, byte[] signature) throws InvalidSignatureException, InvalidTimestampException{
       
       //verify signature
       try {
@@ -53,18 +50,17 @@ public class Server implements ServerAPI{
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature))
-	  return "Invalid Signature";
+	  throw new InvalidSignatureException("Signature verification failed");
       } catch(IOException e) {
-	return "Signature could not be verified";
+	throw new InvalidSignatureException(e.getMessage());
       }
 
       Timestamp currentTs = new Timestamp(System.currentTimeMillis());
       if(ts.getTime() - currentTs.getTime() > 5000)
-	return "Invalid TimeStamp";
+	throw new InvalidTimestampException("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
 
       _announcementB.put(pubkey,new ArrayList<Announcement>());
-      return "User registered";
     }
 
     public String post(PublicKey pubkey, char[] message, Announcement[] a){

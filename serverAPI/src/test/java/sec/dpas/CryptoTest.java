@@ -1,6 +1,6 @@
 package sec.dpas;
 
-import sec.dpas.exceptions.SignatureException;
+import sec.dpas.exceptions.SigningException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -82,7 +82,7 @@ public class CryptoTest
 	}	
 
 	@Test
-	public void testSignature() throws FileNotFoundException, IOException, SignatureException {
+	public void testSigning() throws FileNotFoundException, IOException, SigningException {
 		String plaintext = "Every day, we stray further from God";
 		Key key = Crypto.readPrivateKey("src/resources/test.key");
 
@@ -93,7 +93,7 @@ public class CryptoTest
 	}
 
 	@Test
-	public void testInvalidSignatureDifferentMessage() throws FileNotFoundException, IOException, SignatureException {
+	public void testInvalidSigningDifferentMessage() throws FileNotFoundException, IOException, SigningException {
 		String plaintext = "Sauron was ok I guess";
 		String differentPlaintext = "Peace was never an option";
 		Key key = Crypto.readPrivateKey("src/resources/test.key");
@@ -105,7 +105,7 @@ public class CryptoTest
 	}
 
 	@Test
-	public void testInvalidSignatureDifferentKeys() throws FileNotFoundException, IOException, SignatureException {
+	public void testInvalidSigningDifferentKeys() throws FileNotFoundException, IOException, SigningException {
 		String plaintext = "Only the dead know peace from this evil";
 
 		Key key = Crypto.readPrivateKey("src/resources/test.key");

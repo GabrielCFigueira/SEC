@@ -1,7 +1,9 @@
 package sec.dpas;
 
 import sec.dpas.exceptions.NegativeNumberException;
-import sec.dpas.exceptions.SignatureException;
+import sec.dpas.exceptions.SigningException;
+import sec.dpas.exceptions.InvalidSignatureException;
+import sec.dpas.exceptions.InvalidTimestampException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -12,25 +14,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.PrivateKey;
-import java.util.Arrays;
-import java.util.Base64;
 import java.sql.Timestamp;
 
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.BadPaddingException;
 
 /**
  * TODO
  */
-public class ServerTest
+public class ReadTest
 {
     @Test(expected = NegativeNumberException.class)
-    public void testReadNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, SignatureException {
+    public void testReadNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -45,7 +39,7 @@ public class ServerTest
     }
 
     @Test
-    public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, SignatureException {
+    public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -64,7 +58,7 @@ public class ServerTest
     }
 
     @Test
-    public void testReadAll() throws FileNotFoundException, IOException, NegativeNumberException, SignatureException {
+    public void testReadAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -95,7 +89,7 @@ public class ServerTest
     }*/
 
     @Test(expected = NegativeNumberException.class)
-    public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, SignatureException {
+    public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -110,7 +104,7 @@ public class ServerTest
     }
 
     @Test
-    public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, SignatureException {
+    public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -129,7 +123,7 @@ public class ServerTest
     }
 
     @Test
-    public void testReadGeneralAll() throws FileNotFoundException, IOException, NegativeNumberException, SignatureException {
+    public void testReadGeneralAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
