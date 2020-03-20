@@ -52,4 +52,51 @@ public class RegisterTest
         server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
     }
 
+
+    @Test(expected = InvalidSignatureException.class)
+    public void testForgedTimestampRegister() throws FileNotFoundException, IOException, SigningException, InvalidSignatureException, InvalidTimestampException, InterruptedException {
+        Server server = new Server();
+        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+	Message message = new Message();
+	Timestamp ts = new Timestamp(System.currentTimeMillis());
+
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+	Thread.sleep(10000);
+        server.register(pubkey, new Timestamp(System.currentTimeMillis()), signature);
+    }
+
+
+    @Test(expected = InvalidSignatureException.class)
+    public void testForgedTimestampRegister2() throws FileNotFoundException, IOException, SigningException, InvalidSignatureException, InvalidTimestampException {
+        Server server = new Server();
+        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+	Message message = new Message();
+	Timestamp ts = new Timestamp(System.currentTimeMillis());
+
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+        ts.setTime(ts.getTime() + 10000);
+	server.register(pubkey, ts, signature);
+    }
+
+
+    @Test(expected = InvalidTimestampException.class)
+    public void testDelayedRegister() throws FileNotFoundException, IOException, SigningException, InvalidSignatureException, InvalidTimestampException, InterruptedException {
+        Server server = new Server();
+        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+	Message message = new Message();
+	Timestamp ts = new Timestamp(System.currentTimeMillis());
+
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+	Thread.sleep(10000);
+	server.register(pubkey, ts, signature);
+    }
 }

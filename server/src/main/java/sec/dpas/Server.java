@@ -56,7 +56,7 @@ public class Server implements ServerAPI{
       }
 
       Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-      if(ts.getTime() - currentTs.getTime() > 5000)
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
 	throw new InvalidTimestampException("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
 
