@@ -44,7 +44,7 @@ public class Server implements ServerAPI{
     }
 
     public void register(PublicKey pubkey, Timestamp ts, byte[] signature) throws InvalidSignatureException, InvalidTimestampException, AlreadyRegisteredException {
-      
+
       //verify signature
       try {
 	Message message = new Message();
@@ -84,13 +84,13 @@ public class Server implements ServerAPI{
         return _generalB;
     }
 
-    public void addUserAnnouncement(PublicKey pubkey, Announcement a) {
+    /*public void addUserAnnouncement(PublicKey pubkey, Announcement a) {
         getUserAnnouncements(pubkey).add(a);
     }
 
     public void addGenAnnouncement(Announcement a){
         getGenAnnouncements().add(a);
-    }
+    }*/
 
     public ArrayList<Announcement> read(PublicKey pubkey, int number)
             throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {

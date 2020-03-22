@@ -51,10 +51,12 @@ public class ReadTest
 	message.appendObject(ts);
 
         server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
+        /*Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addUserAnnouncement(pubkey, ann1);
-        server.addUserAnnouncement(pubkey, ann2);
+        server.addUserAnnouncement(pubkey, ann2);*/
+        server.post(pubkey, "A1".toCharArray(), null);
+        server.post(pubkey, "A2".toCharArray(), null);
         server.read(pubkey, 1);
     }
 
@@ -70,10 +72,12 @@ public class ReadTest
 	message.appendObject(ts);
 
         server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
+        /*Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addUserAnnouncement(pubkey, ann1);
-        server.addUserAnnouncement(pubkey, ann2);
+        server.addUserAnnouncement(pubkey, ann2);*/
+        server.post(pubkey, "A1".toCharArray(), null);
+        server.post(pubkey, "A2".toCharArray(), null);
         server.read(pubkey, 0);
     }
 
@@ -116,10 +120,12 @@ public class ReadTest
 	message.appendObject(ts);
 
         server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
+      /*  Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addGenAnnouncement(ann1);
-        server.addGenAnnouncement(ann2);
+        server.addGenAnnouncement(ann2);*/
+        server.postGeneral(pubkey, "A1".toCharArray(), null);
+        server.postGeneral(pubkey, "A2".toCharArray(), null);
         server.readGeneral(1);
     }
 
@@ -135,10 +141,12 @@ public class ReadTest
 	message.appendObject(ts);
 
         server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
+        /*Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addGenAnnouncement(ann1);
-        server.addGenAnnouncement(ann2);
+        server.addGenAnnouncement(ann2);*/
+        server.postGeneral(pubkey, "A1".toCharArray(), null);
+        server.postGeneral(pubkey, "A2".toCharArray(), null);
         server.readGeneral(0);
     }
 }
