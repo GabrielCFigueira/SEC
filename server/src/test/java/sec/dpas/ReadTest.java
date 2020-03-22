@@ -2,9 +2,6 @@ package sec.dpas;
 
 import sec.dpas.exceptions.NegativeNumberException;
 import sec.dpas.exceptions.SigningException;
-import sec.dpas.exceptions.InvalidSignatureException;
-import sec.dpas.exceptions.InvalidTimestampException;
-import sec.dpas.exceptions.AlreadyRegisteredException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -25,7 +22,7 @@ import java.security.Key;
 public class ReadTest
 {
     @Test(expected = NegativeNumberException.class)
-    public void testReadNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testReadNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -35,12 +32,13 @@ public class ReadTest
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response.getStatusCode().equals("User registered"));
         server.read(pubkey, -1);
     }
 
     @Test
-    public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -50,18 +48,31 @@ public class ReadTest
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response.getStatusCode().equals("User registered"));
         /*Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addUserAnnouncement(pubkey, ann1);
         server.addUserAnnouncement(pubkey, ann2);*/
-        server.post(pubkey, "A1".toCharArray(), null);
-        server.post(pubkey, "A2".toCharArray(), null);
-        server.read(pubkey, 1);
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+        
+	server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+
+	server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
+	server.read(pubkey, 1);
     }
 
     @Test
-    public void testReadAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testReadAll() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -71,13 +82,26 @@ public class ReadTest
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response.getStatusCode().equals("User registered"));
         /*Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addUserAnnouncement(pubkey, ann1);
         server.addUserAnnouncement(pubkey, ann2);*/
-        server.post(pubkey, "A1".toCharArray(), null);
-        server.post(pubkey, "A2".toCharArray(), null);
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+        
+	server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+
+	server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
         server.read(pubkey, 0);
     }
 
@@ -94,7 +118,7 @@ public class ReadTest
     }*/
 
     @Test(expected = NegativeNumberException.class)
-    public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -104,12 +128,13 @@ public class ReadTest
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response.getStatusCode().equals("User registered"));
         server.readGeneral(-1);
     }
 
     @Test
-    public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -119,18 +144,31 @@ public class ReadTest
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response.getStatusCode().equals("User registered"));
       /*  Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addGenAnnouncement(ann1);
         server.addGenAnnouncement(ann2);*/
-        server.postGeneral(pubkey, "A1".toCharArray(), null);
-        server.postGeneral(pubkey, "A2".toCharArray(), null);
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+        
+	server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+
+	server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
         server.readGeneral(1);
     }
 
     @Test
-    public void testReadGeneralAll() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testReadGeneralAll() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
@@ -140,13 +178,26 @@ public class ReadTest
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response.getStatusCode().equals("User registered"));
         /*Announcement ann1 = new Announcement(pubkey, "A1".toCharArray(), null);
         Announcement ann2 = new Announcement(pubkey, "A2".toCharArray(), null);
         server.addGenAnnouncement(ann1);
         server.addGenAnnouncement(ann2);*/
-        server.postGeneral(pubkey, "A1".toCharArray(), null);
-        server.postGeneral(pubkey, "A2".toCharArray(), null);
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+        
+	server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	ts = new Timestamp(System.currentTimeMillis());
+
+	server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+
         server.readGeneral(0);
     }
 }

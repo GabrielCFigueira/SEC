@@ -2,9 +2,6 @@ package sec.dpas;
 
 import sec.dpas.exceptions.NegativeNumberException;
 import sec.dpas.exceptions.SigningException;
-import sec.dpas.exceptions.InvalidSignatureException;
-import sec.dpas.exceptions.InvalidTimestampException;
-import sec.dpas.exceptions.AlreadyRegisteredException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -26,7 +23,7 @@ public class PostTest
 {
 
     @Test
-    public void testRegularPost() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testRegularPost() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
         PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
@@ -38,11 +35,17 @@ public class PostTest
 	       message.appendObject(ts);
 
         server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        server.post(pubkey, "A1".toCharArray(), null);
+
+	message = new Message();
+	message.appendObject(pubkey);
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+
+        server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
     }
 
     @Test
-    public void testRegularGeneralPost() throws FileNotFoundException, IOException, NegativeNumberException, InvalidSignatureException, SigningException, InvalidTimestampException, AlreadyRegisteredException {
+    public void testRegularGeneralPost() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
         PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");

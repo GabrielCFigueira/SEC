@@ -25,9 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sec.dpas.exceptions.NegativeNumberException;
-import sec.dpas.exceptions.InvalidSignatureException;
-import sec.dpas.exceptions.InvalidTimestampException;
-import sec.dpas.exceptions.AlreadyRegisteredException;
+import sec.dpas.exceptions.SigningException;
 
 /**
  * TODO!
@@ -37,38 +35,107 @@ public class Server implements ServerAPI{
 
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
     private ArrayList<Announcement> _generalB;
+    private Key _serverKey;
 
-    public Server() {
+    public Server() throws IOException, FileNotFoundException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
         _generalB = new ArrayList<Announcement>();
+	_serverKey = Crypto.readPrivateKey("src/resources/server.key");
     }
 
-    public void register(PublicKey pubkey, Timestamp ts, byte[] signature) throws InvalidSignatureException, InvalidTimestampException, AlreadyRegisteredException {
+    private  Response constructResponse(String statusCode) {
+	    Message message = new Message();
+      	    Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+	    try {
+	    	message.appendObject(statusCode);
+	    	message.appendObject(currentTs);
+	    } catch (IOException e) {
+		    System.err.println(e.getMessage());
+		    e.printStackTrace();
+		    System.exit(1);
+	    }
 
+	    byte[] serverSignature = null;
+	    try {
+		    serverSignature = Crypto.sign(_serverKey, message.getByteArray());
+	    } catch (SigningException e) {
+		System.err.println(e.getMessage());
+		System.exit(1);
+	    }
+	    return new Response(statusCode, null, currentTs, serverSignature);
+    }
+    
+    private Response constructResponse(String statusCode, Announcement[] an) {
+	    Message message = new Message();
+      	    Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+	    
+	    try {
+	    	message.appendObject(statusCode);
+	    	message.appendObject(currentTs);
+	    	message.appendObject(an);
+	    } catch (IOException e) {
+		    System.err.println(e.getMessage());
+		    e.printStackTrace();
+		    System.exit(1);
+	    }
+
+	    byte[] serverSignature = null;
+	    try {
+		    serverSignature = Crypto.sign(_serverKey, message.getByteArray());
+	    } catch (SigningException e) {
+		System.err.println(e.getMessage());
+		System.exit(1);
+	    }
+	    return new Response(statusCode, an, currentTs, serverSignature);
+    }
+
+    public Response register(PublicKey pubkey, Timestamp ts, byte[] signature) {
+      
       //verify signature
       try {
 	Message message = new Message();
 	message.appendObject(pubkey);
 	message.appendObject(ts);
-	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature))
-	  throw new InvalidSignatureException("Signature verification failed");
+	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+	  return constructResponse("Signature verification failed");
+	}
       } catch(IOException e) {
-	throw new InvalidSignatureException(e.getMessage());
+	  return constructResponse(e.getMessage());
       }
 
       Timestamp currentTs = new Timestamp(System.currentTimeMillis());
       if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-	throw new InvalidTimestampException("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
       if(_announcementB.containsKey(pubkey))
-	throw new AlreadyRegisteredException("This public key is already registered");
+	return constructResponse("User was already registered");
 
       _announcementB.put(pubkey,new ArrayList<Announcement>());
+      return constructResponse("User registered");
     }
 
-    public String post(PublicKey pubkey, char[] message, Announcement[] a){
+    public Response post(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) {
+
+      //verify signature
+      try {
+	Message msg = new Message();
+	msg.appendObject(pubkey);
+	msg.appendObject(message);
+	msg.appendObject(a);
+	msg.appendObject(ts);
+	if(!Crypto.verifySignature(pubkey, msg.getByteArray(), signature)) {
+	  return constructResponse("Signature verification failed");
+	}
+      } catch(IOException e) {
+	  return constructResponse(e.getMessage());
+      }
+
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+	
         getUserAnnouncements(pubkey).add(new Announcement(pubkey,message,a));
-        return "posted new announcement on board";
+        return constructResponse("Announcement posted");
     }
 
     public String postGeneral(PublicKey pubkey, char[] message, Announcement[] a){

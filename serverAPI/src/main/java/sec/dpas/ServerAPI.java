@@ -1,9 +1,6 @@
 package sec.dpas;
 
 import sec.dpas.exceptions.NegativeNumberException;
-import sec.dpas.exceptions.InvalidSignatureException;
-import sec.dpas.exceptions.InvalidTimestampException;
-import sec.dpas.exceptions.AlreadyRegisteredException;
 
 import java.security.PublicKey;
 
@@ -20,9 +17,9 @@ import java.util.*;
  */
 public interface ServerAPI extends Remote {
 
-    void register(PublicKey pubkey, Timestamp ts, byte[] signature) throws RemoteException, InvalidSignatureException, InvalidTimestampException, AlreadyRegisteredException;
+    Response register(PublicKey pubkey, Timestamp ts, byte[] signature) throws RemoteException;
 
-    String post(PublicKey pubkey, char[] message, Announcement[] a) throws RemoteException;
+    Response post(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) throws RemoteException;
 
     String postGeneral(PublicKey pubkey, char[] message, Announcement[] a) throws RemoteException;
 
