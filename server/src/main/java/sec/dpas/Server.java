@@ -142,6 +142,22 @@ public class Server implements ServerAPI{
     }
 
     public Response postGeneral(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature){
+      try {
+	       Message msg = new Message();
+	       msg.appendObject(pubkey);
+	       msg.appendObject(message);
+	       msg.appendObject(a);
+	       msg.appendObject(ts);
+	       if(!Crypto.verifySignature(pubkey, msg.getByteArray(), signature)) {
+	          return constructResponse("Signature verification failed");
+	         }
+         } catch(IOException e) {
+	          return constructResponse(e.getMessage());
+      }
+
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+	       return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
       if(getUserAnnouncements(pubkey) == null){
         return constructResponse("No such user registered. needs to register before posting");
       }
