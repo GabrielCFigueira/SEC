@@ -24,7 +24,6 @@ import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
 
-import sec.dpas.exceptions.NegativeNumberException;
 import sec.dpas.exceptions.SigningException;
 
 /**
@@ -64,11 +63,11 @@ public class Server implements ServerAPI{
 	    }
 	    return new Response(statusCode, null, currentTs, serverSignature);
     }
-    
-    private Response constructResponse(String statusCode, Announcement[] an) {
+
+    private Response constructResponse(String statusCode, ArrayList<Announcement> an) {
 	    Message message = new Message();
       	    Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-	    
+
 	    try {
 	    	message.appendObject(statusCode);
 	    	message.appendObject(currentTs);
@@ -90,7 +89,7 @@ public class Server implements ServerAPI{
     }
 
     public Response register(PublicKey pubkey, Timestamp ts, byte[] signature) {
-      
+
       //verify signature
       try {
 	Message message = new Message();
@@ -133,14 +132,21 @@ public class Server implements ServerAPI{
       Timestamp currentTs = new Timestamp(System.currentTimeMillis());
       if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
 	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
-	
+
+      if(getUserAnnouncements(pubkey) == null){
+        return constructResponse("No such user registered. needs to register before posting");
+      }
+
         getUserAnnouncements(pubkey).add(new Announcement(pubkey,message,a));
         return constructResponse("Announcement posted");
     }
 
-    public String postGeneral(PublicKey pubkey, char[] message, Announcement[] a){
+    public Response postGeneral(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature){
+      if(getUserAnnouncements(pubkey) == null){
+        return constructResponse("No such user registered. needs to register before posting");
+      }
         getGenAnnouncements().add(new Announcement(pubkey,message,a));
-        return "posted new announcement on general board";
+        return constructResponse("General announcement posted");
     }
 
     public ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
@@ -151,32 +157,26 @@ public class Server implements ServerAPI{
         return _generalB;
     }
 
-    /*public void addUserAnnouncement(PublicKey pubkey, Announcement a) {
-        getUserAnnouncements(pubkey).add(a);
-    }
-
-    public void addGenAnnouncement(Announcement a){
-        getGenAnnouncements().add(a);
-    }*/
-
-    public ArrayList<Announcement> read(PublicKey pubkey, int number)
-            throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {
+    public Response read(PublicKey pubkey, int number)
+            throws IndexOutOfBoundsException, IllegalArgumentException{
         ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
         return readFrom(userAnn, number);
     }
 
-    public ArrayList<Announcement> readGeneral(int number)
-            throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {
+    public Response readGeneral(int number)
+            throws IndexOutOfBoundsException, IllegalArgumentException{
         ArrayList<Announcement> genAnn = getGenAnnouncements();
         return readFrom(genAnn, number);
     }
 
-    public ArrayList<Announcement> readFrom(ArrayList<Announcement> ann, int number)
-            throws IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException {
+    public Response readFrom(ArrayList<Announcement> ann, int number)
+            throws IndexOutOfBoundsException, IllegalArgumentException {
         if (number < 0) {
-            throw new NegativeNumberException("Tried to read with a negative number.");
+            return constructResponse("Tried to read with a negative number.");
         }
-        return number == 0 ? ann : new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
+        return number == 0 ? constructResponse("read successful",ann) : constructResponse("read successful",new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())));
+
+
     }
 
 
@@ -204,8 +204,6 @@ public class Server implements ServerAPI{
             System.out.println("Exception thrown : " + e);
         } catch (IllegalArgumentException e) {
             System.out.println("Exception thrown : " + e);
-        //} catch (NegativeNumberException e) {
-            //System.out.println("Exception thrown : " + e);
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();

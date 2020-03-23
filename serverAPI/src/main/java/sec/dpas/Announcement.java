@@ -4,7 +4,9 @@ import java.util.Hashtable;
 
 import java.security.Key;
 
-public class Announcement{
+import java.io.Serializable;
+
+public class Announcement implements Serializable{
 
   private Key _pubkey;
   private char[] _message;

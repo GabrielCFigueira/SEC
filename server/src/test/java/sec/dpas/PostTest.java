@@ -1,6 +1,6 @@
 package sec.dpas;
 
-import sec.dpas.exceptions.NegativeNumberException;
+
 import sec.dpas.exceptions.SigningException;
 
 import static org.junit.Assert.assertTrue;
@@ -23,7 +23,7 @@ public class PostTest
 {
 
     @Test
-    public void testRegularPost() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
+    public void testRegularPost() throws FileNotFoundException, IOException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
         PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
@@ -34,18 +34,21 @@ public class PostTest
 	       message.appendObject(pubkey);
 	       message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+ 	       assertTrue(response.getStatusCode().equals("User registered"));
 
-	message = new Message();
-	message.appendObject(pubkey);
-	ts = new Timestamp(System.currentTimeMillis());
-	message.appendObject(ts);
-
-        server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+         message = new Message();
+       	message.appendObject(pubkey);
+       	message.appendObject("A1".toCharArray());
+        message.appendObject(null);
+        ts = new Timestamp(System.currentTimeMillis());
+        message.appendObject(ts);
+         Response response2 = server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+         assertTrue(response2.getStatusCode().equals("Announcement posted"));
     }
 
-    @Test
-    public void testRegularGeneralPost() throws FileNotFoundException, IOException, NegativeNumberException, SigningException {
+
+    /*public void testNoRegisteredPoster() throws FileNotFoundException, IOException, SigningException {
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
         PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
@@ -56,8 +59,27 @@ public class PostTest
 	       message.appendObject(pubkey);
 	       message.appendObject(ts);
 
-        server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        server.postGeneral(pubkey, "A1".toCharArray(), null);
+         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+         assertTrue(response.getStatusCode().equals("User registered"));
+         server.post(pubkey, "A1".toCharArray(), null);
+    }*/
+
+    @Test
+    public void testRegularGeneralPost() throws FileNotFoundException, IOException, SigningException {
+        Server server = new Server();
+        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
+        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
+	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+	      Message message = new Message();
+	      Timestamp ts = new Timestamp(System.currentTimeMillis());
+
+	       message.appendObject(pubkey);
+	       message.appendObject(ts);
+
+        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        assertTrue(response.getStatusCode().equals("User registered"));
+        Response response2 = server.postGeneral(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+        assertTrue(response2.getStatusCode().equals("General announcement posted"));
     }
 
 }

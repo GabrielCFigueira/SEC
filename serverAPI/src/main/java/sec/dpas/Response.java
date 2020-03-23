@@ -3,15 +3,17 @@ package sec.dpas;
 
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
+
 public class Response {
 
 	private String _statusCode;
-	private Announcement[] _announcements; 
+	private ArrayList<Announcement> _announcements;
 	private Timestamp _ts;
 	private byte[] _signature;
-	
 
-	public Response(String statusCode, Announcement[] announcements, Timestamp ts, byte[] signature) {
+
+	public Response(String statusCode, ArrayList<Announcement> announcements, Timestamp ts, byte[] signature) {
 		_statusCode = statusCode;
 		_announcements = announcements;
 		_ts = ts;
@@ -19,7 +21,7 @@ public class Response {
 	}
 
 	public String getStatusCode() { return _statusCode; }
-	public Announcement[] getAnnouncements() { return _announcements; }
+	public ArrayList<Announcement> getAnnouncements() { return _announcements; }
 	public Timestamp getTimestamp() { return _ts; }
 	public byte[] getSignature() { return _signature; }
 }

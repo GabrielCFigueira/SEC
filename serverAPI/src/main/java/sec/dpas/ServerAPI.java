@@ -1,7 +1,5 @@
 package sec.dpas;
 
-import sec.dpas.exceptions.NegativeNumberException;
-
 import java.security.PublicKey;
 
 import java.rmi.Remote;
@@ -21,12 +19,12 @@ public interface ServerAPI extends Remote {
 
     Response post(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) throws RemoteException;
 
-    String postGeneral(PublicKey pubkey, char[] message, Announcement[] a) throws RemoteException;
+    Response postGeneral(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) throws RemoteException;
 
-    ArrayList<Announcement> read(PublicKey pubkey, int number)
-            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException;
+    Response read(PublicKey pubkey, int number)
+            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException;
 
-    ArrayList<Announcement> readGeneral(int number)
-            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, NegativeNumberException;
+    Response readGeneral(int number)
+            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException;
 
 }
