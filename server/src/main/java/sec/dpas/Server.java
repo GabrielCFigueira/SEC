@@ -14,6 +14,9 @@ import java.security.PublicKey;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,10 +39,10 @@ public class Server implements ServerAPI{
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
 
-    public Server() throws IOException, FileNotFoundException {
+    public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
         _generalB = new ArrayList<Announcement>();
-	_serverKey = Crypto.readPrivateKey("src/resources/server.key");
+	_serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
     }
 
     private  Response constructResponse(String statusCode) {

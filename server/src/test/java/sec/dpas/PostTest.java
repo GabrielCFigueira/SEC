@@ -12,6 +12,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.PrivateKey;
+import java.security.KeyStoreException;
+import java.security.UnrecoverableKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 
 import java.security.Key;
@@ -22,12 +26,14 @@ import java.security.Key;
 public class PostTest
 {
 
+    private String _keystorePassword = "keystore";
+
     @Test
-    public void testRegularPost() throws FileNotFoundException, IOException, SigningException {
+    public void testRegularPost() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
-	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PublicKey pub2 = Crypto.readPublicKey("../resources/test1.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	      Message message = new Message();
 	      Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -48,11 +54,11 @@ public class PostTest
     }
 
     @Test
-    public void testWrongPublicKeyPost() throws FileNotFoundException, IOException, SigningException {
+    public void testWrongPublicKeyPost() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
-	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PublicKey pub2 = Crypto.readPublicKey("../resources/test1.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
         Message message = new Message();
 	      Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -74,11 +80,11 @@ public class PostTest
     }
 
     @Test
-    public void testPosterNotRegistered() throws FileNotFoundException, IOException, SigningException {
+    public void testPosterNotRegistered() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
-	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PublicKey pub2 = Crypto.readPublicKey("../resources/test1.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
         Message message = new Message();
 	      Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -93,11 +99,11 @@ public class PostTest
     }
 
     @Test
-    public void testRegularGeneralPost() throws FileNotFoundException, IOException, SigningException {
+    public void testRegularGeneralPost() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
-	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PublicKey pub2 = Crypto.readPublicKey("../resources/test1.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
         Message message = new Message();
 	      Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -118,11 +124,11 @@ public class PostTest
     }
 
     @Test
-    public void testWrongPublicKeyGenPost() throws FileNotFoundException, IOException, SigningException {
+    public void testWrongPublicKeyGenPost() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
-	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PublicKey pub2 = Crypto.readPublicKey("../resources/test1.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
         Message message = new Message();
 	      Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -144,11 +150,11 @@ public class PostTest
     }
 
     @Test
-    public void testGenPosterNotRegistered() throws FileNotFoundException, IOException, SigningException {
+    public void testGenPosterNotRegistered() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-        PublicKey pub2 = Crypto.readPublicKey("src/resources/test.key.pub1");
-	      PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PublicKey pub2 = Crypto.readPublicKey("../resources/test1.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
         Message message = new Message();
 	      Timestamp ts = new Timestamp(System.currentTimeMillis());
 

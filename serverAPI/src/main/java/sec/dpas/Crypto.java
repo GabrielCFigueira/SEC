@@ -7,12 +7,15 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.KeyStore;
 import java.security.MessageDigest;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.UnrecoverableKeyException;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.cert.CertificateException;
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -30,26 +33,11 @@ import java.util.Arrays;
  */
 public class Crypto {
 
-    public static PrivateKey readPrivateKey(String keypath) throws FileNotFoundException, IOException {
-        System.out.println("Reading key from file " + keypath + " ...");
-        FileInputStream fis = new FileInputStream(keypath);
-        byte[] encoded = new byte[fis.available()];
-        fis.read(encoded);
-        fis.close();
-
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
-
-	KeyFactory keyFac;
-	PrivateKey priv = null;
-	try {
-		keyFac = KeyFactory.getInstance("RSA");
-        	priv = keyFac.generatePrivate(spec);
-	} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-		System.err.println("Something really weird happened while reading the private key");
-		System.err.println(e.getMessage());
-		System.exit(1);
-	}
-        return priv;
+    public static PrivateKey readPrivateKey(String keystore, String keyname, String keystorePassword, String keyPassword) throws KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+        System.out.println("Reading key from file " + keystore + " ...");
+	KeyStore keyStore = KeyStore.getInstance("JKS");
+	keyStore.load(new FileInputStream(keystore), keystorePassword.toCharArray());
+        return (PrivateKey) keyStore.getKey(keyname, keyPassword.toCharArray());
     }
 
     public static PublicKey readPublicKey(String keypath) throws FileNotFoundException, IOException {

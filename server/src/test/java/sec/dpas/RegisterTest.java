@@ -9,6 +9,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.PrivateKey;
+import java.security.KeyStoreException;
+import java.security.UnrecoverableKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 
 import java.security.Key;
@@ -21,11 +25,14 @@ import sec.dpas.exceptions.SigningException;
  */
 public class RegisterTest
 {
+
+    private String _keystorePassword = "keystore";
+
     @Test
-    public void testNormalRegister() throws FileNotFoundException, IOException, SigningException {
+    public void testNormalRegister() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -37,10 +44,10 @@ public class RegisterTest
     }
 
     @Test
-    public void testDuplicateRegister() throws FileNotFoundException, IOException, SigningException {
+    public void testDuplicateRegister() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -54,10 +61,10 @@ public class RegisterTest
     }
 
     @Test
-    public void testWrongPublicKeyRegister() throws FileNotFoundException, IOException, SigningException {
+    public void testWrongPublicKeyRegister() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub1");
-	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test1.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -70,10 +77,10 @@ public class RegisterTest
 
 
     @Test
-    public void testForgedTimestampRegister() throws FileNotFoundException, IOException, SigningException, InterruptedException {
+    public void testForgedTimestampRegister() throws FileNotFoundException, IOException, SigningException, InterruptedException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -87,10 +94,10 @@ public class RegisterTest
 
 
     @Test
-    public void testForgedTimestampRegister2() throws FileNotFoundException, IOException, SigningException {
+    public void testForgedTimestampRegister2() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 
@@ -104,10 +111,10 @@ public class RegisterTest
 
 
     @Test
-    public void testDelayedRegister() throws FileNotFoundException, IOException, SigningException, InterruptedException {
+    public void testDelayedRegister() throws FileNotFoundException, IOException, SigningException, InterruptedException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
         Server server = new Server();
-        PublicKey pubkey = Crypto.readPublicKey("src/resources/test.key.pub");
-	PrivateKey privkey = Crypto.readPrivateKey("src/resources/test.key");
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 

@@ -26,7 +26,7 @@ public class Client
     private PublicKey _pubkey;
 
     private Client() throws FileNotFoundException, IOException{
-      _privKey = Crypto.readPrivateKey("/src/resources/test.key");
+      //_privKey = Crypto.readPrivateKey("/src/resources/test.key");
       _pubkey = Crypto.readPublicKey("/src/resources/test.key.pub");
     }
 
