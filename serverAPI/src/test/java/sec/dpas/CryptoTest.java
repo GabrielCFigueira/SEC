@@ -4,7 +4,7 @@ import sec.dpas.exceptions.SigningException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
@@ -76,7 +76,7 @@ public class CryptoTest
 
 		key = Crypto.readPublicKey("../resources/test.pub");
 		cipher.init(Cipher.DECRYPT_MODE, key);
-		assertTrue(plaintext.equals(new String(cipher.doFinal(ciphertext))));
+		assertEquals(plaintext, new String(cipher.doFinal(ciphertext)));
 	}
 
 		
@@ -92,7 +92,7 @@ public class CryptoTest
 
 		key = Crypto.readPrivateKey("../resources/key.store", "test", _keyStorePassword, "testtest");
 		cipher.init(Cipher.DECRYPT_MODE, key);
-		assertTrue(plaintext.equals(new String(cipher.doFinal(ciphertext))));
+		assertEquals(plaintext, new String(cipher.doFinal(ciphertext)));
 	}	
 
 	@Test

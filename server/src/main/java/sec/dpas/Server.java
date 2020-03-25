@@ -127,26 +127,27 @@ public class Server implements ServerAPI{
 
     public Response post(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) {
 
-        //verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(a);
-            message.appendObject(ts);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage());
-        }
+      //verify signature
+      try {
+	Message message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+	message.appendObject(ts);
+	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+	  return constructResponse("Signature verification failed");
+	}
+      } catch(IOException e) {
+	  return constructResponse(e.getMessage());
+      }
 
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
-        if(getUserAnnouncements(pubkey) == null){
-            return constructResponse("No such user registered. needs to register before posting");
-        }
+
+      if(!hasPublicKey(pubkey)){
+        return constructResponse("No such user registered. needs to register before posting");
+      }
 
         getUserAnnouncements(pubkey).add(a);
         try {saveToFile("board");}
@@ -157,30 +158,37 @@ public class Server implements ServerAPI{
     }
 
     public Response postGeneral(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature){
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(a);
-            message.appendObject(ts);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage());
-        }
 
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
-        if(getUserAnnouncements(pubkey) == null){
-            return constructResponse("No such user registered. needs to register before posting");
-        }
-        getGenAnnouncements().add(a);
+      try {
+	       Message message = new Message();
+	       message.appendObject(pubkey);
+	       message.appendObject(a);
+	       message.appendObject(ts);
+	       if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+	          return constructResponse("Signature verification failed");
+	         }
+         } catch(IOException e) {
+	          return constructResponse(e.getMessage());
+      }
+
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+	       return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+       
+      if(!hasPublicKey(pubkey)){
+        return constructResponse("No such user registered. needs to register before posting");
+      }
+        
+      getGenAnnouncements().add(a);
         try {saveToFile("genboard");}
         catch (IOException e){
             System.out.println(e.getMessage());
         }
         return constructResponse("General announcement posted");
+    }
+
+    public boolean hasPublicKey(PublicKey key) {
+	    return _announcementB.containsKey(key);
     }
 
     public ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
@@ -195,10 +203,33 @@ public class Server implements ServerAPI{
         return _announcementB;
     }
 
-    public Response read(PublicKey pubkey, int number)
+    public Response read(PublicKey pubkey, int number, PublicKey senderKey, Timestamp ts, byte[] signature)
             throws IndexOutOfBoundsException, IllegalArgumentException{
-        try{
-            loadFromFile("board");
+        
+      //verify signature
+      try {
+	Message message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(number);
+	message.appendObject(senderKey);
+	message.appendObject(ts);
+	if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
+	  return constructResponse("Signature verification failed");
+	}
+      } catch(IOException e) {
+	  return constructResponse(e.getMessage());
+      }
+
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+
+      if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
+        return constructResponse("No such user registered. needs to register before posting");
+      }
+
+	try{
+          loadFromFile("board");
         }
         catch(IOException e){
             System.out.println(e.getMessage());
@@ -210,10 +241,33 @@ public class Server implements ServerAPI{
         return readFrom(userAnn, number);
     }
 
-    public Response readGeneral(int number)
+    public Response readGeneral(int number, PublicKey senderKey, Timestamp ts, byte[] signature)
             throws IndexOutOfBoundsException, IllegalArgumentException{
-        try{
-            loadFromFile("genboard");
+      
+      //verify signature
+      try {
+	Message message = new Message();
+	message.appendObject(number);
+	message.appendObject(senderKey);
+	message.appendObject(ts);
+	if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
+	  return constructResponse("Signature verification failed");
+	}
+      } catch(IOException e) {
+	  return constructResponse(e.getMessage());
+      }
+
+      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+      
+      
+      if(!hasPublicKey(senderKey)){
+        return constructResponse("No such user registered. needs to register before posting");
+      }
+
+      try{
+          loadFromFile("genboard");
         }
         catch(IOException e){
             System.out.println(e.getMessage());

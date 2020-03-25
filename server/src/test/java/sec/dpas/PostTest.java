@@ -41,7 +41,7 @@ public class PostTest
 	message.appendObject(ts);
 
        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
- 	assertTrue(response.getStatusCode().equals("User registered"));
+ 	assertEquals(response.getStatusCode(), "User registered");
 
         //Constructing announcement
 	message = new Message();
@@ -72,7 +72,7 @@ public class PostTest
         message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response.getStatusCode().equals("User registered"));
+        assertEquals(response.getStatusCode(), "User registered");
 
         //Constructing announcement
 	message = new Message();
@@ -88,7 +88,7 @@ public class PostTest
         ts = new Timestamp(System.currentTimeMillis());
         message.appendObject(ts);
         Response response2 = server.post(pub2, a, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response2.getStatusCode().equals("Signature verification failed"));
+        assertEquals(response2.getStatusCode(), "Signature verification failed");
 
     }
 
@@ -114,7 +114,7 @@ public class PostTest
         message.appendObject(ts);
         Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
         System.out.println(response2.getStatusCode());
-        assertTrue(response2.getStatusCode().equals("No such user registered. needs to register before posting"));
+        assertEquals(response2.getStatusCode(), "No such user registered. needs to register before posting");
 
     }
 
@@ -131,7 +131,7 @@ public class PostTest
 	       message.appendObject(ts);
 
          Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
- 	       assertTrue(response.getStatusCode().equals("User registered"));
+       assertEquals(response.getStatusCode(), "User registered");
 
 	//Constructing announcement
 	message = new Message();
@@ -147,7 +147,7 @@ public class PostTest
         ts = new Timestamp(System.currentTimeMillis());
         message.appendObject(ts);
         Response response2 = server.postGeneral(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response2.getStatusCode().equals("General announcement posted"));
+        assertEquals(response2.getStatusCode(), "General announcement posted");
     }
 
     @Test
@@ -163,7 +163,7 @@ public class PostTest
 	       message.appendObject(ts);
 
          Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
- 	       assertTrue(response.getStatusCode().equals("User registered"));
+       assertEquals(response.getStatusCode(), "User registered");
 
 	//Constructing announcement
 	message = new Message();
@@ -179,7 +179,7 @@ public class PostTest
         ts = new Timestamp(System.currentTimeMillis());
         message.appendObject(ts);
         Response response2 = server.postGeneral(pub2, a, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response2.getStatusCode().equals("Signature verification failed"));
+        assertEquals(response2.getStatusCode(), "Signature verification failed");
 
     }
 
@@ -205,7 +205,7 @@ public class PostTest
         message.appendObject(ts);
         Response response2 = server.postGeneral(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
         System.out.println(response2.getStatusCode());
-        assertTrue(response2.getStatusCode().equals("No such user registered. needs to register before posting"));
+        assertEquals(response2.getStatusCode(), "No such user registered. needs to register before posting");
 
     }
 

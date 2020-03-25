@@ -2,6 +2,7 @@ package sec.dpas;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -39,7 +40,7 @@ public class RegisterTest {
         message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response.getStatusCode().equals("User registered"));
+	assertEquals(response.getStatusCode(), "User registered");
     }
 
     @Test
@@ -54,10 +55,10 @@ public class RegisterTest {
         message.appendObject(pubkey);
         message.appendObject(ts);
 
-        Response response1 = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        Response response2 = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response1.getStatusCode().equals("User registered"));
-        assertTrue(response2.getStatusCode().equals("User was already registered"));
+	Response response1 = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	Response response2 = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response1.getStatusCode(), "User registered");
+	assertEquals(response2.getStatusCode(), "User was already registered");
     }
 
     @Test
@@ -72,8 +73,8 @@ public class RegisterTest {
         message.appendObject(pubkey);
         message.appendObject(ts);
 
-        Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-        assertTrue(response.getStatusCode().equals("Signature verification failed"));
+	Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response.getStatusCode(), "Signature verification failed");
     }
 
     @Test
@@ -91,7 +92,7 @@ public class RegisterTest {
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
         Thread.sleep(10000);
         Response response = server.register(pubkey, new Timestamp(System.currentTimeMillis()), signature);
-        assertTrue(response.getStatusCode().equals("Signature verification failed"));
+	assertEquals(response.getStatusCode(), "Signature verification failed");
     }
 
     @Test
@@ -107,8 +108,9 @@ public class RegisterTest {
         message.appendObject(ts);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
         ts.setTime(ts.getTime() + 10000);
-        Response response = server.register(pubkey, ts, signature);
-        assertTrue(response.getStatusCode().equals("Signature verification failed"));
+
+	Response response = server.register(pubkey, ts, signature);
+	assertEquals(response.getStatusCode(), "Signature verification failed");
     }
 
     @Test

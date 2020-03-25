@@ -4,6 +4,7 @@ import sec.dpas.exceptions.SigningException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -33,16 +34,24 @@ public class ReadTest
         Server server = new Server();
         PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
 	PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
-  Message message = new Message();
+	Message message = new Message();
 	Timestamp ts = new Timestamp(System.currentTimeMillis());
 
 	message.appendObject(pubkey);
 	message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response.getStatusCode().equals("User registered"));
-        Response response2 = server.read(pubkey, -1);
-        assertTrue(response2.getStatusCode().equals("Tried to read with a negative number."));
+	assertEquals(response.getStatusCode(), "User registered");
+        
+	message = new Message();
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(pubkey);
+	message.appendObject(-1);
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+	
+	Response response2 = server.read(pubkey, -1, pubkey, ts, Crypto.sign(privkey,message.getByteArray()));
+        assertEquals(response2.getStatusCode(), "Tried to read with a negative number.");
     }
 
     @Test
@@ -57,7 +66,7 @@ public class ReadTest
 	message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response.getStatusCode().equals("User registered"));
+	assertEquals(response.getStatusCode(),"User registered");
 
 	//constructing Announcement
 	message = new Message();
@@ -74,7 +83,7 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response2.getStatusCode().equals("Announcement posted"));
+	assertEquals(response2.getStatusCode(), "Announcement posted");
 
 
 	//constructing Announcement
@@ -92,10 +101,17 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response3.getStatusCode().equals("Announcement posted"));
+	assertEquals(response3.getStatusCode(), "Announcement posted");
 
-  Response response4 = server.read(pubkey,1);
-  assertTrue(response4.getStatusCode().equals("read successful"));
+	message = new Message();
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(pubkey);
+	message.appendObject(1);
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+
+	Response response4 = server.read(pubkey,1,pubkey,ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response4.getStatusCode(), "read successful");
     }
 
     @Test
@@ -110,7 +126,7 @@ public class ReadTest
 	message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response.getStatusCode().equals("User registered"));
+	assertEquals(response.getStatusCode(), "User registered");
 
 	//constructing Announcement
 	message = new Message();
@@ -127,7 +143,7 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response2.getStatusCode().equals("Announcement posted"));
+	assertEquals(response2.getStatusCode(), "Announcement posted");
 
 
 	//constructing Announcement
@@ -145,10 +161,17 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response3.getStatusCode().equals("Announcement posted"));
+	assertEquals(response3.getStatusCode(), "Announcement posted");
 
-  Response response4 = server.read(pubkey,0);
-  assertTrue(response4.getStatusCode().equals("read successful"));
+	message = new Message();
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(pubkey);
+	message.appendObject(0);
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+
+	Response response4 = server.read(pubkey,0, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response4.getStatusCode(), "read successful");
     }
 
   //  @Test
@@ -175,9 +198,16 @@ public class ReadTest
 	message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response.getStatusCode().equals("User registered"));
-  Response response2 = server.readGeneral(-1);
-  assertTrue(response2.getStatusCode().equals("Tried to read with a negative number."));
+	assertEquals(response.getStatusCode(), "User registered");
+
+	message = new Message();
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(-1);
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+
+	Response response2 = server.readGeneral(-1, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response2.getStatusCode(), "Tried to read with a negative number.");
     }
 
     @Test
@@ -192,7 +222,7 @@ public class ReadTest
 	message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response.getStatusCode().equals("User registered"));
+	assertEquals(response.getStatusCode(), "User registered");
 
 	//constructing Announcement
 	message = new Message();
@@ -209,7 +239,7 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response2.getStatusCode().equals("Announcement posted"));
+	assertEquals(response2.getStatusCode(), "Announcement posted");
 
 
 	//constructing Announcement
@@ -227,10 +257,16 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response3.getStatusCode().equals("Announcement posted"));
+	assertEquals(response3.getStatusCode(), "Announcement posted");
 
-  Response response4 = server.readGeneral(1);
-  assertTrue(response4.getStatusCode().equals("read successful"));
+	message = new Message();
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(1);
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+
+	Response response4 = server.readGeneral(1, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response4.getStatusCode(), "read successful");
     }
 
     @Test
@@ -245,7 +281,7 @@ public class ReadTest
 	message.appendObject(ts);
 
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response.getStatusCode().equals("User registered"));
+	assertEquals(response.getStatusCode(), "User registered");
 
 	//constructing Announcement
 	message = new Message();
@@ -262,7 +298,7 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response2.getStatusCode().equals("Announcement posted"));
+	assertEquals(response2.getStatusCode(), "Announcement posted");
 
 
 	//constructing Announcement
@@ -280,9 +316,15 @@ public class ReadTest
 	ts = new Timestamp(System.currentTimeMillis());
 	message.appendObject(ts);
 	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
-	assertTrue(response3.getStatusCode().equals("Announcement posted"));
+	assertEquals(response3.getStatusCode(), "Announcement posted");
 
-  Response response4 = server.readGeneral(0);
-  assertTrue(response4.getStatusCode().equals("read successful"));
+	message = new Message();
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(0);
+	message.appendObject(pubkey);
+	message.appendObject(ts);
+
+      	Response response4 = server.readGeneral(0, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertEquals(response4.getStatusCode(), "read successful");
     }
 }

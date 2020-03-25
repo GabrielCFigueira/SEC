@@ -24,10 +24,10 @@ public interface ServerAPI extends Remote {
 
     Response postGeneral(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) throws RemoteException;
 
-    Response read(PublicKey pubkey, int number)
+    Response read(PublicKey pubkey, int number, PublicKey senderKey, Timestamp ts, byte[] signature)
             throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, IOException, ClassNotFoundException;
 
-    Response readGeneral(int number)
+    Response readGeneral(int number, PublicKey senderKey, Timestamp ts, byte[] signature)
             throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, IOException, ClassNotFoundException;
 
 }
