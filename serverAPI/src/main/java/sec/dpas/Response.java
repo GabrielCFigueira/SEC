@@ -4,8 +4,10 @@ package sec.dpas;
 import java.sql.Timestamp;
 
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class Response {
+
+public class Response implements Serializable {
 
 	private String _statusCode;
 	private ArrayList<Announcement> _announcements;
@@ -24,4 +26,6 @@ public class Response {
 	public ArrayList<Announcement> getAnnouncements() { return _announcements; }
 	public Timestamp getTimestamp() { return _ts; }
 	public byte[] getSignature() { return _signature; }
+
+	public String toString(){ return _statusCode; }
 }

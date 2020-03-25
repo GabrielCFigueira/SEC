@@ -47,138 +47,138 @@ public class Server implements ServerAPI{
     public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
         _generalB = new ArrayList<Announcement>();
-	_serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
+        _serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
     }
 
     private  Response constructResponse(String statusCode) {
-	    Message message = new Message();
-      	    Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-	    try {
-	    	message.appendObject(statusCode);
-	    	message.appendObject(currentTs);
-	    } catch (IOException e) {
-		    System.err.println(e.getMessage());
-		    e.printStackTrace();
-		    System.exit(1);
-	    }
+        Message message = new Message();
+        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+        try {
+            message.appendObject(statusCode);
+            message.appendObject(currentTs);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
-	    byte[] serverSignature = null;
-	    try {
-		    serverSignature = Crypto.sign(_serverKey, message.getByteArray());
-	    } catch (SigningException e) {
-		System.err.println(e.getMessage());
-		System.exit(1);
-	    }
-	    return new Response(statusCode, null, currentTs, serverSignature);
+        byte[] serverSignature = null;
+        try {
+            serverSignature = Crypto.sign(_serverKey, message.getByteArray());
+        } catch (SigningException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        return new Response(statusCode, null, currentTs, serverSignature);
     }
 
     private Response constructResponse(String statusCode, ArrayList<Announcement> an) {
-	    Message message = new Message();
-      	    Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+        Message message = new Message();
+        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
 
-	    try {
-	    	message.appendObject(statusCode);
-	    	message.appendObject(currentTs);
-	    	message.appendObject(an);
-	    } catch (IOException e) {
-		    System.err.println(e.getMessage());
-		    e.printStackTrace();
-		    System.exit(1);
-	    }
+        try {
+            message.appendObject(statusCode);
+            message.appendObject(currentTs);
+            message.appendObject(an);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
-	    byte[] serverSignature = null;
-	    try {
-		    serverSignature = Crypto.sign(_serverKey, message.getByteArray());
-	    } catch (SigningException e) {
-		System.err.println(e.getMessage());
-		System.exit(1);
-	    }
-	    return new Response(statusCode, an, currentTs, serverSignature);
+        byte[] serverSignature = null;
+        try {
+            serverSignature = Crypto.sign(_serverKey, message.getByteArray());
+        } catch (SigningException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        return new Response(statusCode, an, currentTs, serverSignature);
     }
 
     public Response register(PublicKey pubkey, Timestamp ts, byte[] signature) {
 
-      //verify signature
-      try {
-	Message message = new Message();
-	message.appendObject(pubkey);
-	message.appendObject(ts);
-	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-	  return constructResponse("Signature verification failed");
-	}
-      } catch(IOException e) {
-	  return constructResponse(e.getMessage());
-      }
+        //verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(ts);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed");
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage());
+        }
 
-      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
-      if(_announcementB.containsKey(pubkey))
-	return constructResponse("User was already registered");
+        if(_announcementB.containsKey(pubkey))
+            return constructResponse("User was already registered");
 
-      _announcementB.put(pubkey,new ArrayList<Announcement>());
-      try {saveToFile("board");}
-      catch (IOException e){
-        System.out.println(e.getMessage());
-      }
-      return constructResponse("User registered");
+        _announcementB.put(pubkey,new ArrayList<Announcement>());
+        try {saveToFile("board");}
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        return constructResponse("User registered");
     }
 
     public Response post(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) {
 
-      //verify signature
-      try {
-	Message message = new Message();
-	message.appendObject(pubkey);
-	message.appendObject(a);
-	message.appendObject(ts);
-	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-	  return constructResponse("Signature verification failed");
-	}
-      } catch(IOException e) {
-	  return constructResponse(e.getMessage());
-      }
+        //verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(a);
+            message.appendObject(ts);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed");
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage());
+        }
 
-      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-	return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
-      if(getUserAnnouncements(pubkey) == null){
-        return constructResponse("No such user registered. needs to register before posting");
-      }
+        if(getUserAnnouncements(pubkey) == null){
+            return constructResponse("No such user registered. needs to register before posting");
+        }
 
         getUserAnnouncements(pubkey).add(a);
         try {saveToFile("board");}
         catch (IOException e){
-          System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
         return constructResponse("Announcement posted");
     }
 
     public Response postGeneral(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature){
-      try {
-	       Message message = new Message();
-	       message.appendObject(pubkey);
-	       message.appendObject(a);
-	       message.appendObject(ts);
-	       if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-	          return constructResponse("Signature verification failed");
-	         }
-         } catch(IOException e) {
-	          return constructResponse(e.getMessage());
-      }
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(a);
+            message.appendObject(ts);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed");
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage());
+        }
 
-      Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-      if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-	       return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
-      if(getUserAnnouncements(pubkey) == null){
-        return constructResponse("No such user registered. needs to register before posting");
-      }
+        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
+            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+        if(getUserAnnouncements(pubkey) == null){
+            return constructResponse("No such user registered. needs to register before posting");
+        }
         getGenAnnouncements().add(a);
         try {saveToFile("genboard");}
         catch (IOException e){
-          System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
         return constructResponse("General announcement posted");
     }
@@ -192,19 +192,19 @@ public class Server implements ServerAPI{
     }
 
     public Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
-      return _announcementB;
+        return _announcementB;
     }
 
     public Response read(PublicKey pubkey, int number)
             throws IndexOutOfBoundsException, IllegalArgumentException{
         try{
-          loadFromFile("board");
+            loadFromFile("board");
         }
         catch(IOException e){
-          System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
         catch(ClassNotFoundException e){
-          System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
         ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
         return readFrom(userAnn, number);
@@ -213,13 +213,13 @@ public class Server implements ServerAPI{
     public Response readGeneral(int number)
             throws IndexOutOfBoundsException, IllegalArgumentException{
         try{
-          loadFromFile("genboard");
+            loadFromFile("genboard");
         }
         catch(IOException e){
-          System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
         catch(ClassNotFoundException e){
-          System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
         ArrayList<Announcement> genAnn = getGenAnnouncements();
         return readFrom(genAnn, number);
@@ -236,50 +236,50 @@ public class Server implements ServerAPI{
     }
 
     public void saveToFile(String path) throws IOException{
-      try{
-        FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + ".txt");
-        ObjectOutputStream output = new ObjectOutputStream(fileOutput);
-        if(path.equals("board")){
-          output.writeObject(getAnnouncements());
-        }
-        else{
-          output.writeObject(getGenAnnouncements());
-        }
+        try{
+            FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + ".txt");
+            ObjectOutputStream output = new ObjectOutputStream(fileOutput);
+            if(path.equals("board")){
+                output.writeObject(getAnnouncements());
+            }
+            else{
+                output.writeObject(getGenAnnouncements());
+            }
 
-        output.close();
-        fileOutput.close();
-      }
-      catch (IOException e){
-        System.out.println(e.getMessage());
-      }
+            output.close();
+            fileOutput.close();
+        }
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
     }
 
     public void loadFromFile(String path) throws IOException, ClassNotFoundException{
-      try{
-        FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
-        ObjectInputStream input = new ObjectInputStream(fileInput);
-        if(path.equals("board")){
-          _announcementB = (Hashtable<PublicKey, ArrayList<Announcement>>) input.readObject();
-        }
-        else{
-          _generalB = (ArrayList<Announcement>) input.readObject();
-        }
+        try{
+            FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
+            ObjectInputStream input = new ObjectInputStream(fileInput);
+            if(path.equals("board")){
+                _announcementB = (Hashtable<PublicKey, ArrayList<Announcement>>) input.readObject();
+            }
+            else{
+                _generalB = (ArrayList<Announcement>) input.readObject();
+            }
 
-        input.close();
-        fileInput.close();
-      }
-      catch (IOException e){
-        System.out.println(e.getMessage());
-      }
-      catch (ClassNotFoundException e){
-        System.out.println(e.getMessage());
-      }
+            input.close();
+            fileInput.close();
+        }
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        catch (ClassNotFoundException e){
+            System.out.println(e.getMessage());
+        }
     }
 
 
     public static void main(String args[]) {
         int registryPort = 1099;
-        System.out.println( "Hello World!" );
+        System.out.println("#####");
 
         try {
             Server obj = new Server();
@@ -289,8 +289,8 @@ public class Server implements ServerAPI{
             // Bind the remote object's stub in the registry
             //Registry registry = LocateRegistry.getRegistry();
             Registry registry = LocateRegistry.createRegistry(registryPort); //no garbage collection
-            registry.rebind("Hello", stub);
-            //Naming.rebind("//localhost:1099/Hello");
+            registry.bind("ServerAPI", stub);
+            //Naming.rebind("//localhost:1099/ServerAPI");
 
             System.err.println("Server ready");
             System.out.println("Awaiting connections");
