@@ -125,16 +125,15 @@ public class Server implements ServerAPI{
       return constructResponse("User registered");
     }
 
-    public Response post(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) {
+    public Response post(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) {
 
       //verify signature
       try {
-	Message msg = new Message();
-	msg.appendObject(pubkey);
-	msg.appendObject(message);
-	msg.appendObject(a);
-	msg.appendObject(ts);
-	if(!Crypto.verifySignature(pubkey, msg.getByteArray(), signature)) {
+	Message message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+	message.appendObject(ts);
+	if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
 	  return constructResponse("Signature verification failed");
 	}
       } catch(IOException e) {
@@ -149,7 +148,7 @@ public class Server implements ServerAPI{
         return constructResponse("No such user registered. needs to register before posting");
       }
 
-        getUserAnnouncements(pubkey).add(new Announcement(pubkey,message,a));
+        getUserAnnouncements(pubkey).add(a);
         try {saveToFile("board");}
         catch (IOException e){
           System.out.println(e.getMessage());
@@ -157,14 +156,13 @@ public class Server implements ServerAPI{
         return constructResponse("Announcement posted");
     }
 
-    public Response postGeneral(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature){
+    public Response postGeneral(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature){
       try {
-	       Message msg = new Message();
-	       msg.appendObject(pubkey);
-	       msg.appendObject(message);
-	       msg.appendObject(a);
-	       msg.appendObject(ts);
-	       if(!Crypto.verifySignature(pubkey, msg.getByteArray(), signature)) {
+	       Message message = new Message();
+	       message.appendObject(pubkey);
+	       message.appendObject(a);
+	       message.appendObject(ts);
+	       if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
 	          return constructResponse("Signature verification failed");
 	         }
          } catch(IOException e) {
@@ -177,7 +175,7 @@ public class Server implements ServerAPI{
       if(getUserAnnouncements(pubkey) == null){
         return constructResponse("No such user registered. needs to register before posting");
       }
-        getGenAnnouncements().add(new Announcement(pubkey,message,a));
+        getGenAnnouncements().add(a);
         try {saveToFile("genboard");}
         catch (IOException e){
           System.out.println(e.getMessage());

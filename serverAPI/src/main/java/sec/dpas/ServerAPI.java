@@ -20,9 +20,9 @@ public interface ServerAPI extends Remote {
 
     Response register(PublicKey pubkey, Timestamp ts, byte[] signature) throws RemoteException;
 
-    Response post(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) throws RemoteException, IOException;
+    Response post(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) throws RemoteException;
 
-    Response postGeneral(PublicKey pubkey, char[] message, Announcement[] a, Timestamp ts, byte[] signature) throws RemoteException, IOException;
+    Response postGeneral(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) throws RemoteException;
 
     Response read(PublicKey pubkey, int number)
             throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, IOException, ClassNotFoundException;

@@ -59,24 +59,40 @@ public class ReadTest
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
 	assertTrue(response.getStatusCode().equals("User registered"));
 
+	//constructing Announcement
 	message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A1".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response2 = server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response2.getStatusCode().equals("Announcement posted"));
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	message.appendObject(null);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+	Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response2.getStatusCode().equals("Announcement posted"));
 
 
+	//constructing Announcement
 	message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A2".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response3 = server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response3.getStatusCode().equals("Announcement posted"));
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	message.appendObject(null);
+	signature = Crypto.sign(privkey, message.getByteArray());
+	a = new Announcement(pubkey, "A2".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response3.getStatusCode().equals("Announcement posted"));
 
   Response response4 = server.read(pubkey,1);
   assertTrue(response4.getStatusCode().equals("read successful"));
@@ -96,24 +112,40 @@ public class ReadTest
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
 	assertTrue(response.getStatusCode().equals("User registered"));
 
+	//constructing Announcement
 	message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A1".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response2 = server.post(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response2.getStatusCode().equals("Announcement posted"));
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	message.appendObject(null);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+	Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response2.getStatusCode().equals("Announcement posted"));
 
 
+	//constructing Announcement
 	message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A2".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response3 = server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response3.getStatusCode().equals("Announcement posted"));
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	message.appendObject(null);
+	signature = Crypto.sign(privkey, message.getByteArray());
+	a = new Announcement(pubkey, "A2".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response3.getStatusCode().equals("Announcement posted"));
 
   Response response4 = server.read(pubkey,0);
   assertTrue(response4.getStatusCode().equals("read successful"));
@@ -162,26 +194,40 @@ public class ReadTest
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
 	assertTrue(response.getStatusCode().equals("User registered"));
 
-  message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A1".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response2 = server.postGeneral(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response2.getStatusCode().equals("General announcement posted"));
-
-
+	//constructing Announcement
 	message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A2".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response3 = server.postGeneral(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response3.getStatusCode().equals("General announcement posted"));
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	message.appendObject(null);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+	Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
 
-	server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response2.getStatusCode().equals("Announcement posted"));
+
+
+	//constructing Announcement
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	message.appendObject(null);
+	signature = Crypto.sign(privkey, message.getByteArray());
+	a = new Announcement(pubkey, "A2".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response3.getStatusCode().equals("Announcement posted"));
 
   Response response4 = server.readGeneral(1);
   assertTrue(response4.getStatusCode().equals("read successful"));
@@ -201,26 +247,40 @@ public class ReadTest
         Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
 	assertTrue(response.getStatusCode().equals("User registered"));
 
-  message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A1".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response2 = server.postGeneral(pubkey, "A1".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response2.getStatusCode().equals("General announcement posted"));
-
-
+	//constructing Announcement
 	message = new Message();
-  message.appendObject(pubkey);
-  message.appendObject("A2".toCharArray());
-  message.appendObject(null);
-  ts = new Timestamp(System.currentTimeMillis());
-  message.appendObject(ts);
-  Response response3 = server.postGeneral(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
-  assertTrue(response3.getStatusCode().equals("General announcement posted"));
+	message.appendObject(pubkey);
+	message.appendObject("A1".toCharArray());
+	message.appendObject(null);
+	byte[] signature = Crypto.sign(privkey, message.getByteArray());
+	Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
 
-	server.post(pubkey, "A2".toCharArray(), null, ts, Crypto.sign(privkey, message.getByteArray()));
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response2 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response2.getStatusCode().equals("Announcement posted"));
+
+
+	//constructing Announcement
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject("A2".toCharArray());
+	message.appendObject(null);
+	signature = Crypto.sign(privkey, message.getByteArray());
+	a = new Announcement(pubkey, "A2".toCharArray(), null, signature);
+  	
+	message = new Message();
+	message.appendObject(pubkey);
+	message.appendObject(a);
+
+	ts = new Timestamp(System.currentTimeMillis());
+	message.appendObject(ts);
+	Response response3 = server.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+	assertTrue(response3.getStatusCode().equals("Announcement posted"));
 
   Response response4 = server.readGeneral(0);
   assertTrue(response4.getStatusCode().equals("read successful"));
