@@ -19,8 +19,13 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.Exception;
+
 import java.util.Arrays;
 import java.sql.Timestamp;
 import java.util.Hashtable;
@@ -113,6 +118,10 @@ public class Server implements ServerAPI{
 	return constructResponse("User was already registered");
 
       _announcementB.put(pubkey,new ArrayList<Announcement>());
+      try {saveToFile("board");}
+      catch (IOException e){
+        System.out.println(e.getMessage());
+      }
       return constructResponse("User registered");
     }
 
@@ -141,6 +150,10 @@ public class Server implements ServerAPI{
       }
 
         getUserAnnouncements(pubkey).add(new Announcement(pubkey,message,a));
+        try {saveToFile("board");}
+        catch (IOException e){
+          System.out.println(e.getMessage());
+        }
         return constructResponse("Announcement posted");
     }
 
@@ -165,6 +178,10 @@ public class Server implements ServerAPI{
         return constructResponse("No such user registered. needs to register before posting");
       }
         getGenAnnouncements().add(new Announcement(pubkey,message,a));
+        try {saveToFile("genboard");}
+        catch (IOException e){
+          System.out.println(e.getMessage());
+        }
         return constructResponse("General announcement posted");
     }
 
@@ -176,14 +193,36 @@ public class Server implements ServerAPI{
         return _generalB;
     }
 
+    public Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
+      return _announcementB;
+    }
+
     public Response read(PublicKey pubkey, int number)
             throws IndexOutOfBoundsException, IllegalArgumentException{
+        try{
+          loadFromFile("board");
+        }
+        catch(IOException e){
+          System.out.println(e.getMessage());
+        }
+        catch(ClassNotFoundException e){
+          System.out.println(e.getMessage());
+        }
         ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
         return readFrom(userAnn, number);
     }
 
     public Response readGeneral(int number)
             throws IndexOutOfBoundsException, IllegalArgumentException{
+        try{
+          loadFromFile("genboard");
+        }
+        catch(IOException e){
+          System.out.println(e.getMessage());
+        }
+        catch(ClassNotFoundException e){
+          System.out.println(e.getMessage());
+        }
         ArrayList<Announcement> genAnn = getGenAnnouncements();
         return readFrom(genAnn, number);
     }
@@ -196,6 +235,47 @@ public class Server implements ServerAPI{
         return number == 0 ? constructResponse("read successful",ann) : constructResponse("read successful",new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())));
 
 
+    }
+
+    public void saveToFile(String path) throws IOException{
+      try{
+        FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + ".txt");
+        ObjectOutputStream output = new ObjectOutputStream(fileOutput);
+        if(path.equals("board")){
+          output.writeObject(getAnnouncements());
+        }
+        else{
+          output.writeObject(getGenAnnouncements());
+        }
+
+        output.close();
+        fileOutput.close();
+      }
+      catch (IOException e){
+        System.out.println(e.getMessage());
+      }
+    }
+
+    public void loadFromFile(String path) throws IOException, ClassNotFoundException{
+      try{
+        FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
+        ObjectInputStream input = new ObjectInputStream(fileInput);
+        if(path.equals("board")){
+          _announcementB = (Hashtable<PublicKey, ArrayList<Announcement>>) input.readObject();
+        }
+        else{
+          _generalB = (ArrayList<Announcement>) input.readObject();
+        }
+
+        input.close();
+        fileInput.close();
+      }
+      catch (IOException e){
+        System.out.println(e.getMessage());
+      }
+      catch (ClassNotFoundException e){
+        System.out.println(e.getMessage());
+      }
     }
 
 
