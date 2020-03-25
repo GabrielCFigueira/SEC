@@ -1,10 +1,5 @@
 package sec.dpas;
 
-/**
- * Hello world!
- *
- */
-
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,6 +23,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 
+/**
+ * Hello world!
+ *
+ */
 public class Client
 {
     private PrivateKey _privKey;
@@ -58,7 +57,7 @@ public class Client
 
     public static void main(String[] args) {
         System.out.println("#####");
-        String host = null;//(args.length < 1) ? null : args[0];
+        String host = (args.length < 1) ? null : args[0];
         try{
             Client cli = new Client();
             Response rp = new Response("statusCode", new ArrayList<Announcement>(), new Timestamp(System.currentTimeMillis()), null);
@@ -79,19 +78,9 @@ public class Client
             System.out.println("#####");
 
             Response response = stub.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+            //verificar assinatura da response
 
             System.out.println("OUTPUT: " + response.getStatusCode());
-//            Server server = new Server();
-//            PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-//            PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
-//            Message message = new Message();
-//            Timestamp ts = new Timestamp(System.currentTimeMillis());
-//
-//            message.appendObject(pubkey);
-//            message.appendObject(ts);
-//
-//            Response response = server.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-//            assertTrue(response.getStatusCode().equals("User registered"));
         }
         catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
