@@ -15,6 +15,9 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import javax.sound.sampled.SourceDataLine;
+
+import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.KeyStoreException;
@@ -78,7 +81,14 @@ public class Client
             System.out.println("#####");
 
             Response response = stub.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-            //verificar assinatura da response
+
+            // verificacao da assinatura da response
+            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+            Message messageReceived = new Message();
+            messageReceived.appendObject(response.getStatusCode());
+            messageReceived.appendObject(response.getTimestamp());
+            
+            System.out.println(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()));
 
             System.out.println("OUTPUT: " + response.getStatusCode());
         }
