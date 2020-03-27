@@ -3,11 +3,14 @@ package sec.dpas;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.BufferedReader; 
+import java.io.InputStreamReader; 
 
 import java.rmi.Naming;
 import java.rmi.Remote;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.ConnectException;
 
 import java.sql.SQLOutput;
 import java.sql.Timestamp;
@@ -16,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 import javax.sound.sampled.SourceDataLine;
+
+import sec.dpas.exceptions.SigningException;
 
 import java.security.Key;
 import java.security.PrivateKey;
@@ -27,11 +32,11 @@ import java.security.cert.CertificateException;
 
 
 /**
- * Hello world!
+ * Client
  *
  */
-public class Client
-{
+public class Client {
+
     private PrivateKey _privKey;
     private PublicKey _pubkey;
     private final String _keystorePassword = "keystore";
@@ -56,41 +61,214 @@ public class Client
 
     public PublicKey getPublicKey() throws FileNotFoundException, IOException{ return _pubkey; }
 
+    public Message reCreateMessage() {
+        return null;
+    }
+
+    /**
+     * printOptions
+     *
+     */
+    public void printOptions() {
+        System.out.println("#=========================================#");
+        System.out.println("| Options:                                |");
+        System.out.println("| 1 - Register User (must register first) |");
+        System.out.println("| 2 - Post an Announcement                |");
+        System.out.println("| 3 - Post an Announcement to General     |");
+        System.out.println("| 4 - Read Announcements                  |");
+        System.out.println("| 5 - Read General Announcements          |");
+        System.out.println("| 6 - Exit Application                    |");
+        System.out.println("#=========================================#");
+    }
+
+    /**
+     * registerOption
+     *
+     */
+    public String registerOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+        PublicKey pubkey = this.getPublicKey();
+        PrivateKey privkey = this.getPrivateKey();
+        Message message = new Message();
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+
+        message.appendObject(pubkey);
+        message.appendObject(ts);
+
+        // call function from ServerAPI
+        Response response = stub.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+
+        // verificacao da assinatura da response
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+        Message messageReceived = new Message();
+
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getTimestamp());
+
+        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
+            return response.getStatusCode();
+        }
+        return "Signature verification failed";
+    }
+
+    /**
+     * postOption
+     *
+     */
+    public String postOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+        PublicKey pubkey = this.getPublicKey();
+        PrivateKey privkey = this.getPrivateKey();
+
+        // creating Announcement
+        Announcement a = this.createAnnouncement();
+
+        // creating Message
+        Message message = new Message();
+        message.appendObject(pubkey);
+        message.appendObject(a);
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        message.appendObject(ts);
+
+        // call post from ServerAPI
+        Response response = stub.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+
+        // response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getTimestamp());
+
+        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
+            return response.getStatusCode();
+        }
+        return "Signature verification failed";
+    }
+
+    /**
+     * postGeneralOption
+     *
+     */
+    public String postGeneralOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+        PublicKey pubkey = this.getPublicKey();
+        PrivateKey privkey = this.getPrivateKey();
+
+        // creating Announcement
+        Announcement a = this.createAnnouncement();
+
+        // creating Message
+        Message message = new Message();
+        message.appendObject(pubkey);
+        message.appendObject(a);
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        message.appendObject(ts);
+
+        // call post from ServerAPI
+        Response response = stub.postGeneral(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+
+        // response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getTimestamp());
+
+        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
+            return response.getStatusCode();
+        }
+        return "Signature verification failed";
+    }
+
+    /**
+     * readOption
+     *
+     */
+    public String readOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+        return "Wrong Signature!";
+    }
+
+    /**
+     * readGeneralOption
+     *
+     */
+    public String readGeneralOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+        return "Wrong Signature!";
+    }
+
+    /**
+     * createAnnouncement
+     *
+     */
+    public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
+        System.out.println("Write your Announcement:");
+        String msg = reader.readLine();
+        //
+        // pede referencias ao user, NULL sempre, por enquanto!
+        //
+
+        Message message = new Message();
+       	message.appendObject(this.getPublicKey());
+       	message.appendObject(msg.toCharArray());
+        message.appendObject(null); //refs
+
+        byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
+        
+	    Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature);
+
+        return a;
+    }
 
 
+    /**
+     * main
+     *
+     */
     public static void main(String[] args) {
-        System.out.println("#####");
         String host = (args.length < 1) ? null : args[0];
         try{
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
             Client cli = new Client();
-            Response rp = new Response("statusCode", new ArrayList<Announcement>(), new Timestamp(System.currentTimeMillis()), null);
-            System.out.println(rp.toString());
             ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
+            int option = 0;
+            boolean bk = false;
 
-
-            System.out.println("#####");
-
-            PublicKey pubkey = cli.getPublicKey();
-            PrivateKey privkey = cli.getPrivateKey();
-            Message message = new Message();
-            Timestamp ts = new Timestamp(System.currentTimeMillis());
-
-            message.appendObject(pubkey);
-            message.appendObject(ts);
-
-            System.out.println("#####");
-
-            Response response = stub.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-
-            // verificacao da assinatura da response
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-            Message messageReceived = new Message();
-            messageReceived.appendObject(response.getStatusCode());
-            messageReceived.appendObject(response.getTimestamp());
-            
-            System.out.println(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()));
-
-            System.out.println("OUTPUT: " + response.getStatusCode());
+            while(option != 6) {
+                cli.printOptions();
+                option = 0;
+                try {
+                    option = Integer.parseInt(reader.readLine()); 
+                } catch (Exception e) {
+                    System.out.println("Exception: " + e.toString());
+                    //bk = true;
+                }
+                switch (option) {
+                    case 1:
+                        System.out.println(cli.registerOption(stub));
+                        break;
+                    case 2:
+                        System.out.println(cli.postOption(stub));
+                        break;
+                    case 3:
+                        System.out.println(cli.postGeneralOption(stub));
+                        break;
+                    case 4:
+                        System.out.println(cli.readOption(stub));
+                        break;
+                    case 5:
+                        System.out.println(cli.readGeneralOption(stub));
+                        break;
+                    case 6:
+                        bk = true;
+                        break;
+                
+                    default:
+                        break;
+                }
+                if(bk) break;
+            }
+        } catch (ConnectException e) {
+            System.out.println("Do not forget to turn on the server :D");
+            return;
         }
         catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
