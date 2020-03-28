@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.lang.Exception;
 
 /**
- * TODO!
+ * ServerAPI
  *
  */
 public interface ServerAPI extends Remote {

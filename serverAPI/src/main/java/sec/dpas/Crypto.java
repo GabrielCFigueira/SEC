@@ -28,95 +28,95 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- * TODO!
+ * Crypto
  *
  */
 public class Crypto {
 
-    public static PrivateKey readPrivateKey(String keystore, String keyname, String keystorePassword, String keyPassword) throws KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
-        System.out.println("Reading key from file " + keystore + " ...");
-	KeyStore keyStore = KeyStore.getInstance("JKS");
-	keyStore.load(new FileInputStream(keystore), keystorePassword.toCharArray());
-        return (PrivateKey) keyStore.getKey(keyname, keyPassword.toCharArray());
-    }
-
-    public static PublicKey readPublicKey(String keypath) throws FileNotFoundException, IOException {
-        System.out.println("Reading key from file " + keypath + " ...");
-        FileInputStream fis = new FileInputStream(keypath);
-        byte[] encoded = new byte[fis.available()];
-        fis.read(encoded);
-        fis.close();
-
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
-	KeyFactory keyFac;
-	PublicKey pub = null;
-	try {
-		keyFac = KeyFactory.getInstance("RSA");
-        	pub = keyFac.generatePublic(spec);
-	} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-		System.err.println("Something really weird happened while reading the public key");
-		System.err.println(e.getMessage());
-		System.exit(1);
-	}
-        return pub;
-    }
-
-    public static byte[] sign(Key key, byte[] message) throws SigningException {
-
-	MessageDigest md = null;
-	Cipher cipher = null;
-	try {
-		md = MessageDigest.getInstance("SHA-256");
-		cipher = Cipher.getInstance("RSA");
-	} catch (NoSuchAlgorithmException e) {
-		System.err.println("Thanos snapped RSA or SHA-256 out of existance");
-		System.exit(1);
-	} catch (NoSuchPaddingException e) {
-		System.err.println("No padding was provided so God must be messing with the Universe");
-		System.exit(1);
+	public static PrivateKey readPrivateKey(String keystore, String keyname, String keystorePassword, String keyPassword) throws KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+		System.out.println("Reading key from file " + keystore + " ...");
+		KeyStore keyStore = KeyStore.getInstance("JKS");
+		keyStore.load(new FileInputStream(keystore), keystorePassword.toCharArray());
+		return (PrivateKey) keyStore.getKey(keyname, keyPassword.toCharArray());
 	}
 
-	md.update(message);
-	byte[] digest = md.digest();
-	byte[] signature = null;
+	public static PublicKey readPublicKey(String keypath) throws FileNotFoundException, IOException {
+		System.out.println("Reading key from file " + keypath + " ...");
+		FileInputStream fis = new FileInputStream(keypath);
+		byte[] encoded = new byte[fis.available()];
+		fis.read(encoded);
+		fis.close();
 
-
-	try {
-		cipher.init(Cipher.ENCRYPT_MODE, key);
-		signature = cipher.doFinal(digest);
-	} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
-		throw new SigningException(e.getMessage());
+		X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
+		KeyFactory keyFac;
+		PublicKey pub = null;
+		try {
+			keyFac = KeyFactory.getInstance("RSA");
+			pub = keyFac.generatePublic(spec);
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+			System.err.println("Something really weird happened while reading the public key");
+			System.err.println(e.getMessage());
+			System.exit(1);
+		}
+		return pub;
 	}
 
-	return signature;
+	public static byte[] sign(Key key, byte[] message) throws SigningException {
 
-    }
+		MessageDigest md = null;
+		Cipher cipher = null;
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+			cipher = Cipher.getInstance("RSA");
+		} catch (NoSuchAlgorithmException e) {
+			System.err.println("Thanos snapped RSA or SHA-256 out of existance");
+			System.exit(1);
+		} catch (NoSuchPaddingException e) {
+			System.err.println("No padding was provided so God must be messing with the Universe");
+			System.exit(1);
+		}
 
-    public static boolean verifySignature(Key key, byte[] message, byte[] signature) {
+		md.update(message);
+		byte[] digest = md.digest();
+		byte[] signature = null;
 
-	MessageDigest md = null;
-	Cipher cipher = null;
-	try {
-		md = MessageDigest.getInstance("SHA-256");
-		cipher = Cipher.getInstance("RSA");
-	} catch (NoSuchAlgorithmException e) {
-		System.err.println("Thanos snapped RSA or SHA-256 out of existance");
-		System.exit(1);
-	} catch (NoSuchPaddingException e) {
-		System.err.println("No padding was provided so God must be messing with the Universe");
-		System.exit(1);
+
+		try {
+			cipher.init(Cipher.ENCRYPT_MODE, key);
+			signature = cipher.doFinal(digest);
+		} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
+			throw new SigningException(e.getMessage());
+		}
+
+		return signature;
+
 	}
 
-	byte[] digest = md.digest(message);
-	boolean res = false;
-	try {
-		cipher.init(Cipher.DECRYPT_MODE, key);
-		res = Arrays.equals(digest, cipher.doFinal(signature));
-	} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
-		System.err.println(e.getMessage() + " when verifying the signature");
-		return false;
-	}
+	public static boolean verifySignature(Key key, byte[] message, byte[] signature) {
 
-	return res;
-    }
+		MessageDigest md = null;
+		Cipher cipher = null;
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+			cipher = Cipher.getInstance("RSA");
+		} catch (NoSuchAlgorithmException e) {
+			System.err.println("Thanos snapped RSA or SHA-256 out of existance");
+			System.exit(1);
+		} catch (NoSuchPaddingException e) {
+			System.err.println("No padding was provided so God must be messing with the Universe");
+			System.exit(1);
+		}
+
+		byte[] digest = md.digest(message);
+		boolean res = false;
+		try {
+			cipher.init(Cipher.DECRYPT_MODE, key);
+			res = Arrays.equals(digest, cipher.doFinal(signature));
+		} catch (BadPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
+			System.err.println(e.getMessage() + " when verifying the signature");
+			return false;
+		}
+
+		return res;
+	}
 }

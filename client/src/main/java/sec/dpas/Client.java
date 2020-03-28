@@ -1,6 +1,5 @@
 package sec.dpas;
 
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.BufferedReader; 
@@ -29,7 +28,6 @@ import java.security.KeyStoreException;
 import java.security.UnrecoverableKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-
 
 /**
  * Client
@@ -79,6 +77,15 @@ public class Client {
         System.out.println("| 5 - Read General Announcements          |");
         System.out.println("| 6 - Exit Application                    |");
         System.out.println("#=========================================#");
+    }
+
+    /**
+     * printAnnouncements
+     *
+     */
+    public void printAnnouncements(ArrayList<Announcement> anns) {
+        System.out.println("Announcements");
+        System.out.println(anns);
     }
 
     /**
@@ -182,16 +189,63 @@ public class Client {
      * readOption
      *
      */
-    public String readOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
-        return "Wrong Signature!";
+    public String readOption(ServerAPI stub, int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException, ClassNotFoundException {
+        PublicKey pubkey = this.getPublicKey();
+        PrivateKey privkey = this.getPrivateKey();
+
+        Message message = new Message();
+        message.appendObject(pubkey);
+        message.appendObject(number);
+        message.appendObject(pubkeyToRead);
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        message.appendObject(ts);
+
+        Response response = stub.read(pubkeyToRead, number, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+
+        // response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getAnnouncements());
+
+        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
+            this.printAnnouncements(response.getAnnouncements());
+            return response.getStatusCode();
+        }
+        return "Signature verification failed";
     }
 
     /**
      * readGeneralOption
      *
      */
-    public String readGeneralOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
-        return "Wrong Signature!";
+    public String readGeneralOption(ServerAPI stub, int number) throws IOException, FileNotFoundException, SigningException, ClassNotFoundException {
+        PublicKey pubkey = this.getPublicKey();
+        PrivateKey privkey = this.getPrivateKey();
+
+        Message message = new Message();
+        message.appendObject(number);
+        message.appendObject(pubkey);
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        message.appendObject(ts);
+
+        Response response = stub.readGeneral(number, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+
+        // response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getAnnouncements());
+
+        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
+            this.printAnnouncements(response.getAnnouncements());
+            return response.getStatusCode();
+        }
+        return "Signature verification failed";
     }
 
     /**
@@ -252,10 +306,16 @@ public class Client {
                         System.out.println(cli.postGeneralOption(stub));
                         break;
                     case 4:
-                        System.out.println(cli.readOption(stub));
+                        System.out.println("Path of the Pubic key to read from: (for test -> test.pub)");
+                        PublicKey pubkeyToRead = Crypto.readPublicKey("../resources/test.pub");
+                        System.out.println("Number of Announcements to read: ");
+                        int number = Integer.parseInt(reader.readLine());
+                        System.out.println(cli.readOption(stub, number, pubkeyToRead));
                         break;
                     case 5:
-                        System.out.println(cli.readGeneralOption(stub));
+                        System.out.println("Number of Announcements to read?");
+                        int number2 = Integer.parseInt(reader.readLine());
+                        System.out.println(cli.readGeneralOption(stub, number2));
                         break;
                     case 6:
                         bk = true;
