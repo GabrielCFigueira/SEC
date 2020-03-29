@@ -40,7 +40,7 @@ public class Client {
     private final String _keystorePassword = "keystore";
     private int annId = 0;
 
-    private Client() throws FileNotFoundException, IOException {
+    public Client() throws FileNotFoundException, IOException {
         try {
             _privKey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
         } catch(KeyStoreException e) {
@@ -56,7 +56,7 @@ public class Client {
         _pubkey = Crypto.readPublicKey("../resources/test.pub");
     }
 
-    private PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
+    protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
 
     public PublicKey getPublicKey() throws FileNotFoundException, IOException{ return _pubkey; }
 
