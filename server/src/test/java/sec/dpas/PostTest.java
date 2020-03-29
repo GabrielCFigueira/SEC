@@ -48,7 +48,7 @@ public class PostTest
         message.appendObject(pubkey);
         message.appendObject("A1".toCharArray());
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, 0);
 
         message = new Message();
         message.appendObject(pubkey);
@@ -80,7 +80,7 @@ public class PostTest
         message.appendObject("A1".toCharArray());
         message.appendObject(null);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pub2, "A1".toCharArray(), null, signature);
+        Announcement a = new Announcement(pub2, "A1".toCharArray(), null, signature, 0);
 
         message = new Message();
         message.appendObject(pub2);
@@ -105,7 +105,7 @@ public class PostTest
         message.appendObject("A1".toCharArray());
         message.appendObject(null);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, 0);
 
         message = new Message();
         message.appendObject(pubkey);

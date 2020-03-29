@@ -199,6 +199,25 @@ public class Server implements ServerAPI{
         return _generalB;
     }
 
+    public  ArrayList<Announcement> getAllUserAnnouncements(PublicKey pubkey){
+      ArrayList<Announcement> all = getUserAnnouncements(pubkey);
+      for (Announcement ann : _generalB){
+        if(ann.getKey().equals(pubkey)){
+          all.add(ann);
+        }
+      }
+      return all;
+    }
+
+    public Announcement getUserAnnouncement(PublicKey pubkey, int id){ //falta verificar que pode nao haver anns com esta pubkey
+      for (Announcement ann : getAllUserAnnouncements(pubkey)){
+        if(ann.getId() == id){
+          return ann;
+        }
+      }
+      return null;
+    }
+
     public Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
         return _announcementB;
     }

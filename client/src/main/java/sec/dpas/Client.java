@@ -2,8 +2,8 @@ package sec.dpas;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.BufferedReader; 
-import java.io.InputStreamReader; 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import java.rmi.Naming;
 import java.rmi.Remote;
@@ -38,6 +38,7 @@ public class Client {
     private PrivateKey _privKey;
     private PublicKey _pubkey;
     private final String _keystorePassword = "keystore";
+    private int annId = 0;
 
     private Client() throws FileNotFoundException, IOException {
         try {
@@ -84,8 +85,14 @@ public class Client {
      *
      */
     public void printAnnouncements(ArrayList<Announcement> anns) {
-        System.out.println("Announcements");
-        System.out.println(anns);
+        System.out.println("Announcements:");
+        for (Announcement ann: anns){
+          System.out.println("----------------------------");
+          System.out.println("Announcement: " + ann.getId());
+          System.out.println("Message: " + ann.getMessage());
+          System.out.println("References: " + ann.getReferences());
+          System.out.println("----------------------------");
+        }
     }
 
     /**
@@ -253,12 +260,22 @@ public class Client {
      *
      */
     public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
-        System.out.println("Write your Announcement:");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Write your Announcement (up to 255 characters):");
         String msg = reader.readLine();
+        while(msg.length() > 255){
+          System.out.println("This announcement has more than 255 characters. Please write up to 255 characters:");
+          msg = reader.readLine();
+        }
         //
         // pede referencias ao user, NULL sempre, por enquanto!
         //
+        System.out.println("Write your references seperated by a comma in this format: pubkey:id");
+        String[] splitComma = reader.readLine().split(",");
+        Announcement[] refs = null;
+        for (String ann : splitComma){
+          //refs.add(ann.split[]);
+        }
 
         Message message = new Message();
        	message.appendObject(this.getPublicKey());
@@ -266,8 +283,11 @@ public class Client {
         message.appendObject(null); //refs
 
         byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
-        
-	    Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature);
+
+
+
+	    Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature, annId);
+      annId++;
 
         return a;
     }
@@ -280,7 +300,7 @@ public class Client {
     public static void main(String[] args) {
         String host = (args.length < 1) ? null : args[0];
         try{
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             Client cli = new Client();
             ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
             int option = 0;
@@ -290,7 +310,7 @@ public class Client {
                 cli.printOptions();
                 option = 0;
                 try {
-                    option = Integer.parseInt(reader.readLine()); 
+                    option = Integer.parseInt(reader.readLine());
                 } catch (Exception e) {
                     System.out.println("Exception: " + e.toString());
                     //bk = true;
@@ -313,14 +333,14 @@ public class Client {
                         System.out.println(cli.readOption(stub, number, pubkeyToRead));
                         break;
                     case 5:
-                        System.out.println("Number of Announcements to read?");
+                        System.out.println("Number of Announcements to read: ");
                         int number2 = Integer.parseInt(reader.readLine());
                         System.out.println(cli.readGeneralOption(stub, number2));
                         break;
                     case 6:
                         bk = true;
                         break;
-                
+
                     default:
                         break;
                 }

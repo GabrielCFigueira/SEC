@@ -73,7 +73,7 @@ public class ReadGeneralTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, 0);
 
 		message = new Message();
 		message.appendObject(pubkey);
@@ -91,7 +91,7 @@ public class ReadGeneralTest {
 		message.appendObject("A2".toCharArray());
 		message.appendObject(null);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, 1);
 
 		message = new Message();
 		message.appendObject(pubkey);
@@ -132,7 +132,7 @@ public class ReadGeneralTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, 0);
 
 		message = new Message();
 		message.appendObject(pubkey);
@@ -150,7 +150,7 @@ public class ReadGeneralTest {
 		message.appendObject("A2".toCharArray());
 		message.appendObject(null);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, 1);
 
 		message = new Message();
 		message.appendObject(pubkey);

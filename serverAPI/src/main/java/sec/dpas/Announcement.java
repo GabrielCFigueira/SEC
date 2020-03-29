@@ -11,14 +11,14 @@ import java.io.Serializable;
 public class Announcement implements Serializable{
 
   private Key _pubkey;
-  //private int _id;
+  private int _id;
   private char[] _message;
   private Announcement[] _references;
   private byte[] _signature;
 
-  public Announcement(Key pubkey, char[] msg, Announcement[] refs, byte[] signature){
+  public Announcement(Key pubkey, char[] msg, Announcement[] refs, byte[] signature, int id){
     _pubkey = pubkey;
-    //_id = 
+    _id = id;
     _message = msg;
     _references = refs;
     _signature = signature;
@@ -32,7 +32,6 @@ public class Announcement implements Serializable{
 
   public byte[] getSignature() { return _signature; }
 
-  /*public void addReference(Announcement a){
-    _references.put(a);
-  }*/
+  public int getId() { return _id; }
+
 }
