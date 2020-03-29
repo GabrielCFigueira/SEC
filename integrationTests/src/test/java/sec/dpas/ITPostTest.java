@@ -26,17 +26,18 @@ import java.lang.Exception;
 /**
  * Client/Server Test
  */
-public class ITClientServerTest {
+public class ITPostTest {
+    
+    static Registry registry;
 
     @Before
     public void init() {
+        int registryPort = 1099;
         try {
             Server server = new Server();
             ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(server, 0);
 
-            int registryPort = 1099;
-
-            Registry registry = LocateRegistry.createRegistry(registryPort);
+            registry = LocateRegistry.createRegistry(registryPort);
             registry.bind("ServerAPI", stub);
         } catch (Exception e) {
             System.err.println("@Before Integration Test exception: " + e.toString());
@@ -46,11 +47,17 @@ public class ITClientServerTest {
 
     @After
     public void cleanup() {
-
+        try {
+            registry.unbind("ServerAPI");
+            UnicastRemoteObject.unexportObject(registry, true);
+        } catch (Exception e) {
+            System.err.println("@After Integration Test exception: " + e.toString());
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void ITregisterTest() {
+    public void ITPostOneClient() {
         try {
             // init Client and ServerAPI stub
             Client client = new Client();
@@ -83,6 +90,30 @@ public class ITClientServerTest {
             System.err.println("@Test Integration Test exception: " + e.toString());
             e.printStackTrace();
         }
+    }
 
+    @Test
+    public void ITPostTwo() {
+        
+    }
+
+    @Test
+    public void ITPostOneDiffClient() {
+        
+    }
+
+    @Test
+    public void ITPostTwoDiffClient() {
+        
+    }
+
+    @Test
+    public void ITPostNotRegistered() {
+        
+    }
+
+    @Test
+    public void ITPostWrongXXXXXXX() {
+        
     }
 }
