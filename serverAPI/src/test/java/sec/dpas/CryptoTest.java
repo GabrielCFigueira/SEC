@@ -129,4 +129,10 @@ public class CryptoTest
 		key = Crypto.readPublicKey("../resources/test1.pub");
 		assertFalse(Crypto.verifySignature(key, plaintext.getBytes(), signature));
 	}
+
+	@Test public void testGetNonce() {
+		long nonce1 = Crypto.generateNonce();
+		long nonce2 = Crypto.generateNonce();
+		assertFalse(nonce1 == nonce2);
+	}
 }

@@ -9,6 +9,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.KeyStore;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
@@ -118,5 +119,12 @@ public class Crypto {
 		}
 
 		return res;
+	}
+
+	public static long generateNonce() {
+		SecureRandom random = new SecureRandom();
+		if(random == null)
+			System.err.println("fodass");
+		return random.nextLong();
 	}
 }

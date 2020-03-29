@@ -12,7 +12,6 @@ import java.rmi.registry.Registry;
 import java.rmi.ConnectException;
 
 import java.sql.SQLOutput;
-import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -103,25 +102,27 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
         Message message = new Message();
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-
+	long clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
-        message.appendObject(ts);
+        message.appendObject(clientNonce);
 
         // call function from ServerAPI
-        Response response = stub.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+
 
         // verificacao da assinatura da response
         PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
         Message messageReceived = new Message();
 
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getClientNonce());
 
-        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
-            return response.getStatusCode();
-        }
-        return "Signature verification failed";
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+       		return "Signature verification failed";
+	else if(clientNonce != response.getClientNonce())
+		return "Server returned invalid nonce: possible replay attack";
+	else
+	        return response.getStatusCode();
     }
 
     /**
@@ -132,30 +133,51 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-        // creating Announcement
+	//requesting nonce
+	Message message = new Message();
+	message.appendObject(pubkey);
+	long clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+	//response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+	Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getClientNonce());
+        messageReceived.appendObject(response.getServerNonce());
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else if(response.getStatusCode() != "Nonce generated")
+		return response.getStatusCode();
+        long serverNonce = response.getServerNonce();
+	
+	// creating Announcement
         Announcement a = this.createAnnouncement();
 
         // creating Message
-        Message message = new Message();
+        message = new Message();
         message.appendObject(pubkey);
         message.appendObject(a);
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        message.appendObject(ts);
+        clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	message.appendObject(serverNonce);
 
         // call post from ServerAPI
-        Response response = stub.post(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+        response = stub.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 
         // response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-
-        Message messageReceived = new Message();
+        messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getClientNonce());
 
-        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
-            return response.getStatusCode();
-        }
-        return "Signature verification failed";
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else
+		return response.getStatusCode();
     }
 
     /**
@@ -166,30 +188,51 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-        // creating Announcement
+	//requesting nonce
+	Message message = new Message();
+	message.appendObject(pubkey);
+	long clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+	//response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+	Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getClientNonce());
+        messageReceived.appendObject(response.getServerNonce());
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else if(response.getStatusCode() != "Nonce generated")
+		return response.getStatusCode();
+        long serverNonce = response.getServerNonce();
+        
+	// creating Announcement
         Announcement a = this.createAnnouncement();
 
         // creating Message
-        Message message = new Message();
+        message = new Message();
         message.appendObject(pubkey);
         message.appendObject(a);
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        message.appendObject(ts);
+        clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	message.appendObject(serverNonce);
 
         // call post from ServerAPI
-        Response response = stub.postGeneral(pubkey, a, ts, Crypto.sign(privkey, message.getByteArray()));
+        response = stub.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 
         // response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-
-        Message messageReceived = new Message();
+        messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getClientNonce());
 
-        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
-            return response.getStatusCode();
-        }
-        return "Signature verification failed";
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else
+		return response.getStatusCode();
     }
 
     /**
@@ -200,28 +243,49 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-        Message message = new Message();
+	//requesting nonce
+	Message message = new Message();
+	message.appendObject(pubkey);
+	long clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+	//response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+	Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getClientNonce());
+        messageReceived.appendObject(response.getServerNonce());
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else if(response.getStatusCode() != "Nonce generated")
+		return response.getStatusCode();
+        long serverNonce = response.getServerNonce();
+        
+	message = new Message();
         message.appendObject(pubkey);
         message.appendObject(number);
         message.appendObject(pubkeyToRead);
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        message.appendObject(ts);
-
-        Response response = stub.read(pubkeyToRead, number, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	message.appendObject(serverNonce);
+        response = stub.read(pubkeyToRead, number, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 
         // response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-
-        Message messageReceived = new Message();
+        messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getAnnouncements());
 
-        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
-            this.printAnnouncements(response.getAnnouncements());
-            return response.getStatusCode();
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else {
+            	this.printAnnouncements(response.getAnnouncements());
+		return response.getStatusCode();
         }
-        return "Signature verification failed";
     }
 
     /**
@@ -232,27 +296,49 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-        Message message = new Message();
+	//requesting nonce
+	Message message = new Message();
+	message.appendObject(pubkey);
+	long clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+	//response signature verification
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+	Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getClientNonce());
+        messageReceived.appendObject(response.getServerNonce());
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else if(response.getStatusCode() != "Nonce generated")
+		return response.getStatusCode();
+        long serverNonce = response.getServerNonce();
+        
+	message = new Message();
         message.appendObject(number);
         message.appendObject(pubkey);
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        message.appendObject(ts);
+        clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	message.appendObject(serverNonce);
 
-        Response response = stub.readGeneral(number, pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
+        response = stub.readGeneral(number, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 
         // response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-
-        Message messageReceived = new Message();
+        messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getTimestamp());
+        messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getAnnouncements());
 
-        if(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature())) {
-            this.printAnnouncements(response.getAnnouncements());
-            return response.getStatusCode();
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+		return "Signature verification failed";
+	else if(response.getClientNonce() != clientNonce)
+		return "Server returned invalid nonce: possible replay attack";
+	else {
+            	this.printAnnouncements(response.getAnnouncements());
+            	return response.getStatusCode();
         }
-        return "Signature verification failed";
     }
 
     /**

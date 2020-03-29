@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.lang.Exception;
 
 import java.util.Arrays;
-import java.sql.Timestamp;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,21 +40,23 @@ import sec.dpas.exceptions.SigningException;
 public class Server implements ServerAPI{
 
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
+    private Hashtable<PublicKey, Long> _nonceTable;
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
 
     public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+        _nonceTable = new Hashtable<PublicKey, Long>();
         _generalB = new ArrayList<Announcement>();
         _serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
     }
 
-    private  Response constructResponse(String statusCode) {
+    private  Response constructResponse(String statusCode, long clientNonce, long serverNonce) {
         Message message = new Message();
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
         try {
             message.appendObject(statusCode);
-            message.appendObject(currentTs);
+            message.appendObject(clientNonce);
+	    message.appendObject(serverNonce);
         } catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
@@ -69,16 +70,36 @@ public class Server implements ServerAPI{
             System.err.println(e.getMessage());
             System.exit(1);
         }
-        return new Response(statusCode, null, currentTs, serverSignature);
+        return new Response(statusCode, clientNonce, serverNonce, serverSignature);
     }
 
-    private Response constructResponse(String statusCode, ArrayList<Announcement> an) {
+    private  Response constructResponse(String statusCode, long clientNonce) {
         Message message = new Message();
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
+        try {
+            message.appendObject(statusCode);
+            message.appendObject(clientNonce);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        byte[] serverSignature = null;
+        try {
+            serverSignature = Crypto.sign(_serverKey, message.getByteArray());
+        } catch (SigningException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        return new Response(statusCode, null, clientNonce, serverSignature);
+    }
+
+    private Response constructResponse(String statusCode, ArrayList<Announcement> an, long clientNonce) {
+        Message message = new Message();
 
         try {
             message.appendObject(statusCode);
-            message.appendObject(currentTs);
+            message.appendObject(clientNonce);
             message.appendObject(an);
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -93,98 +114,121 @@ public class Server implements ServerAPI{
             System.err.println(e.getMessage());
             System.exit(1);
         }
-        return new Response(statusCode, an, currentTs, serverSignature);
+        return new Response(statusCode, an, clientNonce, serverSignature);
     }
 
-    public Response register(PublicKey pubkey, Timestamp ts, byte[] signature) {
+    public Response getNonce(PublicKey pubkey, long clientNonce, byte[] signature) {
 
         //verify signature
         try {
             Message message = new Message();
             message.appendObject(pubkey);
-            message.appendObject(ts);
+            message.appendObject(clientNonce);
             if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
+                return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
-            return constructResponse(e.getMessage());
+            return constructResponse(e.getMessage(), clientNonce);
         }
 
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
+        if(!hasPublicKey(pubkey)){
+            return constructResponse("No such user registered", clientNonce);
+        }
+	
+	long serverNonce = Crypto.generateNonce();
+	_nonceTable.put(pubkey, serverNonce);
+	return constructResponse("Nonce generated", clientNonce, serverNonce);
+    }
+
+
+    public Response register(PublicKey pubkey, long clientNonce, byte[] signature) {
+
+        //verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(clientNonce);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
 
         if(_announcementB.containsKey(pubkey))
-            return constructResponse("User was already registered");
+            return constructResponse("User was already registered", clientNonce);
 
         _announcementB.put(pubkey,new ArrayList<Announcement>());
+	_nonceTable.put(pubkey, (long) 0);
+
         try {saveToFile("board");}
         catch (IOException e){
             System.out.println(e.getMessage());
         }
-        return constructResponse("User registered");
+        return constructResponse("User registered", clientNonce);
     }
 
-    public Response post(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature) {
+    public Response post(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) {
 
         //verify signature
         try {
             Message message = new Message();
             message.appendObject(pubkey);
             message.appendObject(a);
-            message.appendObject(ts);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
             if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
+                return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
-            return constructResponse(e.getMessage());
+            return constructResponse(e.getMessage(), clientNonce);
         }
-
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
-
 
         if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered. needs to register before posting");
+            return constructResponse("No such user registered", clientNonce);
         }
 
-        getUserAnnouncements(pubkey).add(a);
+	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(pubkey, (long) 0);
+
+	getUserAnnouncements(pubkey).add(a);
         try {saveToFile("board");}
         catch (IOException e){
             System.out.println(e.getMessage());
         }
-        return constructResponse("Announcement posted");
+        return constructResponse("Announcement posted", clientNonce);
     }
 
-    public Response postGeneral(PublicKey pubkey, Announcement a, Timestamp ts, byte[] signature){
+    public Response postGeneral(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature){
 
         try {
             Message message = new Message();
             message.appendObject(pubkey);
             message.appendObject(a);
-            message.appendObject(ts);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
             if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
+                return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
-            return constructResponse(e.getMessage());
+            return constructResponse(e.getMessage(), clientNonce);
         }
-
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
         if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered. needs to register before posting");
+            return constructResponse("No such user registered", clientNonce);
         }
 
-        getGenAnnouncements().add(a);
+	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(pubkey, (long) 0);
+        
+	getGenAnnouncements().add(a);
         try {saveToFile("genboard");}
         catch (IOException e){
             System.out.println(e.getMessage());
         }
-        return constructResponse("General announcement posted");
+        return constructResponse("General announcement posted", clientNonce);
     }
 
     public boolean hasPublicKey(PublicKey key) {
@@ -222,7 +266,7 @@ public class Server implements ServerAPI{
         return _announcementB;
     }
 
-    public Response read(PublicKey pubkey, int number, PublicKey senderKey, Timestamp ts, byte[] signature)
+    public Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
             throws IndexOutOfBoundsException, IllegalArgumentException{
 
         //verify signature
@@ -231,23 +275,24 @@ public class Server implements ServerAPI{
             message.appendObject(pubkey);
             message.appendObject(number);
             message.appendObject(senderKey);
-            message.appendObject(ts);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
             if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
+                return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
-            return constructResponse(e.getMessage());
+            return constructResponse(e.getMessage(), clientNonce);
         }
-
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
 
         if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
-            return constructResponse("No such user registered. needs to register before posting");
+            return constructResponse("No such user registered", clientNonce);
         }
 
-        try{
+	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(senderKey, (long) 0);
+        
+	try{
             loadFromFile("board");
         }
         catch(IOException e){
@@ -257,10 +302,10 @@ public class Server implements ServerAPI{
             System.out.println(e.getMessage());
         }
         ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
-        return readFrom(userAnn, number);
+        return readFrom(userAnn, number, clientNonce);
     }
 
-    public Response readGeneral(int number, PublicKey senderKey, Timestamp ts, byte[] signature)
+    public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
             throws IndexOutOfBoundsException, IllegalArgumentException{
 
         //verify signature
@@ -268,24 +313,24 @@ public class Server implements ServerAPI{
             Message message = new Message();
             message.appendObject(number);
             message.appendObject(senderKey);
-            message.appendObject(ts);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
             if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed");
+                return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
-            return constructResponse(e.getMessage());
+            return constructResponse(e.getMessage(), clientNonce);
         }
-
-        Timestamp currentTs = new Timestamp(System.currentTimeMillis());
-        if(Math.abs(ts.getTime() - currentTs.getTime()) > 5000)
-            return constructResponse("Timestamp differs more than " + (ts.getTime() - currentTs.getTime()) + " milliseconds than the current server time");
-
 
         if(!hasPublicKey(senderKey)){
-            return constructResponse("No such user registered. needs to register before posting");
+            return constructResponse("No such user registered", clientNonce);
         }
 
-        try{
+	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(senderKey, (long) 0);
+        
+	try{
             loadFromFile("genboard");
         }
         catch(IOException e){
@@ -295,15 +340,15 @@ public class Server implements ServerAPI{
             System.out.println(e.getMessage());
         }
         ArrayList<Announcement> genAnn = getGenAnnouncements();
-        return readFrom(genAnn, number);
+        return readFrom(genAnn, number, clientNonce);
     }
 
-    public Response readFrom(ArrayList<Announcement> ann, int number)
+    public Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce)
             throws IndexOutOfBoundsException, IllegalArgumentException {
         if (number < 0) {
-            return constructResponse("Tried to read with a negative number.");
+            return constructResponse("Tried to read with a negative number.", clientNonce);
         }
-        return number == 0 ? constructResponse("read successful", ann) : constructResponse("read successful", new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())));
+        return number == 0 ? constructResponse("read successful", ann, clientNonce) : constructResponse("read successful", new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())), clientNonce);
     }
 
     public void saveToFile(String path) throws IOException{
