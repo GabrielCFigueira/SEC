@@ -24,24 +24,37 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
+
 import java.lang.Exception;
 
 /**
- * Client/Server Test
+ * Client/Server Test: Read General
+ * 
+ * ITReadGeneralOne
+ * ITReadGeneralTwo
+ * ITReadGeneralOneDiffClient
+ * ITReadGeneralTwoDiffClient
+ * ITReadGeneralNegativeNumber
+ * ITReadGeneralAll
+ * ITReadGeneralInvalidNonce
  */
 public class ITReadGeneralTest {
 
     static Registry registry;
+    static ServerAPI stub;
 
     @Before
-    public void init() throws IOException, RemoteException, KeyStoreException, AlreadyBoundException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+    public void init() throws IOException, RemoteException, KeyStoreException, AlreadyBoundException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, NotBoundException {
         int registryPort = 1099;
 
         Server server = new Server();
-        ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(server, 0);
+        stub = (ServerAPI) UnicastRemoteObject.exportObject(server, 0);
 
         registry = LocateRegistry.createRegistry(registryPort);
         registry.bind("ServerAPI", stub);
+
+        stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
     }
 
     @After
@@ -51,43 +64,491 @@ public class ITReadGeneralTest {
     }
 
     @Test
-    public void ITReadGeneral() {
-/*         try {
-            // init Client and ServerAPI stub
-            Client client = new Client();
-            ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
+    public void ITReadGeneralOne() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
 
-            // get Keys
-            PublicKey pubkey = client.getPublicKey();
-            PrivateKey privkey = client.getPrivateKey();
+        this.register(pubkey, privkey, stub);
 
-            // Create Message, for call to the ServerAPI
-            Message message = new Message();
-            message.appendObject(pubkey);
-            Timestamp ts = new Timestamp(System.currentTimeMillis());
-            message.appendObject(ts);
-    
-            // Call function from ServerAPI
-            Response response = stub.register(pubkey, ts, Crypto.sign(privkey, message.getByteArray()));
-    
-            // Response signature verification
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        anns.add(ann);
 
-            Message messageReceived = new Message();
-            messageReceived.appendObject(response.getStatusCode());
-            messageReceived.appendObject(response.getTimestamp());
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-            assertEquals(Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()), true);
-            assertEquals(response.getStatusCode(), "User registered");
-            assertEquals(response.getAnnouncements(), null);
-        } catch (Exception e) {
-            System.err.println("@Test Integration Test exception: " + e.toString());
-            e.printStackTrace();
-        } */
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(1);
+		messageRead.appendObject(pubkey);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        Response responseRead = stub.readGeneral(1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
     }
 
     @Test
-    public void ITReadGeneral2() {
+    public void ITReadGeneralTwo() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        anns.add(ann);
+        ann = this.postGeneral(pubkey, privkey, stub, "A1", null, 1);
+        anns.add(ann);
+
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
         
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(2);
+		messageRead.appendObject(pubkey);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        Response responseRead = stub.readGeneral(2, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+    }
+
+    @Test
+    public void ITReadGeneralOneDiffClient() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        Client client2 = new Client("test1");
+        PublicKey pubkey2 = client2.getPublicKey();
+        PrivateKey privkey2 = client2.getPrivateKey();
+
+        this.register(pubkey2, privkey2, stub);
+
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        anns.add(ann);
+        ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, 1);
+        anns2.add(ann);
+
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(1);
+		messageRead.appendObject(pubkey);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        Response responseRead = stub.readGeneral(1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+
+
+        // get server nonce
+        messageServerNonce = new Message();
+        clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey2);
+        messageServerNonce.appendObject(clientNonce);
+        responseNonce = stub.getNonce(pubkey2, clientNonce, Crypto.sign(privkey2, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        messageRead = new Message();
+        messageRead.appendObject(1);
+        messageRead.appendObject(pubkey2);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        responseRead = stub.readGeneral(1, pubkey2, clientNonce, serverNonce, Crypto.sign(privkey2, messageRead.getByteArray()));
+
+        // VERIFICATION
+        message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+    }
+
+    @Test
+    public void ITReadGeneralTwoDiffClient() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        Client client2 = new Client("test1");
+        PublicKey pubkey2 = client2.getPublicKey();
+        PrivateKey privkey2 = client2.getPrivateKey();
+
+        this.register(pubkey2, privkey2, stub);
+
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        anns.add(ann);
+        ann = this.postGeneral(pubkey, privkey, stub, "A1", null, 1);
+        anns.add(ann);
+        ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, 2);
+        anns2.add(ann);
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B1", null, 3);
+        anns2.add(ann);
+
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(2);
+		messageRead.appendObject(pubkey);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        Response responseRead = stub.readGeneral(2, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+
+
+        // get server nonce
+        messageServerNonce = new Message();
+        clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey2);
+        messageServerNonce.appendObject(clientNonce);
+        responseNonce = stub.getNonce(pubkey2, clientNonce, Crypto.sign(privkey2, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        messageRead = new Message();
+        messageRead.appendObject(2);
+        messageRead.appendObject(pubkey2);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        responseRead = stub.readGeneral(2, pubkey2, clientNonce, serverNonce, Crypto.sign(privkey2, messageRead.getByteArray()));
+
+        // VERIFICATION
+        message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+    }
+
+    @Test
+    public void ITReadGeneralNegativeNumber() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        anns.add(ann);
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(-1);
+		messageRead.appendObject(pubkey);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        Response responseRead = stub.readGeneral(-1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("Tried to read with a negative number.", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+    }
+
+    @Test
+    public void ITReadGeneralAll() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        anns.add(ann);
+        ann = this.postGeneral(pubkey, privkey, stub, "A1", null, 1);
+        anns.add(ann);
+
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(0);
+		messageRead.appendObject(pubkey);
+        clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject(serverNonce);
+
+        Response responseRead = stub.readGeneral(0, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+        message.appendObject(responseRead.getAnnouncements());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("read successful", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+    }
+
+    @Test
+    public void ITInvalidNonce() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+        anns.add(ann);
+
+        // get server nonce
+
+
+        // create message for read call
+        Message messageRead = new Message();
+        messageRead.appendObject(1);
+		messageRead.appendObject(pubkey);
+        long clientNonce = Crypto.generateNonce();
+        messageRead.appendObject(clientNonce);
+        messageRead.appendObject((long) 1);
+
+        Response responseRead = stub.readGeneral(1, pubkey, clientNonce, (long) 1, Crypto.sign(privkey, messageRead.getByteArray()));
+
+        // VERIFICATION
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getClientNonce());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+        assertEquals("Invalid nonce", responseRead.getStatusCode());
+        //assertEquals(anns, responseRead.getAnnouncements());
+    }
+
+
+
+        //register(Client client)
+    //  criar msg
+    //  stub.register
+    //  signature ver
+    public void register(PublicKey pubkey, PrivateKey privkey, ServerAPI stub) throws Exception {
+        // create message for register call
+        Message messageRegister = new Message();
+        messageRegister.appendObject(pubkey);
+        long clientNonce = Crypto.generateNonce();
+        messageRegister.appendObject(clientNonce);
+
+        Response responseRegister = stub.register(pubkey, clientNonce, Crypto.sign(privkey, messageRegister.getByteArray()));
+
+        this.signatureVerification(responseRegister, "User registered");
+    }
+
+    //post(Client client)
+    //  criar ann
+    //  get server nonce
+    //  criar msg
+    //  stub.post
+    //  signature ver
+    public Announcement postGeneral(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, int id) throws Exception {
+        // create
+        Message messageAnn = new Message();
+        messageAnn.appendObject(pubkey);
+        messageAnn.appendObject(body.toCharArray());
+        byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for post call
+        Message messagePost = new Message();
+        messagePost.appendObject(pubkey);
+        messagePost.appendObject(ann);
+        clientNonce = Crypto.generateNonce();
+        messagePost.appendObject(clientNonce);
+        messagePost.appendObject(serverNonce);
+
+        Response responsePost = stub.postGeneral(pubkey, ann, clientNonce, serverNonce, Crypto.sign(privkey, messagePost.getByteArray()));
+
+        this.signatureVerification(responsePost, "General announcement posted");
+
+        return ann;
+    }
+
+    public void signatureVerification(Response response, String statusCode) throws Exception {
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(response.getStatusCode());
+        message.appendObject(response.getClientNonce());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
+        assertEquals(statusCode, response.getStatusCode());
+        assertEquals(null, response.getAnnouncements());
+    }
+
+    public void signatureVerificationNonce(Response response, String statusCode) throws Exception {
+        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+        Message message = new Message();
+        message.appendObject(response.getStatusCode());
+        message.appendObject(response.getClientNonce());
+        message.appendObject(response.getServerNonce());
+
+        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
+        assertEquals(statusCode, response.getStatusCode());
+        assertEquals(null, response.getAnnouncements());
     }
 }
