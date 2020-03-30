@@ -51,7 +51,282 @@ public class Server implements ServerAPI{
         _serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
     }
 
-    private  Response constructResponse(String statusCode, long clientNonce, long serverNonce) {
+
+    private boolean verifyArguments(PublicKey pubkey, byte[] signature) {
+        if(pubkey == null || signature == null)
+		return false;
+	else
+		return true;
+    }
+
+    private boolean verifyArguments(PublicKey pubkey, Announcement a, byte[] signature) {
+        if(pubkey == null || a == null || signature == null)
+		return false;
+	else
+		return true;
+    }
+
+    private boolean verifyArguments(PublicKey pubkey, PublicKey senderKey, byte[] signature) {
+        if(pubkey == null || senderKey == null || signature == null)
+		return false;
+	else
+		return true;
+    }
+
+    public Response getNonce(PublicKey pubkey, long clientNonce, byte[] signature) {
+	
+	if(!verifyArguments(pubkey, signature))
+	    return constructResponse("Invalid arguments", clientNonce);
+        
+	//verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(clientNonce);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        if(!hasPublicKey(pubkey)){
+            return constructResponse("No such user registered", clientNonce);
+        }
+	
+	long serverNonce = Crypto.generateNonce();
+	_nonceTable.put(pubkey, serverNonce);
+	return constructResponse("Nonce generated", clientNonce, serverNonce);
+    }
+
+
+    public Response register(PublicKey pubkey, long clientNonce, byte[] signature) {
+	
+	if(!verifyArguments(pubkey, signature))
+	    return constructResponse("Invalid arguments", clientNonce);
+
+        //verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(clientNonce);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        if(_announcementB.containsKey(pubkey))
+            return constructResponse("User was already registered", clientNonce);
+
+        _announcementB.put(pubkey,new ArrayList<Announcement>());
+	_nonceTable.put(pubkey, (long) 0);
+
+        try {saveToFile("board");}
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        return constructResponse("User registered", clientNonce);
+    }
+
+
+    public Response post(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) {
+
+	if(!verifyArguments(pubkey, a, signature))
+	    return constructResponse("Invalid arguments", clientNonce);
+        
+	//verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(a);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        if(!hasPublicKey(pubkey)){
+            return constructResponse("No such user registered", clientNonce);
+        }
+
+	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(pubkey, (long) 0);
+
+	getUserAnnouncements(pubkey).add(a);
+        try {saveToFile("board");}
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        return constructResponse("Announcement posted", clientNonce);
+    }
+
+    public Response postGeneral(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature){
+
+	if(!verifyArguments(pubkey, a, signature))
+	    return constructResponse("Invalid arguments", clientNonce);
+        
+	try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(a);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        if(!hasPublicKey(pubkey)){
+            return constructResponse("No such user registered", clientNonce);
+        }
+
+	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(pubkey, (long) 0);
+        
+	getGenAnnouncements().add(a);
+        try {saveToFile("genboard");}
+        catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        return constructResponse("General announcement posted", clientNonce);
+    }
+
+    private boolean hasPublicKey(PublicKey key) {
+        return _announcementB.containsKey(key);
+    }
+
+    private ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
+        return _announcementB.get(pubkey);
+    }
+
+    private ArrayList<Announcement> getGenAnnouncements(){
+        return _generalB;
+    }
+
+    private ArrayList<Announcement> getAllUserAnnouncements(PublicKey pubkey){
+      ArrayList<Announcement> all = getUserAnnouncements(pubkey);
+      for (Announcement ann : _generalB){
+        if(ann.getKey().equals(pubkey)){
+          all.add(ann);
+        }
+      }
+      return all;
+    }
+
+    private Announcement getUserAnnouncement(PublicKey pubkey, int id){ //falta verificar que pode nao haver anns com esta pubkey
+      for (Announcement ann : getAllUserAnnouncements(pubkey)){
+        if(ann.getId() == id){
+          return ann;
+        }
+      }
+      return null;
+    }
+
+    private Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
+        return _announcementB;
+    }
+
+    public Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
+            throws IndexOutOfBoundsException, IllegalArgumentException{
+
+	if(!verifyArguments(pubkey, senderKey, signature))
+	    return constructResponse("Invalid arguments", clientNonce);
+        
+	//verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(number);
+            message.appendObject(senderKey);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
+            if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
+            return constructResponse("No such user registered", clientNonce);
+        }
+
+	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(senderKey, (long) 0);
+        
+	try{
+            loadFromFile("board");
+        }
+        catch(IOException e){
+            System.out.println(e.getMessage());
+        }
+        catch(ClassNotFoundException e){
+            System.out.println(e.getMessage());
+        }
+        ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
+        return readFrom(userAnn, number, clientNonce);
+    }
+
+    public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
+            throws IndexOutOfBoundsException, IllegalArgumentException{
+
+	if(!verifyArguments(senderKey, signature))
+	    return constructResponse("Invalid arguments", clientNonce);
+        
+	//verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(number);
+            message.appendObject(senderKey);
+            message.appendObject(clientNonce);
+            message.appendObject(serverNonce);
+            if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        if(!hasPublicKey(senderKey)){
+            return constructResponse("No such user registered", clientNonce);
+        }
+
+	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    return constructResponse("Invalid nonce", clientNonce); 
+	_nonceTable.replace(senderKey, (long) 0);
+        
+	try{
+            loadFromFile("genboard");
+        }
+        catch(IOException e){
+            System.out.println(e.getMessage());
+        }
+        catch(ClassNotFoundException e){
+            System.out.println(e.getMessage());
+        }
+        ArrayList<Announcement> genAnn = getGenAnnouncements();
+        return readFrom(genAnn, number, clientNonce);
+    }
+
+    private Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce)
+            throws IndexOutOfBoundsException, IllegalArgumentException {
+        if (number < 0) {
+            return constructResponse("Tried to read with a negative number.", clientNonce);
+        }
+        return number == 0 ? constructResponse("read successful", ann, clientNonce) : constructResponse("read successful", new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())), clientNonce);
+    }
+
+    private Response constructResponse(String statusCode, long clientNonce, long serverNonce) {
         Message message = new Message();
         try {
             message.appendObject(statusCode);
@@ -117,241 +392,7 @@ public class Server implements ServerAPI{
         return new Response(statusCode, an, clientNonce, serverSignature);
     }
 
-    public Response getNonce(PublicKey pubkey, long clientNonce, byte[] signature) {
-
-        //verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(clientNonce);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-        if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
-	
-	long serverNonce = Crypto.generateNonce();
-	_nonceTable.put(pubkey, serverNonce);
-	return constructResponse("Nonce generated", clientNonce, serverNonce);
-    }
-
-
-    public Response register(PublicKey pubkey, long clientNonce, byte[] signature) {
-
-        //verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(clientNonce);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-        if(_announcementB.containsKey(pubkey))
-            return constructResponse("User was already registered", clientNonce);
-
-        _announcementB.put(pubkey,new ArrayList<Announcement>());
-	_nonceTable.put(pubkey, (long) 0);
-
-        try {saveToFile("board");}
-        catch (IOException e){
-            System.out.println(e.getMessage());
-        }
-        return constructResponse("User registered", clientNonce);
-    }
-
-    public Response post(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) {
-
-        //verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(a);
-            message.appendObject(clientNonce);
-            message.appendObject(serverNonce);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-        if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
-
-	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
-	_nonceTable.replace(pubkey, (long) 0);
-
-	getUserAnnouncements(pubkey).add(a);
-        try {saveToFile("board");}
-        catch (IOException e){
-            System.out.println(e.getMessage());
-        }
-        return constructResponse("Announcement posted", clientNonce);
-    }
-
-    public Response postGeneral(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature){
-
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(a);
-            message.appendObject(clientNonce);
-            message.appendObject(serverNonce);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-        if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
-
-	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
-	_nonceTable.replace(pubkey, (long) 0);
-        
-	getGenAnnouncements().add(a);
-        try {saveToFile("genboard");}
-        catch (IOException e){
-            System.out.println(e.getMessage());
-        }
-        return constructResponse("General announcement posted", clientNonce);
-    }
-
-    public boolean hasPublicKey(PublicKey key) {
-        return _announcementB.containsKey(key);
-    }
-
-    public ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
-        return _announcementB.get(pubkey);
-    }
-
-    public ArrayList<Announcement> getGenAnnouncements(){
-        return _generalB;
-    }
-
-    public  ArrayList<Announcement> getAllUserAnnouncements(PublicKey pubkey){
-      ArrayList<Announcement> all = getUserAnnouncements(pubkey);
-      for (Announcement ann : _generalB){
-        if(ann.getKey().equals(pubkey)){
-          all.add(ann);
-        }
-      }
-      return all;
-    }
-
-    public Announcement getUserAnnouncement(PublicKey pubkey, int id){ //falta verificar que pode nao haver anns com esta pubkey
-      for (Announcement ann : getAllUserAnnouncements(pubkey)){
-        if(ann.getId() == id){
-          return ann;
-        }
-      }
-      return null;
-    }
-
-    public Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
-        return _announcementB;
-    }
-
-    public Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
-            throws IndexOutOfBoundsException, IllegalArgumentException{
-
-        //verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(number);
-            message.appendObject(senderKey);
-            message.appendObject(clientNonce);
-            message.appendObject(serverNonce);
-            if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-        if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
-
-	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
-	_nonceTable.replace(senderKey, (long) 0);
-        
-	try{
-            loadFromFile("board");
-        }
-        catch(IOException e){
-            System.out.println(e.getMessage());
-        }
-        catch(ClassNotFoundException e){
-            System.out.println(e.getMessage());
-        }
-        ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
-        return readFrom(userAnn, number, clientNonce);
-    }
-
-    public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
-            throws IndexOutOfBoundsException, IllegalArgumentException{
-
-        //verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(number);
-            message.appendObject(senderKey);
-            message.appendObject(clientNonce);
-            message.appendObject(serverNonce);
-            if(!Crypto.verifySignature(senderKey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-        if(!hasPublicKey(senderKey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
-
-	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
-	_nonceTable.replace(senderKey, (long) 0);
-        
-	try{
-            loadFromFile("genboard");
-        }
-        catch(IOException e){
-            System.out.println(e.getMessage());
-        }
-        catch(ClassNotFoundException e){
-            System.out.println(e.getMessage());
-        }
-        ArrayList<Announcement> genAnn = getGenAnnouncements();
-        return readFrom(genAnn, number, clientNonce);
-    }
-
-    public Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce)
-            throws IndexOutOfBoundsException, IllegalArgumentException {
-        if (number < 0) {
-            return constructResponse("Tried to read with a negative number.", clientNonce);
-        }
-        return number == 0 ? constructResponse("read successful", ann, clientNonce) : constructResponse("read successful", new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())), clientNonce);
-    }
-
-    public void saveToFile(String path) throws IOException{
+    private void saveToFile(String path) throws IOException{
         try{
             FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + ".txt");
             ObjectOutputStream output = new ObjectOutputStream(fileOutput);
@@ -370,7 +411,7 @@ public class Server implements ServerAPI{
         }
     }
 
-    public void loadFromFile(String path) throws IOException, ClassNotFoundException{
+    private void loadFromFile(String path) throws IOException, ClassNotFoundException{
         try{
             FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
             ObjectInputStream input = new ObjectInputStream(fileInput);
