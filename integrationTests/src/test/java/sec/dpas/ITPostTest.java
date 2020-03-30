@@ -154,16 +154,99 @@ public class ITPostTest {
         messagePost.appendObject(ann);
         clientNonce = Crypto.generateNonce();
         messagePost.appendObject(clientNonce);
-        messagePost.appendObject(serverNonce);
+        messagePost.appendObject((long) 0);
 
-        Response responsePost = stub.post(pubkey, ann, clientNonce, serverNonce, Crypto.sign(privkey, messagePost.getByteArray()));
+        Response responsePost = stub.post(pubkey, ann, clientNonce, (long) 0, Crypto.sign(privkey, messagePost.getByteArray()));
 
         this.signatureVerification(responsePost, "No such user registered");
     }
 
     @Test
-    public void ITPostWrongXXXXXXX() throws Exception {
+    public void ITPostWrongPublicKey() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        Client client2 = new Client("test1");
+        PublicKey pubkey2 = client2.getPublicKey();
+        PrivateKey privkey2 = client2.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        // create
+        String body = "A0";
+        int id = 0;
+        ArrayList<Announcement> refs = null;
+        Message messageAnn = new Message();
+        messageAnn.appendObject(pubkey);
+        messageAnn.appendObject(body.toCharArray());
+        byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
         
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for post call
+        Message messagePost = new Message();
+        messagePost.appendObject(pubkey);
+        messagePost.appendObject(ann);
+        clientNonce = Crypto.generateNonce();
+        messagePost.appendObject(clientNonce);
+        messagePost.appendObject(serverNonce);
+
+        Response responsePost = stub.post(pubkey2, ann, clientNonce, serverNonce, Crypto.sign(privkey, messagePost.getByteArray()));
+
+        this.signatureVerification(responsePost, "Signature verification failed");
+    }
+
+    @Test
+    public void ITPostInvalidNonce() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        // create
+        String body = "A0";
+        int id = 0;
+        ArrayList<Announcement> refs = null;
+        Message messageAnn = new Message();
+        messageAnn.appendObject(pubkey);
+        messageAnn.appendObject(body.toCharArray());
+        byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for post call
+        Message messagePost = new Message();
+        messagePost.appendObject(pubkey);
+        messagePost.appendObject(ann);
+        clientNonce = Crypto.generateNonce();
+        messagePost.appendObject(clientNonce);
+        messagePost.appendObject((long) 1);
+
+        Response responsePost = stub.post(pubkey, ann, clientNonce, (long) 1, Crypto.sign(privkey, messagePost.getByteArray()));
+
+        this.signatureVerification(responsePost, "Invalid nonce");
     }
 
 
