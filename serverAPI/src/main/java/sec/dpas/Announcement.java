@@ -13,10 +13,10 @@ public class Announcement implements Serializable{
   private Key _pubkey;
   private int _id;
   private char[] _message;
-  private Announcement[] _references;
+  private ArrayList<Announcement> _references;
   private byte[] _signature;
 
-  public Announcement(Key pubkey, char[] msg, Announcement[] refs, byte[] signature, int id){
+  public Announcement(Key pubkey, char[] msg, ArrayList<Announcement> refs, byte[] signature, int id){
     _pubkey = pubkey;
     _id = id;
     _message = msg;
@@ -28,7 +28,7 @@ public class Announcement implements Serializable{
 
   public char[] getMessage(){ return _message; }
 
-  public Announcement[] getReferences(){ return _references; }
+  public ArrayList<Announcement> getReferences(){ return _references; }
 
   public byte[] getSignature() { return _signature; }
 
