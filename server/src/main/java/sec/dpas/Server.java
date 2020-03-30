@@ -235,8 +235,7 @@ public class Server implements ServerAPI{
         return _announcementB;
     }
 
-    public Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
-            throws IndexOutOfBoundsException, IllegalArgumentException{
+    public Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature) {
 
 	if(!verifyArguments(pubkey, senderKey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -277,8 +276,7 @@ public class Server implements ServerAPI{
         return readFrom(userAnn, number, clientNonce);
     }
 
-    public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
-            throws IndexOutOfBoundsException, IllegalArgumentException{
+    public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature) {
 
 	if(!verifyArguments(senderKey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -318,12 +316,23 @@ public class Server implements ServerAPI{
         return readFrom(genAnn, number, clientNonce);
     }
 
-    private Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce)
-            throws IndexOutOfBoundsException, IllegalArgumentException {
-        if (number < 0) {
+    private Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce) {
+        
+	if (number < 0)
             return constructResponse("Tried to read with a negative number.", clientNonce);
-        }
-        return number == 0 ? constructResponse("read successful", ann, clientNonce) : constructResponse("read successful", new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size())), clientNonce);
+        else if (number > ann.size())
+            return constructResponse("Tried to read with a number bigger than the number of announcements for that user.", clientNonce);
+	else if (number == 0)
+	    return constructResponse("read successful", ann, clientNonce);
+	else {
+	    ArrayList<Announcement> sublist;
+	    try {
+	        sublist = new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
+	    } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+	        return constructResponse("Thanos has snapped and the Universe stopped making sense", clientNonce);
+	    }
+	    return constructResponse("read successful", sublist, clientNonce);
+	}
     }
 
     private Response constructResponse(String statusCode, long clientNonce, long serverNonce) {

@@ -26,9 +26,9 @@ public interface ServerAPI extends Remote {
     Response postGeneral(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) throws RemoteException;
 
     Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
-            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, IOException, ClassNotFoundException;
+            throws RemoteException;
 
     Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
-            throws RemoteException, IndexOutOfBoundsException, IllegalArgumentException, IOException, ClassNotFoundException;
+            throws RemoteException;
 
 }
