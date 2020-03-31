@@ -90,12 +90,16 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
-
-	long serverNonce = Crypto.generateNonce();
-	_nonceTable.put(pubkey, serverNonce);
+	long serverNonce;
+	
+	synchronized(_announcementB) {
+	    synchronized(_nonceTable) {
+        	if(!hasPublicKey(pubkey))
+            	    return constructResponse("No such user registered", clientNonce);
+	    	serverNonce = Crypto.generateNonce();
+	    	_nonceTable.put(pubkey, serverNonce);
+	    }
+	}
 	return constructResponse("Nonce generated", clientNonce, serverNonce);
     }
 
@@ -117,16 +121,20 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        if(_announcementB.containsKey(pubkey))
-            return constructResponse("User was already registered", clientNonce);
+	synchronized(_announcementB) {
+	    synchronized(_nonceTable) {
+	        if(hasPublicKey(pubkey))
+        	    return constructResponse("User was already registered", clientNonce);
+        	_announcementB.put(pubkey,new ArrayList<Announcement>());
+		_nonceTable.put(pubkey, (long) 0);
+	    }
+	
+            try {saveToFile("board");}
+            catch (IOException e){
+                System.out.println(e.getMessage());
+            }
+	}
 
-        _announcementB.put(pubkey,new ArrayList<Announcement>());
-	_nonceTable.put(pubkey, (long) 0);
-
-        try {saveToFile("board");}
-        catch (IOException e){
-            System.out.println(e.getMessage());
-        }
         return constructResponse("User registered", clientNonce);
     }
 
@@ -150,19 +158,23 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
+	synchronized(_announcementB) {
+	    synchronized(_nonceTable) {
+        	if(!hasPublicKey(pubkey)){
+            	    return constructResponse("No such user registered", clientNonce);
+        	}
+		if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+	    	    return constructResponse("Invalid nonce", clientNonce);
+		_nonceTable.replace(pubkey, (long) 0);
+		getUserAnnouncements(pubkey).add(a);
+	    }
+	
+	    try {saveToFile("board");}
+            catch (IOException e){
+            	System.out.println(e.getMessage());
+	    }
+	}
 
-	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce);
-	_nonceTable.replace(pubkey, (long) 0);
-
-	getUserAnnouncements(pubkey).add(a);
-        try {saveToFile("board");}
-        catch (IOException e){
-            System.out.println(e.getMessage());
-        }
         return constructResponse("Announcement posted", clientNonce);
     }
 
@@ -184,19 +196,23 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        if(!hasPublicKey(pubkey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
+	synchronized(_generalB) {
+	    synchronized(_nonceTable) {
+        	if(!hasPublicKey(pubkey)){
+            	    return constructResponse("No such user registered", clientNonce);
+        	}
+		if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+	    	    return constructResponse("Invalid nonce", clientNonce);
+		_nonceTable.replace(pubkey, (long) 0);
+		getGenAnnouncements().add(a);
+	    }
+	
+            try {saveToFile("genboard");}
+            catch (IOException e){
+            	System.out.println(e.getMessage());
+            }
+	}
 
-	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce);
-	_nonceTable.replace(pubkey, (long) 0);
-
-	getGenAnnouncements().add(a);
-        try {saveToFile("genboard");}
-        catch (IOException e){
-            System.out.println(e.getMessage());
-        }
         return constructResponse("General announcement posted", clientNonce);
     }
 
@@ -259,9 +275,11 @@ public class Server implements ServerAPI{
             return constructResponse("No such user registered", clientNonce);
         }
 
-	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce);
-	_nonceTable.replace(senderKey, (long) 0);
+	synchronized(_nonceTable) {
+	    if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    	return constructResponse("Invalid nonce", clientNonce);
+	    _nonceTable.replace(senderKey, (long) 0);
+	}
 
 	try{
             loadFromFile("board");
@@ -272,8 +290,11 @@ public class Server implements ServerAPI{
         catch(ClassNotFoundException e){
             System.out.println(e.getMessage());
         }
-        ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
-        return readFrom(userAnn, number, clientNonce);
+
+	synchronized(_announcementB) {
+            ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
+            return readFrom(userAnn, number, clientNonce);
+	}
     }
 
     public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature) {
@@ -299,9 +320,11 @@ public class Server implements ServerAPI{
             return constructResponse("No such user registered", clientNonce);
         }
 
-	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce);
-	_nonceTable.replace(senderKey, (long) 0);
+	synchronized(_nonceTable) {
+	    if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    	return constructResponse("Invalid nonce", clientNonce);
+	    _nonceTable.replace(senderKey, (long) 0);
+	}
 
 	try{
             loadFromFile("genboard");
@@ -312,8 +335,11 @@ public class Server implements ServerAPI{
         catch(ClassNotFoundException e){
             System.out.println(e.getMessage());
         }
-        ArrayList<Announcement> genAnn = getGenAnnouncements();
-        return readFrom(genAnn, number, clientNonce);
+
+	synchronized(_generalB) {
+            ArrayList<Announcement> genAnn = getGenAnnouncements();
+            return readFrom(genAnn, number, clientNonce);
+	}
     }
 
     private Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce) {
