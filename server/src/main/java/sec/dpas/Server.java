@@ -74,10 +74,10 @@ public class Server implements ServerAPI{
     }
 
     public Response getNonce(PublicKey pubkey, long clientNonce, byte[] signature) {
-	
+
 	if(!verifyArguments(pubkey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
-        
+
 	//verify signature
         try {
             Message message = new Message();
@@ -93,7 +93,7 @@ public class Server implements ServerAPI{
         if(!hasPublicKey(pubkey)){
             return constructResponse("No such user registered", clientNonce);
         }
-	
+
 	long serverNonce = Crypto.generateNonce();
 	_nonceTable.put(pubkey, serverNonce);
 	return constructResponse("Nonce generated", clientNonce, serverNonce);
@@ -101,7 +101,7 @@ public class Server implements ServerAPI{
 
 
     public Response register(PublicKey pubkey, long clientNonce, byte[] signature) {
-	
+
 	if(!verifyArguments(pubkey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
 
@@ -135,7 +135,7 @@ public class Server implements ServerAPI{
 
 	if(!verifyArguments(pubkey, a, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
-        
+
 	//verify signature
         try {
             Message message = new Message();
@@ -155,7 +155,7 @@ public class Server implements ServerAPI{
         }
 
 	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
+	    return constructResponse("Invalid nonce", clientNonce);
 	_nonceTable.replace(pubkey, (long) 0);
 
 	getUserAnnouncements(pubkey).add(a);
@@ -170,7 +170,7 @@ public class Server implements ServerAPI{
 
 	if(!verifyArguments(pubkey, a, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
-        
+
 	try {
             Message message = new Message();
             message.appendObject(pubkey);
@@ -189,9 +189,9 @@ public class Server implements ServerAPI{
         }
 
 	if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
+	    return constructResponse("Invalid nonce", clientNonce);
 	_nonceTable.replace(pubkey, (long) 0);
-        
+
 	getGenAnnouncements().add(a);
         try {saveToFile("genboard");}
         catch (IOException e){
@@ -239,7 +239,7 @@ public class Server implements ServerAPI{
 
 	if(!verifyArguments(pubkey, senderKey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
-        
+
 	//verify signature
         try {
             Message message = new Message();
@@ -260,9 +260,9 @@ public class Server implements ServerAPI{
         }
 
 	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
+	    return constructResponse("Invalid nonce", clientNonce);
 	_nonceTable.replace(senderKey, (long) 0);
-        
+
 	try{
             loadFromFile("board");
         }
@@ -280,7 +280,7 @@ public class Server implements ServerAPI{
 
 	if(!verifyArguments(senderKey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
-        
+
 	//verify signature
         try {
             Message message = new Message();
@@ -300,9 +300,9 @@ public class Server implements ServerAPI{
         }
 
 	if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
-	    return constructResponse("Invalid nonce", clientNonce); 
+	    return constructResponse("Invalid nonce", clientNonce);
 	_nonceTable.replace(senderKey, (long) 0);
-        
+
 	try{
             loadFromFile("genboard");
         }
@@ -317,11 +317,11 @@ public class Server implements ServerAPI{
     }
 
     private Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce) {
-        
+
 	if (number < 0)
             return constructResponse("Tried to read with a negative number.", clientNonce);
         else if (number > ann.size())
-            return constructResponse("Tried to read with a number bigger than the number of announcements for that user.", clientNonce);
+            return constructResponse("Tried to read with a number bigger than the number of announcements for that board.", clientNonce);
 	else if (number == 0)
 	    return constructResponse("read successful", ann, clientNonce);
 	else {

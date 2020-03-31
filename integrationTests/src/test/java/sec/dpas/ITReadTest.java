@@ -393,6 +393,56 @@ public class ITReadTest {
         assertEquals("Tried to read with a negative number.", responseRead.getStatusCode());
         //assertEquals(anns, responseRead.getAnnouncements());
     }
+    @Test
+    public void ITReadMoreThanExistingPosts() throws Exception {
+      Client client = new Client();
+      PublicKey pubkey = client.getPublicKey();
+      PrivateKey privkey = client.getPrivateKey();
+
+      this.register(pubkey, privkey, stub);
+
+      ArrayList<Announcement> anns = new ArrayList<Announcement>();
+      Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+      anns.add(ann);
+
+
+
+
+      // get server nonce
+      Message messageServerNonce = new Message();
+      long clientNonce = Crypto.generateNonce();
+      messageServerNonce.appendObject(pubkey);
+      messageServerNonce.appendObject(clientNonce);
+      Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+
+      this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+      long serverNonce = responseNonce.getServerNonce();
+
+      // create message for read call
+      Message messageRead = new Message();
+      messageRead.appendObject(pubkey);
+      messageRead.appendObject(2);
+  messageRead.appendObject(pubkey);
+      clientNonce = Crypto.generateNonce();
+      messageRead.appendObject(clientNonce);
+      messageRead.appendObject(serverNonce);
+
+      Response responseRead = stub.read(pubkey, 2, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, messageRead.getByteArray()));
+
+      // VERIFICATION
+      PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+
+      Message message = new Message();
+      message.appendObject(responseRead.getStatusCode());
+      message.appendObject(responseRead.getClientNonce());
+      message.appendObject(responseRead.getAnnouncements());
+
+
+      //FIXME assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
+      assertEquals("Tried to read with a number bigger than the number of announcements for that board.", responseRead.getStatusCode());
+        //compareAnnouncements(anns, responseRead.getAnnouncements());
+    }
 
     @Test
     public void ITReadAll() throws Exception {
