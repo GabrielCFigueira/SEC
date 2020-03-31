@@ -37,7 +37,12 @@ import java.lang.Exception;
  * ITReadGeneralTwoDiffClient
  * ITReadGeneralNegativeNumber
  * ITReadGeneralAll
- * ITReadGeneralInvalidNonce
+ * ITInvalidNonce
+ * ITReadGeneralOneWithRef
+ * ITReadGeneralOneWithRefFromAnnBoard
+ * ITReadGeneralOneWithRefFromDiffClient
+ * ITReadGeneralOneWithRefFromDiffClientAnnBoard
+ * ITReadGeneralOneWithTwoRefsFromGenBoardAndDiffClientAnnBoard
  */
 public class ITReadGeneralTest {
 
@@ -846,7 +851,8 @@ public class ITReadGeneralTest {
     }
 
 
-        //register(Client client)
+
+    //register(Client client)
     //  criar msg
     //  stub.register
     //  signature ver

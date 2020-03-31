@@ -30,6 +30,12 @@ import sec.dpas.exceptions.SigningException;
 
 /**
  * Client/Server Test
+ * 
+ * ITRegister1Client
+ * ITRegister2Clients
+ * ITRegisterAlreadyRegistered
+ * ITWrongPublicKeyRegister
+ * ITNonceChanged
  */
 public class ITRegisterTest {
 

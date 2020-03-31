@@ -30,6 +30,14 @@ import java.lang.Exception;
 
 /**
  * Client/Server Test
+ * 
+ * ITPostOneClient
+ * ITPostTwo
+ * ITPostOneDiffClients
+ * ITPostTwoDiffClients
+ * ITPosterNotRegistered
+ * ITPostWrongPublicKey
+ * ITPostInvalidNonce
  */
 public class ITPostTest {
     

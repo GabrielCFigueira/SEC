@@ -38,6 +38,11 @@ import java.lang.Exception;
  * ITReadNegativeNumber
  * ITReadAll
  * ITInvalidNonce
+ * ITReadOneWithRef
+ * ITReadOneWithRefFromGenBoard
+ * ITReadOneWithRefFromDiffClient
+ * ITReadOneWithRefFromDiffClientGenBoard
+ * ITReadOneWithTwoRefsFromGenBoardAndDiffClientAnnBoard
  */
 public class ITReadTest {
 
@@ -564,7 +569,7 @@ public class ITReadTest {
       Message messageRead = new Message();
       messageRead.appendObject(pubkey);
       messageRead.appendObject(1);
-  messageRead.appendObject(pubkey);
+      messageRead.appendObject(pubkey);
       clientNonce = Crypto.generateNonce();
       messageRead.appendObject(clientNonce);
       messageRead.appendObject(serverNonce);
@@ -614,7 +619,7 @@ public class ITReadTest {
       Message messageRead = new Message();
       messageRead.appendObject(pubkey);
       messageRead.appendObject(1);
-    messageRead.appendObject(pubkey);
+      messageRead.appendObject(pubkey);
       clientNonce = Crypto.generateNonce();
       messageRead.appendObject(clientNonce);
       messageRead.appendObject(serverNonce);
