@@ -432,7 +432,7 @@ public class ITReadGeneralTest {
         System.out.println(responseRead.getAnnouncements());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
-        compareAnnouncements(anns, responseRead.getAnnouncements());;
+        compareAnnouncements(anns, responseRead.getAnnouncements());
     }
 
     @Test
