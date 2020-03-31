@@ -93,4 +93,23 @@ public class RegisterTest {
         assertEquals(response.getStatusCode(), "Signature verification failed");
     }
 
+    @Test
+    public void testNullArguments() throws FileNotFoundException, IOException, SigningException,
+            KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
+        Server server = new Server();
+        PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
+        PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+        Message message = new Message();
+	long clientNonce = Crypto.generateNonce();
+
+        message.appendObject(pubkey);
+        message.appendObject(clientNonce);
+
+        Response response1 = server.register(null, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        Response response2 = server.register(pubkey, clientNonce, null);
+        Response response3 = server.register(null, clientNonce, null);
+        assertEquals(response1.getStatusCode(), "Invalid arguments");
+        assertEquals(response2.getStatusCode(), "Invalid arguments");
+        assertEquals(response3.getStatusCode(), "Invalid arguments");
+    }
 }
