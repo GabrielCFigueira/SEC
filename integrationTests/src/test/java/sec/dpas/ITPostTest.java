@@ -71,7 +71,7 @@ public class ITPostTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.post(pubkey, privkey, stub, "A0", null, 0);
+        this.post(pubkey, privkey, stub, "A0", null, "0:0");
     }
 
     @Test
@@ -82,9 +82,9 @@ public class ITPostTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.post(pubkey, privkey, stub, "A0", null, 0);
+        this.post(pubkey, privkey, stub, "A0", null, "0:0");
 
-        this.post(pubkey, privkey, stub, "A1", null, 1);
+        this.post(pubkey, privkey, stub, "A1", null, "0:1");
     }
 
     @Test
@@ -95,7 +95,7 @@ public class ITPostTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.post(pubkey, privkey, stub, "A0", null, 0);
+        this.post(pubkey, privkey, stub, "A0", null, "0:0");
 
         Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
@@ -103,7 +103,7 @@ public class ITPostTest {
 
         this.register(pubkey2, privkey2, stub);
 
-        this.post(pubkey2, privkey2, stub, "B0", null, 1);
+        this.post(pubkey2, privkey2, stub, "B0", null, "1:0");
     }
 
     @Test
@@ -114,9 +114,9 @@ public class ITPostTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.post(pubkey, privkey, stub, "A0", null, 0);
+        this.post(pubkey, privkey, stub, "A0", null, "0:0");
 
-        this.post(pubkey, privkey, stub, "A1", null, 1);
+        this.post(pubkey, privkey, stub, "A1", null, "0:1");
 
         Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
@@ -124,9 +124,9 @@ public class ITPostTest {
 
         this.register(pubkey2, privkey2, stub);
 
-        this.post(pubkey2, privkey2, stub, "B0", null, 2);
+        this.post(pubkey2, privkey2, stub, "B0", null, "1:0");
 
-        this.post(pubkey2, privkey2, stub, "B1", null, 3);
+        this.post(pubkey2, privkey2, stub, "B1", null, "1:1");
     }
 
     @Test
@@ -137,7 +137,7 @@ public class ITPostTest {
 
         // create
         String body = "A0";
-        int id = 0;
+        String id = "0:0";
         ArrayList<Announcement> refs = null;
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
@@ -183,7 +183,7 @@ public class ITPostTest {
 
         // create
         String body = "A0";
-        int id = 0;
+        String id = "0:0";
         ArrayList<Announcement> refs = null;
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
@@ -225,7 +225,7 @@ public class ITPostTest {
 
         // create
         String body = "A0";
-        int id = 0;
+        String id = "0:0";
         ArrayList<Announcement> refs = null;
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
@@ -281,7 +281,7 @@ public class ITPostTest {
     //  criar msg
     //  stub.post
     //  signature ver
-    public void post(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, int id) throws Exception {
+    public void post(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, String id) throws Exception {
         // create
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);

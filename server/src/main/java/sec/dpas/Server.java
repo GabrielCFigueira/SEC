@@ -238,7 +238,7 @@ public class Server implements ServerAPI{
       return all;
     }
 
-    private Announcement getUserAnnouncement(PublicKey pubkey, int id){ //falta verificar que pode nao haver anns com esta pubkey
+    private Announcement getUserAnnouncement(PublicKey pubkey, String id){ //falta verificar que pode nao haver anns com esta pubkey
       for (Announcement ann : getAllUserAnnouncements(pubkey)){
         if(ann.getId() == id){
           return ann;

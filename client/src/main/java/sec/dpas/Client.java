@@ -37,7 +37,9 @@ public class Client {
     private PrivateKey _privKey;
     private PublicKey _pubkey;
     private final String _keystorePassword = "keystore";
-    private int annId = 0;
+    private int _annId;
+    private int _clientId;
+    private static int _counter = 0;
 
     public Client() throws FileNotFoundException, IOException {
         try {
@@ -53,6 +55,10 @@ public class Client {
         }
 
         _pubkey = Crypto.readPublicKey("../resources/test.pub");
+
+        _annId = 0;
+        _clientId = _counter;
+        _counter++;
     }
 
     public Client(String keyName, String password) throws FileNotFoundException, IOException {
@@ -69,6 +75,10 @@ public class Client {
         }
 
         _pubkey = Crypto.readPublicKey("../resources/" + keyName + ".pub");
+
+        _annId = 0;
+        _clientId = _counter;
+        _counter++;
     }
 
     protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
@@ -106,7 +116,7 @@ public class Client {
         for (Announcement ann: anns){
             System.out.println("----------------------------");
             System.out.println("Announcement: " + ann.getId());
-            System.out.println("Message: " + ann.getMessage());
+            System.out.println("Message: " + String.valueOf(ann.getMessage()));
             System.out.println("References: " + ann.getReferences());
             System.out.println("----------------------------");
         }
@@ -384,9 +394,9 @@ public class Client {
         System.out.println("| Write your references seperated by a comma in this format: pubkey:id |");
         System.out.println("#======================================================================#");
         String[] splitComma = reader.readLine().split(",");
-        Announcement[] refs = null;
-        for (String ann : splitComma){
-            //refs.add(ann.split[]);
+        ArrayList<Announcement> refs = new ArrayList<Announcement>();
+        for (String id : splitComma){
+            // refs.add(ann.split[]);
         }
 
         Message message = new Message();
@@ -396,10 +406,9 @@ public class Client {
 
         byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
-
-
-        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature, annId);
-        annId++;
+        String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
+        _annId++;
+        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature, id);
 
         return a;
     }

@@ -81,7 +81,7 @@ public class ReadTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature,0);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -108,7 +108,7 @@ public class ReadTest {
 		message.appendObject("A2".toCharArray());
 		message.appendObject(null);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, 1);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -166,7 +166,7 @@ public class ReadTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature,0);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -193,7 +193,7 @@ public class ReadTest {
 		message.appendObject("A2".toCharArray());
 		message.appendObject(null);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, 1);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -242,7 +242,7 @@ public class ReadTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, 0);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -268,7 +268,7 @@ public class ReadTest {
 		message.appendObject("A2".toCharArray());
 		message.appendObject(null);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, 1);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -327,7 +327,7 @@ public class ReadTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature,0);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -386,7 +386,7 @@ public class ReadTest {
 		message.appendObject("A1".toCharArray());
 		message.appendObject(null);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature,0);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();

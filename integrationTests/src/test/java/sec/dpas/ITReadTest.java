@@ -76,7 +76,7 @@ public class ITReadTest {
 
         this.register(pubkey, privkey, stub);
 
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
         anns.add(ann);
 
@@ -124,9 +124,9 @@ public class ITReadTest {
         this.register(pubkey, privkey, stub);
 
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         anns.add(ann);
-        ann = this.post(pubkey, privkey, stub, "A1", null, 1);
+        ann = this.post(pubkey, privkey, stub, "A1", null, "0:1");
         anns.add(ann);
 
 
@@ -180,7 +180,7 @@ public class ITReadTest {
         this.register(pubkey2, privkey2, stub);
 
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         anns.add(ann);
 
 
@@ -220,7 +220,7 @@ public class ITReadTest {
         compareAnnouncements(anns, responseRead.getAnnouncements());
 
         ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
-        ann = this.post(pubkey2, privkey2, stub, "B0", null, 1);
+        ann = this.post(pubkey2, privkey2, stub, "B0", null, "1:0");
         anns2.add(ann);
 
 
@@ -272,9 +272,9 @@ public class ITReadTest {
         this.register(pubkey2, privkey2, stub);
 
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         anns.add(ann);
-        ann = this.post(pubkey, privkey, stub, "A1", null, 1);
+        ann = this.post(pubkey, privkey, stub, "A1", null, "0:1");
         anns.add(ann);
 
 
@@ -315,9 +315,9 @@ public class ITReadTest {
 
 
         ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
-        ann = this.post(pubkey2, privkey2, stub, "B0", null, 2);
+        ann = this.post(pubkey2, privkey2, stub, "B0", null, "1:0");
         anns2.add(ann);
-        ann = this.post(pubkey2, privkey2, stub, "B1", null, 3);
+        ann = this.post(pubkey2, privkey2, stub, "B1", null, "1:1");
         anns2.add(ann);
 
         // get server nonce
@@ -361,7 +361,7 @@ public class ITReadTest {
 
         this.register(pubkey, privkey, stub);
 
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
         anns.add(ann);
 
@@ -407,7 +407,7 @@ public class ITReadTest {
       this.register(pubkey, privkey, stub);
 
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
-      Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+      Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
       anns.add(ann);
 
 
@@ -458,9 +458,9 @@ public class ITReadTest {
         this.register(pubkey, privkey, stub);
 
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         anns.add(ann);
-        ann = this.post(pubkey, privkey, stub, "A1", null, 1);
+        ann = this.post(pubkey, privkey, stub, "A1", null, "0:1");
         anns.add(ann);
 
 
@@ -508,7 +508,7 @@ public class ITReadTest {
 
         this.register(pubkey, privkey, stub);
 
-        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+        Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
         anns.add(ann);
 
@@ -547,10 +547,10 @@ public class ITReadTest {
 
       this.register(pubkey, privkey, stub);
 
-      Announcement ann = this.post(pubkey, privkey, stub, "A0", null, 0);
+      Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0");
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, 1);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1");
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -597,10 +597,10 @@ public class ITReadTest {
 
       this.register(pubkey, privkey, stub);
 
-      Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+      Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, 1);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1");
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -653,10 +653,10 @@ public class ITReadTest {
 
       this.register(pubkey2, privkey2, stub);
 
-      Announcement ann = this.post(pubkey2, privkey2, stub, "A0", null, 0);
+      Announcement ann = this.post(pubkey2, privkey2, stub, "A0", null, "0:0");
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "B0", arr, 1);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "B0", arr, "0:1");
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -709,10 +709,10 @@ public class ITReadTest {
 
       this.register(pubkey2, privkey2, stub);
 
-      Announcement ann = this.postGeneral(pubkey2, privkey2, stub, "A0", null, 0);
+      Announcement ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0");
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "B0", arr, 1);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "A0", arr, "0:0");
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -765,12 +765,12 @@ public class ITReadTest {
 
       this.register(pubkey2, privkey2, stub);
 
-      Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
+      Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      ann = this.post(pubkey2, privkey2, stub, "B0", null, 1);
+      ann = this.post(pubkey2, privkey2, stub, "B0", null, "1:0");
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, 2);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1");
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -832,7 +832,7 @@ public class ITReadTest {
     //  criar msg
     //  stub.post
     //  signature ver
-    public Announcement post(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, int id) throws Exception {
+    public Announcement post(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, String id) throws Exception {
         // create
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
@@ -872,7 +872,7 @@ public class ITReadTest {
     //  criar msg
     //  stub.post
     //  signature ver
-    public Announcement postGeneral(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, int id) throws Exception {
+    public Announcement postGeneral(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, String id) throws Exception {
         // create
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
