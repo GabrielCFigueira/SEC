@@ -100,13 +100,15 @@ public class Client {
      *
      */
     public void printAnnouncements(ArrayList<Announcement> anns) {
-        System.out.println("Announcements:");
+        System.out.println("#===============#");
+        System.out.println("| Announcements |");
+        System.out.println("#===============#");
         for (Announcement ann: anns){
-          System.out.println("----------------------------");
-          System.out.println("Announcement: " + ann.getId());
-          System.out.println("Message: " + ann.getMessage());
-          System.out.println("References: " + ann.getReferences());
-          System.out.println("----------------------------");
+            System.out.println("----------------------------");
+            System.out.println("Announcement: " + ann.getId());
+            System.out.println("Message: " + ann.getMessage());
+            System.out.println("References: " + ann.getReferences());
+            System.out.println("----------------------------");
         }
     }
 
@@ -118,7 +120,7 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
         Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+        long clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -134,11 +136,11 @@ public class Client {
         messageReceived.appendObject(response.getClientNonce());
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-       		return "Signature verification failed";
-	else if(clientNonce != response.getClientNonce())
-		return "Server returned invalid nonce: possible replay attack";
-	else
-	        return response.getStatusCode();
+            return "Signature verification failed";
+        else if(clientNonce != response.getClientNonce())
+            return "Server returned invalid nonce: possible replay attack";
+        else
+            return response.getStatusCode();
     }
 
     /**
@@ -149,27 +151,28 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-	//requesting nonce
-	Message message = new Message();
-	message.appendObject(pubkey);
-	long clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
-	//response signature verification
+        //requesting nonce
+        Message message = new Message();
+        message.appendObject(pubkey);
+        long clientNonce = Crypto.generateNonce();
+        message.appendObject(clientNonce);
+        Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        //response signature verification
         PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-	Message messageReceived = new Message();
+
+        Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getServerNonce());
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else if(response.getStatusCode() != "Nonce generated")
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else if(!(response.getStatusCode().equals("Nonce generated")))
+            return response.getStatusCode();
         long serverNonce = response.getServerNonce();
-	
-	// creating Announcement
+
+        // creating Announcement
         Announcement a = this.createAnnouncement();
 
         // creating Message
@@ -177,8 +180,8 @@ public class Client {
         message.appendObject(pubkey);
         message.appendObject(a);
         clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	message.appendObject(serverNonce);
+        message.appendObject(clientNonce);
+        message.appendObject(serverNonce);
 
         // call post from ServerAPI
         response = stub.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -188,12 +191,12 @@ public class Client {
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
 
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else
+            return response.getStatusCode();
     }
 
     /**
@@ -204,27 +207,27 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-	//requesting nonce
-	Message message = new Message();
-	message.appendObject(pubkey);
-	long clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
-	//response signature verification
+        //requesting nonce
+        Message message = new Message();
+        message.appendObject(pubkey);
+        long clientNonce = Crypto.generateNonce();
+        message.appendObject(clientNonce);
+        Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        //response signature verification
         PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-	Message messageReceived = new Message();
+        Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getServerNonce());
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else if(response.getStatusCode() != "Nonce generated")
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else if(!(response.getStatusCode().equals("Nonce generated")))
+            return response.getStatusCode();
         long serverNonce = response.getServerNonce();
-        
-	// creating Announcement
+
+        // creating Announcement
         Announcement a = this.createAnnouncement();
 
         // creating Message
@@ -232,8 +235,8 @@ public class Client {
         message.appendObject(pubkey);
         message.appendObject(a);
         clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	message.appendObject(serverNonce);
+        message.appendObject(clientNonce);
+        message.appendObject(serverNonce);
 
         // call post from ServerAPI
         response = stub.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -243,12 +246,12 @@ public class Client {
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
 
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else
+            return response.getStatusCode();
     }
 
     /**
@@ -259,33 +262,33 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-	//requesting nonce
-	Message message = new Message();
-	message.appendObject(pubkey);
-	long clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
-	//response signature verification
+        //requesting nonce
+        Message message = new Message();
+        message.appendObject(pubkey);
+        long clientNonce = Crypto.generateNonce();
+        message.appendObject(clientNonce);
+        Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        //response signature verification
         PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-	Message messageReceived = new Message();
+        Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getServerNonce());
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else if(response.getStatusCode() != "Nonce generated")
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else if(!(response.getStatusCode().equals("Nonce generated")))
+            return response.getStatusCode();
         long serverNonce = response.getServerNonce();
-        
-	message = new Message();
+
+        message = new Message();
         message.appendObject(pubkey);
         message.appendObject(number);
         message.appendObject(pubkeyToRead);
         clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	message.appendObject(serverNonce);
+        message.appendObject(clientNonce);
+        message.appendObject(serverNonce);
         response = stub.read(pubkeyToRead, number, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 
         // response signature verification
@@ -294,13 +297,13 @@ public class Client {
         messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getAnnouncements());
 
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else {
-            	this.printAnnouncements(response.getAnnouncements());
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else {
+            this.printAnnouncements(response.getAnnouncements());
+            return response.getStatusCode();
         }
     }
 
@@ -312,32 +315,32 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
-	//requesting nonce
-	Message message = new Message();
-	message.appendObject(pubkey);
-	long clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
-	//response signature verification
+        //requesting nonce
+        Message message = new Message();
+        message.appendObject(pubkey);
+        long clientNonce = Crypto.generateNonce();
+        message.appendObject(clientNonce);
+        Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        //response signature verification
         PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-	Message messageReceived = new Message();
+        Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getServerNonce());
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else if(response.getStatusCode() != "Nonce generated")
-		return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else if(!(response.getStatusCode().equals("Nonce generated")))
+            return response.getStatusCode();
         long serverNonce = response.getServerNonce();
-        
-	message = new Message();
+
+        message = new Message();
         message.appendObject(number);
         message.appendObject(pubkey);
         clientNonce = Crypto.generateNonce();
-	message.appendObject(clientNonce);
-	message.appendObject(serverNonce);
+        message.appendObject(clientNonce);
+        message.appendObject(serverNonce);
 
         response = stub.readGeneral(number, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 
@@ -347,13 +350,13 @@ public class Client {
         messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getAnnouncements());
 
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-		return "Signature verification failed";
-	else if(response.getClientNonce() != clientNonce)
-		return "Server returned invalid nonce: possible replay attack";
-	else {
-            	this.printAnnouncements(response.getAnnouncements());
-            	return response.getStatusCode();
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(response.getClientNonce() != clientNonce)
+            return "Server returned invalid nonce: possible replay attack";
+        else {
+            this.printAnnouncements(response.getAnnouncements());
+            return response.getStatusCode();
         }
     }
 
@@ -363,33 +366,40 @@ public class Client {
      */
     public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Write your Announcement (up to 255 characters):");
+        System.out.println("#=====================================================#");
+        System.out.println("| Write your Announcement Body (up to 255 characters) |");
+        System.out.println("#=====================================================#");
         String msg = reader.readLine();
         while(msg.length() > 255){
-          System.out.println("This announcement has more than 255 characters. Please write up to 255 characters:");
-          msg = reader.readLine();
+            System.out.println("#=====================================================#");
+            System.out.println("| This Announcement Body has more than 255 characters |");
+            System.out.println("| Please write up to 255 characters                   |");
+            System.out.println("#=====================================================#");
+            msg = reader.readLine();
         }
         //
         // pede referencias ao user, NULL sempre, por enquanto!
         //
-        System.out.println("Write your references seperated by a comma in this format: pubkey:id");
+        System.out.println("#======================================================================#");
+        System.out.println("| Write your references seperated by a comma in this format: pubkey:id |");
+        System.out.println("#======================================================================#");
         String[] splitComma = reader.readLine().split(",");
         Announcement[] refs = null;
         for (String ann : splitComma){
-          //refs.add(ann.split[]);
+            //refs.add(ann.split[]);
         }
 
         Message message = new Message();
-       	message.appendObject(this.getPublicKey());
-       	message.appendObject(msg.toCharArray());
+        message.appendObject(this.getPublicKey());
+        message.appendObject(msg.toCharArray());
         message.appendObject(null); //refs
 
         byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
 
 
-	    Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature, annId);
-      annId++;
+        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature, annId);
+        annId++;
 
         return a;
     }
@@ -400,7 +410,7 @@ public class Client {
      *
      */
     public static void main(String[] args) {
-        String host = (args.length < 1) ? null : args[0];
+        //String host = (args.length < 1) ? null : args[0];
         try{
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             Client cli = new Client();
@@ -428,14 +438,23 @@ public class Client {
                         System.out.println(cli.postGeneralOption(stub));
                         break;
                     case 4:
-                        System.out.println("Path of the Pubic key to read from: (for test -> test.pub)");
-                        PublicKey pubkeyToRead = Crypto.readPublicKey("../resources/test.pub");
-                        System.out.println("Number of Announcements to read: ");
+                        System.out.println("#===============================================#");
+                        System.out.println("| Public key name to read from: (test or test1) |");
+                        System.out.println("#===============================================#");
+                        String keyName = reader.readLine();
+                        if(keyName.equals("")) keyName = "test";
+                        PublicKey pubkeyToRead = Crypto.readPublicKey("../resources/" + keyName + ".pub");
+
+                        System.out.println("#=================================#");
+                        System.out.println("| Number of Announcements to read |");
+                        System.out.println("#=================================#");
                         int number = Integer.parseInt(reader.readLine());
                         System.out.println(cli.readOption(stub, number, pubkeyToRead));
                         break;
                     case 5:
-                        System.out.println("Number of Announcements to read: ");
+                        System.out.println("#=================================#");
+                        System.out.println("| Number of Announcements to read |");
+                        System.out.println("#=================================#");
                         int number2 = Integer.parseInt(reader.readLine());
                         System.out.println(cli.readGeneralOption(stub, number2));
                         break;
