@@ -55,9 +55,9 @@ public class Client {
         _pubkey = Crypto.readPublicKey("../resources/test.pub");
     }
 
-    public Client(String keyName) throws FileNotFoundException, IOException {
+    public Client(String keyName, String password) throws FileNotFoundException, IOException {
         try {
-            _privKey = Crypto.readPrivateKey("../resources/key.store", keyName, _keystorePassword, "test" + keyName);
+            _privKey = Crypto.readPrivateKey("../resources/key.store", keyName, _keystorePassword, password);
         } catch(KeyStoreException e) {
             System.out.println("KeyStoreException");
         } catch(UnrecoverableKeyException e) {

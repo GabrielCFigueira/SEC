@@ -75,7 +75,7 @@ public class ITRegisterTest {
 
         this.register(pubkey, privkey, stub, "User registered");
 
-        Client client2 = new Client("test1");
+        Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
         PrivateKey privkey2 = client2.getPrivateKey();
 

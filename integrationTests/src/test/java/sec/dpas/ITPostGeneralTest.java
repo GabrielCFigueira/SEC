@@ -89,7 +89,7 @@ public class ITPostGeneralTest {
 
         this.postGeneral(pubkey, privkey, stub, "A0", null, 0);
 
-        Client client2 = new Client("test1");
+        Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
         PrivateKey privkey2 = client2.getPrivateKey();
 
@@ -110,7 +110,7 @@ public class ITPostGeneralTest {
 
         this.postGeneral(pubkey, privkey, stub, "A1", null, 1);
 
-        Client client2 = new Client("test1");
+        Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
         PrivateKey privkey2 = client2.getPrivateKey();
 
@@ -165,7 +165,7 @@ public class ITPostGeneralTest {
         PublicKey pubkey = client.getPublicKey();
         PrivateKey privkey = client.getPrivateKey();
 
-        Client client2 = new Client("test1");
+        Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
         PrivateKey privkey2 = client2.getPrivateKey();
 
