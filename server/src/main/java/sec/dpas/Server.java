@@ -31,6 +31,10 @@ import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import static java.nio.file.StandardCopyOption.*;
+
 import sec.dpas.exceptions.SigningException;
 
 /**
@@ -91,7 +95,7 @@ public class Server implements ServerAPI{
         }
 
 	long serverNonce;
-	
+
 	synchronized(_announcementB) {
 	    synchronized(_nonceTable) {
         	if(!hasPublicKey(pubkey))
@@ -128,7 +132,7 @@ public class Server implements ServerAPI{
         	_announcementB.put(pubkey,new ArrayList<Announcement>());
 		_nonceTable.put(pubkey, (long) 0);
 	    }
-	
+
             try {saveToFile("board");}
             catch (IOException e){
                 System.out.println(e.getMessage());
@@ -168,7 +172,7 @@ public class Server implements ServerAPI{
 		_nonceTable.replace(pubkey, (long) 0);
 		getUserAnnouncements(pubkey).add(a);
 	    }
-	
+
 	    try {saveToFile("board");}
             catch (IOException e){
             	System.out.println(e.getMessage());
@@ -206,7 +210,7 @@ public class Server implements ServerAPI{
 		_nonceTable.replace(pubkey, (long) 0);
 		getGenAnnouncements().add(a);
 	    }
-	
+
             try {saveToFile("genboard");}
             catch (IOException e){
             	System.out.println(e.getMessage());
@@ -429,7 +433,7 @@ public class Server implements ServerAPI{
 
     private void saveToFile(String path) throws IOException{
         try{
-            FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + ".txt");
+            FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + "_temp.txt");
             ObjectOutputStream output = new ObjectOutputStream(fileOutput);
             if(path.equals("board")){
                 output.writeObject(getAnnouncements());
@@ -440,6 +444,7 @@ public class Server implements ServerAPI{
 
             output.close();
             fileOutput.close();
+            Files.move(Paths.get("../resources/" + path + "_temp.txt"), Paths.get("../resources/" + path + ".txt"), REPLACE_EXISTING, ATOMIC_MOVE);
         }
         catch (IOException e){
             System.out.println(e.getMessage());
@@ -448,6 +453,7 @@ public class Server implements ServerAPI{
 
     private void loadFromFile(String path) throws IOException, ClassNotFoundException{
         try{
+          //  FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
             FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
             ObjectInputStream input = new ObjectInputStream(fileInput);
             if(path.equals("board")){
