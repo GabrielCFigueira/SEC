@@ -40,6 +40,7 @@ public class Client {
     private int _annId;
     private int _clientId;
     private static int _counter = 0;
+    private ArrayList<Announcement> _lastRead;
 
     public Client() throws FileNotFoundException, IOException {
         try {
@@ -59,6 +60,7 @@ public class Client {
         _annId = 0;
         _clientId = _counter;
         _counter++;
+        _lastRead = new ArrayList<Announcement>();
     }
 
     public Client(String keyName, String password) throws FileNotFoundException, IOException {
@@ -79,6 +81,7 @@ public class Client {
         _annId = 0;
         _clientId = _counter;
         _counter++;
+        _lastRead = new ArrayList<Announcement>();
     }
 
     protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
@@ -313,6 +316,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
+            _lastRead = response.getAnnouncements();
             return response.getStatusCode();
         }
     }
@@ -366,6 +370,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
+            _lastRead = response.getAnnouncements();
             return response.getStatusCode();
         }
     }
@@ -396,19 +401,25 @@ public class Client {
         String[] splitComma = reader.readLine().split(",");
         ArrayList<Announcement> refs = new ArrayList<Announcement>();
         for (String id : splitComma){
-            // refs.add(ann.split[]);
+            for (Announcement ann : _lastRead) {
+                System.out.println(ann.getId());
+                if(ann.getId().equals(id)){
+                    refs.add(ann);
+                }
+            }
         }
+        if(refs.size() == 0) refs = null;
 
         Message message = new Message();
         message.appendObject(this.getPublicKey());
         message.appendObject(msg.toCharArray());
-        message.appendObject(null); //refs
+        message.appendObject(refs);
 
         byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
         String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
         _annId++;
-        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), null, signature, id);
+        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), refs, signature, id);
 
         return a;
     }
