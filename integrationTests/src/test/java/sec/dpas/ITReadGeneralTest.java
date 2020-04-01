@@ -483,7 +483,6 @@ public class ITReadGeneralTest {
         message.appendObject(responseRead.getStatusCode());
         message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
-        System.out.println(responseRead.getAnnouncements());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
         compareAnnouncements(anns, responseRead.getAnnouncements());
@@ -541,7 +540,6 @@ public class ITReadGeneralTest {
         message.appendObject(responseRead.getStatusCode());
         message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
-        System.out.println(responseRead.getAnnouncements());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
         compareAnnouncements(anns, responseRead.getAnnouncements());;
@@ -989,8 +987,15 @@ public class ITReadGeneralTest {
           announcementVerification(ann1.getReferences().get(i), ann2.getReferences().get(i));
         }
       }
-
-      //assertEquals(ann1.getSignature(), ann2.getSignature());
+      String sig1 = "";
+      String sig2 = "";
+      for (byte b : ann1.getSignature()){
+        sig1 +=b;
+      }
+      for (byte b : ann2.getSignature()){
+        sig2 +=b;
+      }
+      assertEquals(sig1,sig2);
 
 
     }

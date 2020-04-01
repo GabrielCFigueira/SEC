@@ -982,7 +982,15 @@ public class ITReadTest {
         }
       }
 
-      //assertEquals(ann1.getSignature(), ann2.getSignature());
+      String sig1 = "";
+      String sig2 = "";
+      for (byte b : ann1.getSignature()){
+        sig1 +=b;
+      }
+      for (byte b : ann2.getSignature()){
+        sig2 +=b;
+      }
+      assertEquals(sig1,sig2);
 
 
     }
