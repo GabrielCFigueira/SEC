@@ -24,7 +24,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.Exception;
+import java.io.File;
 
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -53,6 +53,57 @@ public class Server implements ServerAPI{
         _nonceTable = new Hashtable<PublicKey, Long>();
         _generalB = new ArrayList<Announcement>();
         _serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
+	
+	File f = new File("../resources/board.txt");
+	if(f.isFile()) {
+
+	    try{
+            	loadFromFile("board");
+            }
+            catch(IOException e){
+            	System.out.println(e.getMessage());
+        	_announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+            }
+            catch(ClassNotFoundException e){
+            	System.out.println(e.getMessage());
+        	_announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+            }
+	}
+
+	f = new File("../resources/genboard.txt");
+	if(f.isFile()) {
+
+	    try{
+            	loadFromFile("genboard");
+            }
+            catch(IOException e){
+            	System.out.println(e.getMessage());
+        	_generalB = new ArrayList<Announcement>();
+            }
+            catch(ClassNotFoundException e){
+            	System.out.println(e.getMessage());
+        	_generalB = new ArrayList<Announcement>();
+            }
+	}
+    }
+
+    public void cleanup() {
+	synchronized(_announcementB) {
+	    synchronized(_nonceTable) {
+		synchronized(_generalB) {
+	
+		    File board = new File("../resources/board.txt");
+	            File genboard = new File("../resources/genboard.txt");
+
+	            board.delete();
+	            genboard.delete();
+	
+        	    _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+        	    _nonceTable = new Hashtable<PublicKey, Long>();
+        	    _generalB = new ArrayList<Announcement>();
+		}
+	    }
+	}
     }
 
 
@@ -285,16 +336,6 @@ public class Server implements ServerAPI{
 	    _nonceTable.replace(senderKey, (long) 0);
 	}
 
-	try{
-            loadFromFile("board");
-        }
-        catch(IOException e){
-            System.out.println(e.getMessage());
-        }
-        catch(ClassNotFoundException e){
-            System.out.println(e.getMessage());
-        }
-
 	synchronized(_announcementB) {
             ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
             return readFrom(userAnn, number, clientNonce);
@@ -329,16 +370,6 @@ public class Server implements ServerAPI{
 	    	return constructResponse("Invalid nonce", clientNonce);
 	    _nonceTable.replace(senderKey, (long) 0);
 	}
-
-	try{
-            loadFromFile("genboard");
-        }
-        catch(IOException e){
-            System.out.println(e.getMessage());
-        }
-        catch(ClassNotFoundException e){
-            System.out.println(e.getMessage());
-        }
 
 	synchronized(_generalB) {
             ArrayList<Announcement> genAnn = getGenAnnouncements();

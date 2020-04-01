@@ -22,7 +22,6 @@ import java.security.KeyStoreException;
 import java.security.UnrecoverableKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.sql.Timestamp;
 
 import java.util.ArrayList;
 
@@ -43,12 +42,13 @@ public class ITPostTest {
     
     static Registry registry;
     static ServerAPI stub;
+    private Server server;
 
     @Before
     public void init() throws IOException, RemoteException, KeyStoreException, AlreadyBoundException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, NotBoundException {
         int registryPort = 1099;
 
-        Server server = new Server();
+        server = new Server();
         stub = (ServerAPI) UnicastRemoteObject.exportObject(server, 0);
 
         registry = LocateRegistry.createRegistry(registryPort);
@@ -61,6 +61,7 @@ public class ITPostTest {
     public void cleanup() throws RemoteException, NoSuchObjectException, NotBoundException {
         registry.unbind("ServerAPI");
         UnicastRemoteObject.unexportObject(registry, true);
+    	server.cleanup();
     }
 
     @Test

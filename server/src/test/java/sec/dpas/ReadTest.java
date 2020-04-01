@@ -7,6 +7,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,13 +28,27 @@ import java.security.Key;
 public class ReadTest {
 
 	private String _keystorePassword = "keystore";
+	private Server server;
+	private PublicKey pubkey;
+	private PublicKey pub2;
+	private PrivateKey privkey;
+
+   	@Before                                    
+    	public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {                       
+		server = new Server();                 
+		pubkey = Crypto.readPublicKey("../resources/test.pub");
+		pub2 = Crypto.readPublicKey("../resources/test1.pub");
+		privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	}                                          
+
+    	@After                                     
+        public void cleanup() {                    
+		server.cleanup();                      
+	}
 
 	@Test
-	public void testReadNegativeNumber() throws FileNotFoundException, IOException,SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
-
+	public void testReadNegativeNumber() throws SigningException, IOException {
+		
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
 		message.appendObject(pubkey);
@@ -62,10 +78,7 @@ public class ReadTest {
 	}
 
 	@Test
-	public void testReadPositiveNumberPrivateKey() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testReadPositiveNumberPrivateKey() throws SigningException, IOException {
 		
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -147,10 +160,7 @@ public class ReadTest {
 	}
 
 	@Test
-	public void testInvalidNonce() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testInvalidNonce() throws SigningException, IOException {
 		
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -224,10 +234,7 @@ public class ReadTest {
 	}
 
 	@Test
-	public void testReadAll() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testReadAll() throws SigningException, IOException {
 
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -308,10 +315,7 @@ public class ReadTest {
 
 
 	@Test
-	public void testCorruptedSignature() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testCorruptedSignature() throws SigningException, IOException {
 		
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -367,10 +371,7 @@ public class ReadTest {
 	}
 
 	@Test
-	public void testNullArguments() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testNullArguments() throws SigningException, IOException {
 		
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();

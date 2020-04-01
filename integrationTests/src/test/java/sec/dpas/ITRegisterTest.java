@@ -42,12 +42,13 @@ public class ITRegisterTest {
     static Registry registry;
     // FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException
     // FileNotFoundException, IOException, NotBoundException, RemoteException, SigningException
+    private Server server;
 
     @Before
     public void init() throws IOException, RemoteException, KeyStoreException, AlreadyBoundException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         int registryPort = 1099;
 
-        Server server = new Server();
+        server = new Server();
         ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(server, 0);
 
         registry = LocateRegistry.createRegistry(registryPort);
@@ -58,6 +59,7 @@ public class ITRegisterTest {
     public void cleanup() throws RemoteException, NoSuchObjectException, NotBoundException {
         registry.unbind("ServerAPI");
         UnicastRemoteObject.unexportObject(registry, true);
+	server.cleanup();
     }
 
     @Test

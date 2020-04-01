@@ -7,6 +7,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,12 +29,26 @@ import java.security.Key;
 public class ReadGeneralTest {
 
 	private String _keystorePassword = "keystore";
+	private Server server;	
+	private PublicKey pubkey;
+        private PublicKey pub2;
+	private PrivateKey privkey;
+	
+	@Before                                    
+	public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+	   	server = new Server();                 
+		pubkey = Crypto.readPublicKey("../resources/test.pub");
+		pub2 = Crypto.readPublicKey("../resources/test1.pub");
+		privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");								
+	}  
+
+	@After                                     
+        public void cleanup() {                    	
+		server.cleanup();                      	
+	}
 
 	@Test
-	public void testReadGeneralNegativeNumber() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testReadGeneralNegativeNumber() throws SigningException, IOException {
 
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -60,11 +76,8 @@ public class ReadGeneralTest {
 	}
 
 	@Test
-	public void testReadGeneralPositiveNumberPrivateKey() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
-
+	public void testReadGeneralPositiveNumberPrivateKey() throws SigningException, IOException {
+		
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
 		message.appendObject(pubkey);
@@ -94,8 +107,8 @@ public class ReadGeneralTest {
 		clientNonce = Crypto.generateNonce();
 		message.appendObject(clientNonce);
 		message.appendObject(serverNonce);
-		Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
-		assertEquals(response3.getStatusCode(), "Announcement posted");
+		Response response3 = server.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response3.getStatusCode(), "General announcement posted");
 
 
 		//constructing Announcement
@@ -120,8 +133,8 @@ public class ReadGeneralTest {
 		clientNonce = Crypto.generateNonce();
 		message.appendObject(clientNonce);
 		message.appendObject(serverNonce);
-		Response response5 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
-		assertEquals(response5.getStatusCode(), "Announcement posted");
+		Response response5 = server.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response5.getStatusCode(), "General announcement posted");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -142,10 +155,7 @@ public class ReadGeneralTest {
 	}
 
 	@Test
-	public void testInvalidNonce() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testInvalidNonce() throws SigningException, IOException {
 
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -216,10 +226,7 @@ public class ReadGeneralTest {
 	}
 
 	@Test
-	public void testReadGeneralAll() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testReadGeneralAll() throws SigningException, IOException {
 
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -299,10 +306,7 @@ public class ReadGeneralTest {
 
 
 	@Test
-	public void testReadGeneralCorruptedSignature() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testReadGeneralCorruptedSignature() throws SigningException, IOException {
 
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
@@ -356,10 +360,7 @@ public class ReadGeneralTest {
 
 	
 	@Test
-	public void testNullArguments() throws FileNotFoundException, IOException, SigningException, KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
-		Server server = new Server();
-		PublicKey pubkey = Crypto.readPublicKey("../resources/test.pub");
-		PrivateKey privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+	public void testNullArguments() throws SigningException, IOException {
 
 		Message message = new Message();
 		long clientNonce = Crypto.generateNonce();
