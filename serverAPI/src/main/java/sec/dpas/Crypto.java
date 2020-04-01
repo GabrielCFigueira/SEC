@@ -123,8 +123,6 @@ public class Crypto {
 
 	public static long generateNonce() {
 		SecureRandom random = new SecureRandom();
-		if(random == null)
-			System.err.println("fodass");
 		return random.nextLong();
 	}
 }

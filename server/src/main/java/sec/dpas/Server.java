@@ -60,10 +60,6 @@ public class Server implements ServerAPI{
 	    try{
             	loadFromFile("board");
             }
-            catch(IOException e){
-            	System.out.println(e.getMessage());
-        	_announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
-            }
             catch(ClassNotFoundException e){
             	System.out.println(e.getMessage());
         	_announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
@@ -75,10 +71,6 @@ public class Server implements ServerAPI{
 
 	    try{
             	loadFromFile("genboard");
-            }
-            catch(IOException e){
-            	System.out.println(e.getMessage());
-        	_generalB = new ArrayList<Announcement>();
             }
             catch(ClassNotFoundException e){
             	System.out.println(e.getMessage());
@@ -104,6 +96,10 @@ public class Server implements ServerAPI{
 		}
 	    }
 	}
+    }
+
+    public void crash() {
+	System.exit(1);
     }
 
 

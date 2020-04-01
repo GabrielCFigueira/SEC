@@ -5,6 +5,7 @@ import sec.dpas.exceptions.SigningException;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.junit.Before;
@@ -428,5 +429,86 @@ public class ReadTest {
 		assertEquals(response5.getStatusCode(), "Invalid arguments");
 		assertEquals(response6.getStatusCode(), "Invalid arguments");
 		assertEquals(response7.getStatusCode(), "Invalid arguments");
+	}
+
+	@Test
+	public void testServerCrash() throws SigningException, IOException {
+		
+		Message message = new Message();
+		long clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+
+		Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response.getStatusCode(),"User registered");
+
+		//constructing Announcement
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject("A1".toCharArray());
+		message.appendObject(null);
+		byte[] signature = Crypto.sign(privkey, message.getByteArray());
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
+
+		message = new Message();
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+		Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		
+		assertEquals(response2.getStatusCode(), "Nonce generated");
+		long serverNonce = response2.getServerNonce();
+
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject(a);
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(clientNonce);
+		message.appendObject(serverNonce);
+		Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response3.getStatusCode(), "Announcement posted");
+
+		message = new Message();
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+		Response response6 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response6.getStatusCode(), "Nonce generated");
+		serverNonce = response6.getServerNonce();
+		
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject(1);
+		message.appendObject(pubkey);
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(clientNonce);
+		message.appendObject(serverNonce);
+		Response response7 = server.read(pubkey, 1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response7.getStatusCode(), "read successful");
+
+		//crash
+		try {
+		    server = new Server();
+		} catch (Exception e) {
+		    fail(e.getMessage());
+		}
+	
+		message = new Message();
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+		Response response8 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response8.getStatusCode(), "Nonce generated");
+		serverNonce = response8.getServerNonce();
+		
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject(1);
+		message.appendObject(pubkey);
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(clientNonce);
+		message.appendObject(serverNonce);
+		Response response9 = server.read(pubkey, 1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response9.getStatusCode(), "read successful");
 	}
 }
