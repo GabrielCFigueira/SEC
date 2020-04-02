@@ -20,9 +20,7 @@ Maven version: 3.6.3
 
 ## After running the interface
 
-Remove the .txt files to avoid conflicts with the automatic tests.
-rm resources/*.txt
-
+Remove the .txt files to avoid conflicts with the automatic tests: rm resources/*.txt
 
 # Java KeyStore
 
