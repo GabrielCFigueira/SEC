@@ -1,9 +1,16 @@
 # SECproj
 SEC project
 
-RMI Instructions
+# Compile and run the tests
 
-1)On the Server directory: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Server"
+1) mvn clean install in project folder
+
+2) ...keys...
+
+# Run the interface:
+
+1)On the Server directory: mvn  exec:java -Dexec.mainClass="sec.dpas.Server"
+
 2)On the Client directory: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Client"
 
 
@@ -34,7 +41,7 @@ Private keys:
 	server password: server
 
 	test password: testtest
-	
+
 	test1 password: testtest1
 
 ## Exporting public keys
