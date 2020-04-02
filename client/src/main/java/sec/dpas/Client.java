@@ -462,7 +462,13 @@ public class Client {
                         System.out.println("| Public key name to read from: (test or test1) |");
                         System.out.println("#===============================================#");
                         String keyName = reader.readLine();
-                        if(keyName.equals("")) keyName = "test";
+                        while (!(keyName.equals("test")) && !(keyName.equals("test1")) ){
+                          System.out.println("#===============================================#");
+                          System.out.println("| Public key name to read from: (test or test1) |");
+                          System.out.println("#===============================================#");
+                          System.out.print(keyName);
+                          keyName = reader.readLine();
+                        }
                         PublicKey pubkeyToRead = Crypto.readPublicKey("../resources/" + keyName + ".pub");
 
                         System.out.println("#=================================#");
