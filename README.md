@@ -1,13 +1,20 @@
 # SECproj
 SEC project
 
-# Compile and run the tests
+
+## Requirements
+
+Java version: 8 or higher
+Maven version: 3.6.3
+
+
+## Compile and run the tests
 
 1) mvn clean install in project folder
 
 2) mvn clean test in project folder
 
-# Run the interface:
+## Run the interface:
 
 1)On the Server directory: mvn  exec:java -Dexec.mainClass="sec.dpas.Server"
 
