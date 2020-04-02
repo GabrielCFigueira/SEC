@@ -5,7 +5,7 @@ SEC project
 
 1) mvn clean install in project folder
 
-2) ...keys...
+2) mvn clean test in project folder
 
 # Run the interface:
 
