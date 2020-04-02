@@ -433,7 +433,13 @@ public class Client {
         //String host = (args.length < 1) ? null : args[0];
         try{
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            Client cli = new Client();
+            Client cli;
+
+	    if(args.length > 0)
+		cli = new Client(args[0], args[1]);
+	    else
+	    	cli = new Client();
+
             ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
             int option = 0;
             boolean bk = false;

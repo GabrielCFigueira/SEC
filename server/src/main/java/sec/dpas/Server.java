@@ -48,11 +48,12 @@ public class Server implements ServerAPI{
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
 
-    public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+
+    public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
         _nonceTable = new Hashtable<PublicKey, Long>();
         _generalB = new ArrayList<Announcement>();
-        _serverKey = Crypto.readPrivateKey("../resources/key.store", "server", "keystore", "server");
+        _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
 	
 	File f = new File("../resources/board.txt");
 	if(f.isFile()) {
@@ -78,6 +79,12 @@ public class Server implements ServerAPI{
             }
 	}
     }
+
+
+    public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+	this("server", "server");
+    }
+
 
     public void cleanup() {
 	synchronized(_announcementB) {
@@ -507,7 +514,11 @@ public class Server implements ServerAPI{
         System.out.println("#####");
 
         try {
-            Server obj = new Server();
+	    Server obj;
+	    if(args.length > 0)	    
+		    obj = new Server(args[0], args[1]);
+	    else
+		    obj = new Server();
             //src.hello.Server obj = new src.hello.Server();
             ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(obj, 0);
 
