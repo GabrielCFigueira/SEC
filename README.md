@@ -18,6 +18,11 @@ Maven version: 3.6.3
 
 2)On the Client directory: mvn exec:java -Dexec.mainClass="sec.dpas.Client"
 
+## After running the interface
+
+Remove the .txt files to avoid conflicts with the automatic tests.
+rm resources/*.txt
+
 
 # Java KeyStore
 
