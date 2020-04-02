@@ -16,7 +16,7 @@ Maven version: 3.6.3
 
 1)On the Server directory: mvn exec:java -Dexec.mainClass="sec.dpas.Server"
 
-2)On the Client directory: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Client"
+2)On the Client directory: mvn exec:java -Dexec.mainClass="sec.dpas.Client"
 
 
 # Java KeyStore
