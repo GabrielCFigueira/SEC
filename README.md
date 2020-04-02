@@ -1,12 +1,10 @@
 # SECproj
 SEC project
 
-
 ## Requirements
 
 Java version: 8 or higher
 Maven version: 3.6.3
-
 
 ## Compile and run the tests
 
@@ -16,30 +14,19 @@ Maven version: 3.6.3
 
 ## Run the interface:
 
-1)On the Server directory: mvn  exec:java -Dexec.mainClass="sec.dpas.Server"
+1)On the Server directory: mvn exec:java -Dexec.mainClass="sec.dpas.Server"
 
 2)On the Client directory: mvn -U clean install exec:java -Dexec.mainClass="sec.dpas.Client"
 
 
-#OpenSSL
-
-generate rsa keypairs:
-
-$ openssl genrsa -out priv.pem 4096
-
-$ openssl pkcs8 -topk8 -inform PEM -outform DER -in priv.pem -out priv.key -nocrypt
-
-$ openssl rsa -in priv.pem -pubout -outform DER -out pub.key
-
-
-#Java KeyStore
+# Java KeyStore
 
 Create keystore and generate RSA keypair
 
 $ keytool -genkeypair -alias keyname -keystore key.store -keyalg RSA -storetype jks
 
 
-## Keystore passwords
+## Current keystore keys 
 
 Keystore password: keystore
 
