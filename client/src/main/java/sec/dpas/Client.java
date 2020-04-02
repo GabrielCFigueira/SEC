@@ -296,9 +296,9 @@ public class Client {
         long serverNonce = response.getServerNonce();
 
         message = new Message();
-        message.appendObject(pubkey);
-        message.appendObject(number);
         message.appendObject(pubkeyToRead);
+        message.appendObject(number);
+        message.appendObject(pubkey);
         clientNonce = Crypto.generateNonce();
         message.appendObject(clientNonce);
         message.appendObject(serverNonce);
@@ -445,6 +445,7 @@ public class Client {
             boolean bk = false;
 
             while(option != 6) {
+	    try {
                 cli.printOptions();
                 option = 0;
                 try {
@@ -498,12 +499,17 @@ public class Client {
                         break;
                 }
                 if(bk) break;
-            }
-        } catch (ConnectException e) {
-            System.out.println("Do not forget to turn on the server :D");
-            return;
-        }
-        catch (Exception e) {
+         
+            	} catch (ConnectException e) {
+            	    System.out.println("Do not forget to turn on the server :D");
+            	    System.out.println("Retrying connection...");
+            	    Thread.sleep(1000);
+            	    stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
+            	    option = 0;
+            	    bk = false;
+	        }
+	    }
+        } catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
         }
