@@ -258,6 +258,93 @@ public class ITPostTest {
         this.signatureVerification(responsePost, "Invalid nonce");
     }
 
+    @Test
+    public void ITPostBodySizeGreaterThan255() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        String body = "A";
+        String bodyRepeated = body.repeat(256);
+        String id = "0:0";
+        ArrayList<Announcement> refs = null;
+
+        // create
+        Message messageAnn = new Message();
+        messageAnn.appendObject(pubkey);
+        messageAnn.appendObject(bodyRepeated.toCharArray());
+        byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
+        Announcement ann = new Announcement(pubkey, bodyRepeated.toCharArray(), refs, signature, id);
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for post call
+        Message messagePost = new Message();
+        messagePost.appendObject(pubkey);
+        messagePost.appendObject(ann);
+        clientNonce = Crypto.generateNonce();
+        messagePost.appendObject(clientNonce);
+        messagePost.appendObject(serverNonce);
+
+        Response responsePost = stub.post(pubkey, ann, clientNonce, serverNonce, Crypto.sign(privkey, messagePost.getByteArray()));
+
+        this.signatureVerification(responsePost, "Invalid arguments");
+    }
+
+    @Test
+    public void ITPostBodySize0() throws Exception {
+        Client client = new Client();
+        PublicKey pubkey = client.getPublicKey();
+        PrivateKey privkey = client.getPrivateKey();
+
+        this.register(pubkey, privkey, stub);
+
+        String body = "";
+        String id = "0:0";
+        ArrayList<Announcement> refs = null;
+
+        // create
+        Message messageAnn = new Message();
+        messageAnn.appendObject(pubkey);
+        messageAnn.appendObject(body.toCharArray());
+        byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
+
+        // get server nonce
+        Message messageServerNonce = new Message();
+        long clientNonce = Crypto.generateNonce();
+        messageServerNonce.appendObject(pubkey);
+        messageServerNonce.appendObject(clientNonce);
+        Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
+        
+        this.signatureVerificationNonce(responseNonce, "Nonce generated");
+
+        long serverNonce = responseNonce.getServerNonce();
+
+        // create message for post call
+        Message messagePost = new Message();
+        messagePost.appendObject(pubkey);
+        messagePost.appendObject(ann);
+        clientNonce = Crypto.generateNonce();
+        messagePost.appendObject(clientNonce);
+        messagePost.appendObject(serverNonce);
+
+        Response responsePost = stub.post(pubkey, ann, clientNonce, serverNonce, Crypto.sign(privkey, messagePost.getByteArray()));
+
+        this.signatureVerification(responsePost, "Invalid arguments");
+    }
+
 
 
     //register(Client client)

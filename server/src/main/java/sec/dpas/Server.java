@@ -118,7 +118,7 @@ public class Server implements ServerAPI{
     }
 
     private boolean verifyArguments(PublicKey pubkey, Announcement a, byte[] signature) {
-        if(pubkey == null || a == null || signature == null)
+        if(pubkey == null || a == null || signature == null || a.getMessage().length > 255 || a.getMessage().length == 0)
 		return false;
 	else
 		return true;
