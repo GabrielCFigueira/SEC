@@ -32,24 +32,24 @@ public class GetNonceTest {
     private PublicKey pub2;
     private PrivateKey privkey;
 
-    @Before                                    
-    public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {                       
-	    server = new Server();                 
+    @Before
+    public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+	    server = new Server();
 	    pubkey = Crypto.readPublicKey("../resources/test.pub");
 	    pub2 = Crypto.readPublicKey("../resources/test1.pub");
 	    privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
-    }  
+    }
 
     @After
     public void cleanup() {
 	server.cleanup();
     }
-    
+
     @Test
     public void testGetNonce() throws SigningException, IOException {
-	
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -65,9 +65,9 @@ public class GetNonceTest {
 
     @Test
     public void testRepeatedGetNonce() throws SigningException, IOException {
-	
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -79,26 +79,26 @@ public class GetNonceTest {
 	message.appendObject(clientNonce);
 	response = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
 	assertEquals(response.getStatusCode(), "Nonce generated");
-	long firstNonce = response.getServerNonce();
-	
+	String firstNonce = response.getServerNonce();
+
 	message = new Message();
 	clientNonce = Crypto.generateNonce();
 	message.appendObject(pubkey);
 	message.appendObject(clientNonce);
 	response = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
 	assertEquals(response.getStatusCode(), "Nonce generated");
-	long secondNonce = response.getServerNonce();
+	String secondNonce = response.getServerNonce();
 
-	assertTrue(firstNonce != secondNonce);
-	assertTrue(firstNonce != 0);
-	assertTrue(secondNonce != 0);
+	assertTrue(!firstNonce.equals(secondNonce));
+	assertTrue(!firstNonce.equals("0"));
+	assertTrue(!secondNonce.equals("0"));
     }
 
     @Test
-    public void testGetNonceBeforeRegistering() throws SigningException, IOException { 
-	
+    public void testGetNonceBeforeRegistering() throws SigningException, IOException {
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
 	message.appendObject(pubkey);
 	message.appendObject(clientNonce);
 	Response response = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -107,9 +107,9 @@ public class GetNonceTest {
 
     @Test
     public void testNullArguments() throws SigningException, IOException {
-	
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -129,9 +129,9 @@ public class GetNonceTest {
 
     @Test
     public void testCorruptedSignature() throws SigningException, IOException {
-	
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -147,9 +147,9 @@ public class GetNonceTest {
 
     @Test
     public void testWrongPublicKey() throws SigningException, IOException {
-        
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));

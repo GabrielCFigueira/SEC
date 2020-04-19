@@ -30,7 +30,7 @@ import sec.dpas.exceptions.SigningException;
 
 /**
  * Client/Server Test
- * 
+ *
  * ITRegister1Client
  * ITRegister2Clients
  * ITRegisterAlreadyRegistered
@@ -126,7 +126,7 @@ public class ITRegisterTest {
         // create message for register call
         Message messageRegister = new Message();
         messageRegister.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageRegister.appendObject(clientNonce);
 
         Response responseRegister = stub.register(pubkey, Crypto.generateNonce(), Crypto.sign(privkey, messageRegister.getByteArray()));
@@ -144,7 +144,7 @@ public class ITRegisterTest {
         // create message for register call
         Message messageRegister = new Message();
         messageRegister.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageRegister.appendObject(clientNonce);
 
         Response responseRegister = stub.register(pubkey, clientNonce, Crypto.sign(privkey, messageRegister.getByteArray()));

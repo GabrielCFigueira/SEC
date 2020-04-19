@@ -133,7 +133,7 @@ public class Client {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
         Message message = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -167,7 +167,7 @@ public class Client {
         //requesting nonce
         Message message = new Message();
         message.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
@@ -183,7 +183,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
-        long serverNonce = response.getServerNonce();
+        String serverNonce = response.getServerNonce();
 
         // creating Announcement
         Announcement a = this.createAnnouncement();
@@ -223,7 +223,7 @@ public class Client {
         //requesting nonce
         Message message = new Message();
         message.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
@@ -238,7 +238,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
-        long serverNonce = response.getServerNonce();
+        String serverNonce = response.getServerNonce();
 
         // creating Announcement
         Announcement a = this.createAnnouncement();
@@ -278,7 +278,7 @@ public class Client {
         //requesting nonce
         Message message = new Message();
         message.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
@@ -293,7 +293,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
-        long serverNonce = response.getServerNonce();
+        String serverNonce = response.getServerNonce();
 
         message = new Message();
         message.appendObject(pubkeyToRead);
@@ -332,7 +332,7 @@ public class Client {
         //requesting nonce
         Message message = new Message();
         message.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
@@ -347,7 +347,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
-        long serverNonce = response.getServerNonce();
+        String serverNonce = response.getServerNonce();
 
         message = new Message();
         message.appendObject(number);
@@ -499,7 +499,7 @@ public class Client {
                         break;
                 }
                 if(bk) break;
-         
+
             	} catch (ConnectException e) {
             	    System.out.println("Do not forget to turn on the server :D");
             	    System.out.println("Retrying connection...");

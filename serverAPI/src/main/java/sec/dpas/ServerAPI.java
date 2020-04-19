@@ -17,18 +17,18 @@ import java.lang.Exception;
  */
 public interface ServerAPI extends Remote {
 
-    Response getNonce(PublicKey pubkey, long clientNonce, byte[] signature) throws RemoteException;
+    Response getNonce(PublicKey pubkey, String clientNonce, byte[] signature) throws RemoteException;
 
-    Response register(PublicKey pubkey, long clientNonce, byte[] signature) throws RemoteException;
+    Response register(PublicKey pubkey, String clientNonce, byte[] signature) throws RemoteException;
 
-    Response post(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) throws RemoteException;
+    Response post(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature) throws RemoteException;
 
-    Response postGeneral(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) throws RemoteException;
+    Response postGeneral(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature) throws RemoteException;
 
-    Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
+    Response read(PublicKey pubkey, int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature)
             throws RemoteException;
 
-    Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature)
+    Response readGeneral(int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature)
             throws RemoteException;
 
 }

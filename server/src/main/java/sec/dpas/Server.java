@@ -37,6 +37,8 @@ import static java.nio.file.StandardCopyOption.*;
 
 import sec.dpas.exceptions.SigningException;
 
+import java.math.BigInteger;
+
 /**
  * Server
  *
@@ -44,17 +46,17 @@ import sec.dpas.exceptions.SigningException;
 public class Server implements ServerAPI{
 
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
-    private Hashtable<PublicKey, Long> _nonceTable;
+    private Hashtable<PublicKey, String> _nonceTable;
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
 
 
     public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
-        _nonceTable = new Hashtable<PublicKey, Long>();
+        _nonceTable = new Hashtable<PublicKey, String>();
         _generalB = new ArrayList<Announcement>();
         _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
-	
+
 	File f = new File("../resources/board.txt");
 	if(f.isFile()) {
 
@@ -90,15 +92,15 @@ public class Server implements ServerAPI{
 	synchronized(_announcementB) {
 	    synchronized(_nonceTable) {
 		synchronized(_generalB) {
-	
+
 		    File board = new File("../resources/board.txt");
 	            File genboard = new File("../resources/genboard.txt");
 
 	            board.delete();
 	            genboard.delete();
-	
+
         	    _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
-        	    _nonceTable = new Hashtable<PublicKey, Long>();
+        	    _nonceTable = new Hashtable<PublicKey, String>();
         	    _generalB = new ArrayList<Announcement>();
 		}
 	    }
@@ -131,7 +133,7 @@ public class Server implements ServerAPI{
 		return true;
     }
 
-    public Response getNonce(PublicKey pubkey, long clientNonce, byte[] signature) {
+    public Response getNonce(PublicKey pubkey, String clientNonce, byte[] signature) {
 
 	if(!verifyArguments(pubkey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -148,7 +150,7 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	long serverNonce;
+	String serverNonce;
 
 	synchronized(_announcementB) {
 	    synchronized(_nonceTable) {
@@ -162,7 +164,7 @@ public class Server implements ServerAPI{
     }
 
 
-    public Response register(PublicKey pubkey, long clientNonce, byte[] signature) {
+    public Response register(PublicKey pubkey, String clientNonce, byte[] signature) {
 
 	if(!verifyArguments(pubkey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -184,7 +186,7 @@ public class Server implements ServerAPI{
 	        if(hasPublicKey(pubkey))
         	    return constructResponse("User was already registered", clientNonce);
         	_announcementB.put(pubkey,new ArrayList<Announcement>());
-		_nonceTable.put(pubkey, (long) 0);
+		_nonceTable.put(pubkey, "0");
 	    }
 
             try {saveToFile("board");}
@@ -197,7 +199,7 @@ public class Server implements ServerAPI{
     }
 
 
-    public Response post(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature) {
+    public Response post(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature) {
 
 	if(!verifyArguments(pubkey, a, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -221,9 +223,9 @@ public class Server implements ServerAPI{
         	if(!hasPublicKey(pubkey)){
             	    return constructResponse("No such user registered", clientNonce);
         	}
-		if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+		if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
 	    	    return constructResponse("Invalid nonce", clientNonce);
-		_nonceTable.replace(pubkey, (long) 0);
+		_nonceTable.replace(pubkey,  "0");
 		getUserAnnouncements(pubkey).add(a);
 	    }
 
@@ -236,7 +238,7 @@ public class Server implements ServerAPI{
         return constructResponse("Announcement posted", clientNonce);
     }
 
-    public Response postGeneral(PublicKey pubkey, Announcement a, long clientNonce, long serverNonce, byte[] signature){
+    public Response postGeneral(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature){
 
 	if(!verifyArguments(pubkey, a, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -259,9 +261,9 @@ public class Server implements ServerAPI{
         	if(!hasPublicKey(pubkey)){
             	    return constructResponse("No such user registered", clientNonce);
         	}
-		if(_nonceTable.get(pubkey) == (long) 0 || _nonceTable.get(pubkey) != serverNonce)
+		if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
 	    	    return constructResponse("Invalid nonce", clientNonce);
-		_nonceTable.replace(pubkey, (long) 0);
+		_nonceTable.replace(pubkey, "0");
 		getGenAnnouncements().add(a);
 	    }
 
@@ -309,7 +311,7 @@ public class Server implements ServerAPI{
         return _announcementB;
     }
 
-    public Response read(PublicKey pubkey, int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature) {
+    public Response read(PublicKey pubkey, int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature) {
 
 	if(!verifyArguments(pubkey, senderKey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -334,9 +336,9 @@ public class Server implements ServerAPI{
         }
 
 	synchronized(_nonceTable) {
-	    if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
 	    	return constructResponse("Invalid nonce", clientNonce);
-	    _nonceTable.replace(senderKey, (long) 0);
+	    _nonceTable.replace(senderKey, "0");
 	}
 
 	synchronized(_announcementB) {
@@ -345,7 +347,7 @@ public class Server implements ServerAPI{
 	}
     }
 
-    public Response readGeneral(int number, PublicKey senderKey, long clientNonce, long serverNonce, byte[] signature) {
+    public Response readGeneral(int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature) {
 
 	if(!verifyArguments(senderKey, signature))
 	    return constructResponse("Invalid arguments", clientNonce);
@@ -369,9 +371,9 @@ public class Server implements ServerAPI{
         }
 
 	synchronized(_nonceTable) {
-	    if(_nonceTable.get(senderKey) == (long) 0 || _nonceTable.get(senderKey) != serverNonce)
+	    if(_nonceTable.get(senderKey).equals("0") || !_nonceTable.get(senderKey).equals(serverNonce))
 	    	return constructResponse("Invalid nonce", clientNonce);
-	    _nonceTable.replace(senderKey, (long) 0);
+	    _nonceTable.replace(senderKey, "0");
 	}
 
 	synchronized(_generalB) {
@@ -380,7 +382,7 @@ public class Server implements ServerAPI{
 	}
     }
 
-    private Response readFrom(ArrayList<Announcement> ann, int number, long clientNonce) {
+    private Response readFrom(ArrayList<Announcement> ann, int number, String clientNonce) {
 
 	if (number < 0)
             return constructResponse("Tried to read with a negative number.", clientNonce);
@@ -399,7 +401,7 @@ public class Server implements ServerAPI{
 	}
     }
 
-    private Response constructResponse(String statusCode, long clientNonce, long serverNonce) {
+    private Response constructResponse(String statusCode, String clientNonce, String serverNonce) {
         Message message = new Message();
         try {
             message.appendObject(statusCode);
@@ -421,7 +423,7 @@ public class Server implements ServerAPI{
         return new Response(statusCode, clientNonce, serverNonce, serverSignature);
     }
 
-    private  Response constructResponse(String statusCode, long clientNonce) {
+    private  Response constructResponse(String statusCode, String clientNonce) {
         Message message = new Message();
         try {
             message.appendObject(statusCode);
@@ -439,10 +441,10 @@ public class Server implements ServerAPI{
             System.err.println(e.getMessage());
             System.exit(1);
         }
-        return new Response(statusCode, null, clientNonce, serverSignature);
+        return new Response(statusCode,(ArrayList<Announcement>) null, clientNonce, serverSignature);
     }
 
-    private Response constructResponse(String statusCode, ArrayList<Announcement> an, long clientNonce) {
+    private Response constructResponse(String statusCode, ArrayList<Announcement> an, String clientNonce) {
         Message message = new Message();
 
         try {
@@ -515,7 +517,7 @@ public class Server implements ServerAPI{
 
         try {
 	    Server obj;
-	    if(args.length > 0)	    
+	    if(args.length > 0)
 		    obj = new Server(args[0], args[1]);
 	    else
 		    obj = new Server();

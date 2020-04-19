@@ -28,6 +28,8 @@ import java.io.IOException;
 
 import java.util.Arrays;
 
+import java.util.UUID;
+
 /**
  * Crypto
  *
@@ -121,8 +123,10 @@ public class Crypto {
 		return res;
 	}
 
-	public static long generateNonce() {
-		SecureRandom random = new SecureRandom();
-		return random.nextLong();
+	public static String generateNonce() {
+		//SecureRandom random = new SecureRandom();
+		//UUID.randomUUID()
+		//System.out.println();
+		return UUID.randomUUID().toString();
 	}
 }

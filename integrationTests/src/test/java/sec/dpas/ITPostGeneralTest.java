@@ -30,7 +30,7 @@ import java.lang.Exception;
 
 /**
  * Client/Server Test
- * 
+ *
  * ITPostOneClient
  * ITPostTwo
  * ITPostOneDiffClients
@@ -90,7 +90,7 @@ public class ITPostGeneralTest {
     }
 
     @Test
-    public void ITPostOneDiffClients() throws Exception {        
+    public void ITPostOneDiffClients() throws Exception {
         Client client = new Client();
         PublicKey pubkey = client.getPublicKey();
         PrivateKey privkey = client.getPrivateKey();
@@ -109,7 +109,7 @@ public class ITPostGeneralTest {
     }
 
     @Test
-    public void ITPostTwoDiffClients() throws Exception {          
+    public void ITPostTwoDiffClients() throws Exception {
         Client client = new Client();
         PublicKey pubkey = client.getPublicKey();
         PrivateKey privkey = client.getPrivateKey();
@@ -149,11 +149,11 @@ public class ITPostGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
-        
+
         this.signatureVerification(responseNonce, "No such user registered");
 
         // create message for post call
@@ -162,9 +162,9 @@ public class ITPostGeneralTest {
         messagePost.appendObject(ann);
         clientNonce = Crypto.generateNonce();
         messagePost.appendObject(clientNonce);
-        messagePost.appendObject((long) 0);
+        messagePost.appendObject("0");
 
-        Response responsePost = stub.postGeneral(pubkey, ann, clientNonce, (long) 0, Crypto.sign(privkey, messagePost.getByteArray()));
+        Response responsePost = stub.postGeneral(pubkey, ann, clientNonce, "0", Crypto.sign(privkey, messagePost.getByteArray()));
 
         this.signatureVerification(responsePost, "No such user registered");
     }
@@ -193,14 +193,14 @@ public class ITPostGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
-        
+
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();
@@ -235,14 +235,14 @@ public class ITPostGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
-        
+
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();
@@ -250,9 +250,9 @@ public class ITPostGeneralTest {
         messagePost.appendObject(ann);
         clientNonce = Crypto.generateNonce();
         messagePost.appendObject(clientNonce);
-        messagePost.appendObject((long) 1);
+        messagePost.appendObject("1");
 
-        Response responsePost = stub.postGeneral(pubkey, ann, clientNonce, (long) 1, Crypto.sign(privkey, messagePost.getByteArray()));
+        Response responsePost = stub.postGeneral(pubkey, ann, clientNonce, "1", Crypto.sign(privkey, messagePost.getByteArray()));
 
         this.signatureVerification(responsePost, "Invalid nonce");
     }
@@ -279,14 +279,14 @@ public class ITPostGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
-        
+
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();
@@ -322,14 +322,14 @@ public class ITPostGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
-        
+
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();
@@ -354,7 +354,7 @@ public class ITPostGeneralTest {
         // create message for register call
         Message messageRegister = new Message();
         messageRegister.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageRegister.appendObject(clientNonce);
 
         Response responseRegister = stub.register(pubkey, clientNonce, Crypto.sign(privkey, messageRegister.getByteArray()));
@@ -378,14 +378,14 @@ public class ITPostGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
-        
+
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();

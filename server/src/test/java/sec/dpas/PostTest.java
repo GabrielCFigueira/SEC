@@ -33,25 +33,25 @@ public class PostTest
     private PublicKey pub2;
     private PrivateKey privkey;
 
-    @Before                                    
+    @Before
     public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException{
 
-	    server = new Server();                 	
-	    pubkey = Crypto.readPublicKey("../resources/test.pub");	    
-	    pub2 = Crypto.readPublicKey("../resources/test1.pub");	
-	    privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");					
-    }  
+	    server = new Server();
+	    pubkey = Crypto.readPublicKey("../resources/test.pub");
+	    pub2 = Crypto.readPublicKey("../resources/test1.pub");
+	    privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+    }
 
-    @After                                     
-    public void cleanup() {                    
-	server.cleanup();                      	    	
+    @After
+    public void cleanup() {
+	server.cleanup();
     }
 
     @Test
     public void testRegularPost() throws SigningException, IOException {
 
 	Message message = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
 	message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -70,8 +70,8 @@ public class PostTest
         message.appendObject(clientNonce);
         Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response2.getStatusCode(), "Nonce generated");
-        long serverNonce = response2.getServerNonce();
-	
+        String serverNonce = response2.getServerNonce();
+
 	message = new Message();
         message.appendObject(pubkey);
         message.appendObject(a);
@@ -86,7 +86,7 @@ public class PostTest
     public void testInvalidNonce() throws SigningException, IOException {
 
 	Message message = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
 	message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
@@ -99,22 +99,22 @@ public class PostTest
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
         Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
-	
+
 	message = new Message();
         message.appendObject(pubkey);
         message.appendObject(a);
         clientNonce = Crypto.generateNonce();
 	message.appendObject(clientNonce);
-	message.appendObject((long) 1000);
-        Response response3 = server.post(pubkey, a, clientNonce, (long) 1000, Crypto.sign(privkey, message.getByteArray()));
+	message.appendObject("1000");
+        Response response3 = server.post(pubkey, a, clientNonce, "1000", Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response3.getStatusCode(), "Invalid nonce");
     }
 
     @Test
     public void testWrongPublicKeyPost() throws SigningException, IOException {
-        
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -135,8 +135,8 @@ public class PostTest
         message.appendObject(clientNonce);
         Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response2.getStatusCode(), "Nonce generated");
-        long serverNonce = response2.getServerNonce();
-        
+        String serverNonce = response2.getServerNonce();
+
 	message = new Message();
         message.appendObject(pub2);
         message.appendObject(a);
@@ -160,29 +160,29 @@ public class PostTest
         Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0");
 
 	message = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
 	message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response2.getStatusCode(), "No such user registered");
-        
+
 	message = new Message();
         message.appendObject(pubkey);
         message.appendObject(a);
         clientNonce = Crypto.generateNonce();
 	message.appendObject(clientNonce);
-	message.appendObject((long) 0);
-        Response response3 = server.post(pubkey, a, clientNonce,(long) 0, Crypto.sign(privkey, message.getByteArray()));
+	message.appendObject("0");
+        Response response3 = server.post(pubkey, a, clientNonce,"0", Crypto.sign(privkey, message.getByteArray()));
 	assertEquals(response3.getStatusCode(), "No such user registered");
 
     }
 
-    
+
     @Test
     public void testCorruptedSignature() throws SigningException, IOException {
-        
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -204,15 +204,15 @@ public class PostTest
         message.appendObject(null);
         signature = Crypto.sign(privkey, message.getByteArray());
         Announcement a1 = new Announcement(pub2, "Good Morning".toCharArray(), null, signature, "1:1");
-	
+
 	message = new Message();
         clientNonce = Crypto.generateNonce();
 	message.appendObject(pubkey);
         message.appendObject(clientNonce);
         Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response2.getStatusCode(), "Nonce generated");
-        long serverNonce = response2.getServerNonce();
-        
+        String serverNonce = response2.getServerNonce();
+
 	message = new Message();
         message.appendObject(pub2);
         message.appendObject(a1);
@@ -226,9 +226,9 @@ public class PostTest
 
     @Test
     public void testInvalidArguments() throws SigningException, IOException {
-        
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -249,8 +249,8 @@ public class PostTest
         message.appendObject(clientNonce);
         Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response2.getStatusCode(), "Nonce generated");
-        long serverNonce = response2.getServerNonce();
-        
+        String serverNonce = response2.getServerNonce();
+
 	message = new Message();
         message.appendObject(pubkey);
         message.appendObject(a);

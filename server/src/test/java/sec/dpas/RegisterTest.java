@@ -32,25 +32,25 @@ public class RegisterTest {
     private PublicKey pub2;
     private PrivateKey privkey;
 
-    @Before                                    
-    public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {	    
-   	    server = new Server();                 	
-	    pubkey = Crypto.readPublicKey("../resources/test.pub");	
+    @Before
+    public void init() throws FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+   	    server = new Server();
+	    pubkey = Crypto.readPublicKey("../resources/test.pub");
 	    pub2 = Crypto.readPublicKey("../resources/test1.pub");
 	    privkey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
 
-    }                                            
+    }
 
-    @After                                     
-    public void cleanup() {                    
-	server.cleanup();                      
+    @After
+    public void cleanup() {
+	server.cleanup();
     }
 
     @Test
     public void testNormalRegister() throws SigningException, IOException {
-        
+
 	Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -60,9 +60,9 @@ public class RegisterTest {
 
     @Test
     public void testDuplicateRegister() throws SigningException, IOException {
-        
+
         Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 
@@ -74,9 +74,9 @@ public class RegisterTest {
 
     @Test
     public void testWrongPublicKeyRegister() throws SigningException, IOException {
-        
+
         Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pub2);
         message.appendObject(clientNonce);
 
@@ -86,9 +86,9 @@ public class RegisterTest {
 
     @Test
     public void testNonceChanged() throws SigningException, IOException {
-        
+
         Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
 
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
@@ -99,9 +99,9 @@ public class RegisterTest {
 
     @Test
     public void testNullArguments() throws SigningException, IOException {
-        
+
         Message message = new Message();
-	long clientNonce = Crypto.generateNonce();
+	String clientNonce = Crypto.generateNonce();
         message.appendObject(pubkey);
         message.appendObject(clientNonce);
 

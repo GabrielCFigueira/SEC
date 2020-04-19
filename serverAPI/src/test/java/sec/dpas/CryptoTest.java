@@ -26,7 +26,7 @@ import javax.crypto.BadPaddingException;
 /**
  * TODO
  */
-public class CryptoTest 
+public class CryptoTest
 {
 
 	private String _keyStorePassword = "keystore";
@@ -67,7 +67,7 @@ public class CryptoTest
 	@Test
 	public void testPrivateKeyEncryption() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, KeyStoreException, UnrecoverableKeyException, CertificateException {
 		String plaintext = "ThanosDidNothingWrong";
-		
+
 		Key key = Crypto.readPrivateKey("../resources/key.store", "test", _keyStorePassword, "testtest");
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -79,11 +79,11 @@ public class CryptoTest
 		assertEquals(plaintext, new String(cipher.doFinal(ciphertext)));
 	}
 
-		
+
 	@Test
 	public void testPublicKeyEncryption() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, KeyStoreException, UnrecoverableKeyException, CertificateException {
 		String plaintext = "Jet fuel cant melt steel beams";
-		
+
 		Key key = Crypto.readPublicKey("../resources/test.pub");
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -93,7 +93,7 @@ public class CryptoTest
 		key = Crypto.readPrivateKey("../resources/key.store", "test", _keyStorePassword, "testtest");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		assertEquals(plaintext, new String(cipher.doFinal(ciphertext)));
-	}	
+	}
 
 	@Test
 	public void testSigning() throws FileNotFoundException, IOException, SigningException , KeyStoreException, UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException {
@@ -131,8 +131,8 @@ public class CryptoTest
 	}
 
 	@Test public void testGetNonce() {
-		long nonce1 = Crypto.generateNonce();
-		long nonce2 = Crypto.generateNonce();
+		String nonce1 = Crypto.generateNonce();
+		String nonce2 = Crypto.generateNonce();
 		assertFalse(nonce1 == nonce2);
 	}
 }

@@ -84,14 +84,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -133,14 +133,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -188,14 +188,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -279,14 +279,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -363,14 +363,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -409,14 +409,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -459,14 +459,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -516,14 +516,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -566,11 +566,11 @@ public class ITReadGeneralTest {
         Message messageRead = new Message();
         messageRead.appendObject(1);
 		messageRead.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageRead.appendObject(clientNonce);
-        messageRead.appendObject((long) 1);
+        messageRead.appendObject("1");
 
-        Response responseRead = stub.readGeneral(1, pubkey, clientNonce, (long) 1, Crypto.sign(privkey, messageRead.getByteArray()));
+        Response responseRead = stub.readGeneral(1, pubkey, clientNonce, "1", Crypto.sign(privkey, messageRead.getByteArray()));
 
         // VERIFICATION
         PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
@@ -602,14 +602,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -651,14 +651,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -706,14 +706,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -761,14 +761,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -818,14 +818,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for read call
         Message messageRead = new Message();
@@ -860,7 +860,7 @@ public class ITReadGeneralTest {
         // create message for register call
         Message messageRegister = new Message();
         messageRegister.appendObject(pubkey);
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageRegister.appendObject(clientNonce);
 
         Response responseRegister = stub.register(pubkey, clientNonce, Crypto.sign(privkey, messageRegister.getByteArray()));
@@ -884,14 +884,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();
@@ -918,14 +918,14 @@ public class ITReadGeneralTest {
 
         // get server nonce
         Message messageServerNonce = new Message();
-        long clientNonce = Crypto.generateNonce();
+        String clientNonce = Crypto.generateNonce();
         messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
-        long serverNonce = responseNonce.getServerNonce();
+        String serverNonce = responseNonce.getServerNonce();
 
         // create message for post call
         Message messagePost = new Message();
