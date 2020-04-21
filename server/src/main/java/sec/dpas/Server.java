@@ -43,12 +43,14 @@ import java.math.BigInteger;
  * Server
  *
  */
+
 public class Server implements ServerAPI{
 
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
     private Hashtable<PublicKey, String> _nonceTable;
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
+    private int _id = 1;
 
 
     public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
@@ -57,7 +59,8 @@ public class Server implements ServerAPI{
         _generalB = new ArrayList<Announcement>();
         _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
 
-	File f = new File("../resources/board.txt");
+
+	File f = new File("../resources/board" + _id + ".txt");
 	if(f.isFile()) {
 
 	    try{
@@ -69,7 +72,7 @@ public class Server implements ServerAPI{
             }
 	}
 
-	f = new File("../resources/genboard.txt");
+	f = new File("../resources/genboard" + _id + ".txt");
 	if(f.isFile()) {
 
 	    try{
@@ -87,14 +90,18 @@ public class Server implements ServerAPI{
 	this("server", "server");
     }
 
+    public Server(int id) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+	this("server", "server");
+  _id = id;
+    }
 
     public void cleanup() {
 	synchronized(_announcementB) {
 	    synchronized(_nonceTable) {
 		synchronized(_generalB) {
 
-		    File board = new File("../resources/board.txt");
-	            File genboard = new File("../resources/genboard.txt");
+		    File board = new File("../resources/board" + _id + ".txt");
+	            File genboard = new File("../resources/genboard" + _id + ".txt");
 
 	            board.delete();
 	            genboard.delete();
@@ -469,7 +476,7 @@ public class Server implements ServerAPI{
 
     private void saveToFile(String path) throws IOException{
         try{
-            FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + "_temp.txt");
+            FileOutputStream fileOutput = new FileOutputStream("../resources/" + path + _id + "_temp.txt");
             ObjectOutputStream output = new ObjectOutputStream(fileOutput);
             if(path.equals("board")){
                 output.writeObject(getAnnouncements());
@@ -480,7 +487,7 @@ public class Server implements ServerAPI{
 
             output.close();
             fileOutput.close();
-            Files.move(Paths.get("../resources/" + path + "_temp.txt"), Paths.get("../resources/" + path + ".txt"), REPLACE_EXISTING, ATOMIC_MOVE);
+            Files.move(Paths.get("../resources/" + path +  _id + "_temp.txt"), Paths.get("../resources/" + path + _id + ".txt"), REPLACE_EXISTING, ATOMIC_MOVE);
         }
         catch (IOException e){
             System.out.println(e.getMessage());
@@ -490,7 +497,7 @@ public class Server implements ServerAPI{
     private void loadFromFile(String path) throws IOException, ClassNotFoundException{
         try{
           //  FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
-            FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
+            FileInputStream fileInput = new FileInputStream("../resources/" + path + _id + ".txt");
             ObjectInputStream input = new ObjectInputStream(fileInput);
             if(path.equals("board")){
                 _announcementB = (Hashtable<PublicKey, ArrayList<Announcement>>) input.readObject();
@@ -511,14 +518,16 @@ public class Server implements ServerAPI{
     }
 
 
+
     public static void main(String args[]) {
         int registryPort = 1099;
         System.out.println("#####");
 
         try {
 	    Server obj;
-	    if(args.length > 0)
+	    if(args.length > 0){
 		    obj = new Server(args[0], args[1]);
+      }
 	    else
 		    obj = new Server();
             //src.hello.Server obj = new src.hello.Server();
