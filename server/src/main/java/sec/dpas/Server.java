@@ -60,121 +60,90 @@ public class Server implements ServerAPI{
         _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
 
 
-	File f = new File("../resources/board" + _id + ".txt");
-	if(f.isFile()) {
+        File f = new File("../resources/board" + _id + ".txt");
+        if(f.isFile()) {
 
-	    try{
-            	loadFromFile("board");
+            try{
+                loadFromFile("board");
             }
             catch(ClassNotFoundException e){
-            	System.out.println(e.getMessage());
-        	_announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+                System.out.println(e.getMessage());
+                _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
             }
-	}
+        }
 
-	f = new File("../resources/genboard" + _id + ".txt");
-	if(f.isFile()) {
+        f = new File("../resources/genboard" + _id + ".txt");
+        if(f.isFile()) {
 
-	    try{
-            	loadFromFile("genboard");
+            try{
+                loadFromFile("genboard");
             }
             catch(ClassNotFoundException e){
-            	System.out.println(e.getMessage());
-        	_generalB = new ArrayList<Announcement>();
+                System.out.println(e.getMessage());
+                _generalB = new ArrayList<Announcement>();
             }
-	}
+        }
     }
 
 
     public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
-	this("server", "server");
+        this("server", "server");
     }
 
     public Server(int id) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
-	this("server", "server");
-  _id = id;
+        this("server", "server");
+        _id = id;
     }
 
     public void cleanup() {
-	synchronized(_announcementB) {
-	    synchronized(_nonceTable) {
-		synchronized(_generalB) {
+        synchronized(_announcementB) {
+            synchronized(_nonceTable) {
+                synchronized(_generalB) {
 
-		    File board = new File("../resources/board" + _id + ".txt");
-	            File genboard = new File("../resources/genboard" + _id + ".txt");
+                    File board = new File("../resources/board" + _id + ".txt");
+                    File genboard = new File("../resources/genboard" + _id + ".txt");
 
-	            board.delete();
-	            genboard.delete();
+                    board.delete();
+                    genboard.delete();
 
-        	    _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
-        	    _nonceTable = new Hashtable<PublicKey, String>();
-        	    _generalB = new ArrayList<Announcement>();
-		}
-	    }
-	}
+                    _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
+                    _nonceTable = new Hashtable<PublicKey, String>();
+                    _generalB = new ArrayList<Announcement>();
+                }
+            }
+        }
     }
 
     public void crash() {
-	System.exit(1);
+        System.exit(1);
     }
 
 
     private boolean verifyArguments(PublicKey pubkey, byte[] signature) {
         if(pubkey == null || signature == null)
-		return false;
-	else
-		return true;
+            return false;
+        else
+            return true;
     }
 
     private boolean verifyArguments(PublicKey pubkey, Announcement a, byte[] signature) {
         if(pubkey == null || a == null || signature == null || a.getMessage().length > 255 || a.getMessage().length == 0)
-		return false;
-	else
-		return true;
+            return false;
+        else
+            return true;
     }
 
     private boolean verifyArguments(PublicKey pubkey, PublicKey senderKey, byte[] signature) {
         if(pubkey == null || senderKey == null || signature == null)
-		return false;
-	else
-		return true;
+            return false;
+        else
+            return true;
     }
 
     public Response getNonce(PublicKey pubkey, String clientNonce, byte[] signature) {
 
-	if(!verifyArguments(pubkey, signature))
-	    return constructResponse("Invalid arguments", clientNonce);
-
-	//verify signature
-        try {
-            Message message = new Message();
-            message.appendObject(pubkey);
-            message.appendObject(clientNonce);
-            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
-            }
-        } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
-        }
-
-	String serverNonce;
-
-	synchronized(_announcementB) {
-	    synchronized(_nonceTable) {
-        	if(!hasPublicKey(pubkey))
-            	    return constructResponse("No such user registered", clientNonce);
-	    	serverNonce = Crypto.generateNonce();
-	    	_nonceTable.put(pubkey, serverNonce);
-	    }
-	}
-	return constructResponse("Nonce generated", clientNonce, serverNonce);
-    }
-
-
-    public Response register(PublicKey pubkey, String clientNonce, byte[] signature) {
-
-	if(!verifyArguments(pubkey, signature))
-	    return constructResponse("Invalid arguments", clientNonce);
+        if(!verifyArguments(pubkey, signature))
+            return constructResponse("Invalid arguments", clientNonce);
 
         //verify signature
         try {
@@ -188,19 +157,50 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	synchronized(_announcementB) {
-	    synchronized(_nonceTable) {
-	        if(hasPublicKey(pubkey))
-        	    return constructResponse("User was already registered", clientNonce);
-        	_announcementB.put(pubkey,new ArrayList<Announcement>());
-		_nonceTable.put(pubkey, "0");
-	    }
+        String serverNonce;
+
+        synchronized(_announcementB) {
+            synchronized(_nonceTable) {
+                if(!hasPublicKey(pubkey))
+                    return constructResponse("No such user registered", clientNonce);
+                serverNonce = Crypto.generateNonce();
+                _nonceTable.put(pubkey, serverNonce);
+            }
+        }
+        return constructResponse("Nonce generated", clientNonce, serverNonce);
+    }
+
+
+    public Response register(PublicKey pubkey, String clientNonce, byte[] signature) {
+
+        if(!verifyArguments(pubkey, signature))
+            return constructResponse("Invalid arguments", clientNonce);
+
+        //verify signature
+        try {
+            Message message = new Message();
+            message.appendObject(pubkey);
+            message.appendObject(clientNonce);
+            if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+
+        synchronized(_announcementB) {
+            synchronized(_nonceTable) {
+                if(hasPublicKey(pubkey))
+                    return constructResponse("User was already registered", clientNonce);
+                _announcementB.put(pubkey,new ArrayList<Announcement>());
+                _nonceTable.put(pubkey, "0");
+            }
 
             try {saveToFile("board");}
             catch (IOException e){
                 System.out.println(e.getMessage());
             }
-	}
+        }
 
         return constructResponse("User registered", clientNonce);
     }
@@ -208,10 +208,10 @@ public class Server implements ServerAPI{
 
     public Response post(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature) {
 
-	if(!verifyArguments(pubkey, a, signature))
-	    return constructResponse("Invalid arguments", clientNonce);
+        if(!verifyArguments(pubkey, a, signature))
+            return constructResponse("Invalid arguments", clientNonce);
 
-	//verify signature
+        //verify signature
         try {
             Message message = new Message();
             message.appendObject(pubkey);
@@ -225,32 +225,32 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	synchronized(_announcementB) {
-	    synchronized(_nonceTable) {
-        	if(!hasPublicKey(pubkey)){
-            	    return constructResponse("No such user registered", clientNonce);
-        	}
-		if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
-	    	    return constructResponse("Invalid nonce", clientNonce);
-		_nonceTable.replace(pubkey,  "0");
-		getUserAnnouncements(pubkey).add(a);
-	    }
+        synchronized(_announcementB) {
+            synchronized(_nonceTable) {
+                if(!hasPublicKey(pubkey)){
+                    return constructResponse("No such user registered", clientNonce);
+                }
+                if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
+                    return constructResponse("Invalid nonce", clientNonce);
+                _nonceTable.replace(pubkey,  "0");
+                getUserAnnouncements(pubkey).add(a);
+            }
 
-	    try {saveToFile("board");}
+            try {saveToFile("board");}
             catch (IOException e){
-            	System.out.println(e.getMessage());
-	    }
-	}
+                System.out.println(e.getMessage());
+            }
+        }
 
         return constructResponse("Announcement posted", clientNonce);
     }
 
     public Response postGeneral(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature){
 
-	if(!verifyArguments(pubkey, a, signature))
-	    return constructResponse("Invalid arguments", clientNonce);
+        if(!verifyArguments(pubkey, a, signature))
+            return constructResponse("Invalid arguments", clientNonce);
 
-	try {
+        try {
             Message message = new Message();
             message.appendObject(pubkey);
             message.appendObject(a);
@@ -263,22 +263,22 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	synchronized(_generalB) {
-	    synchronized(_nonceTable) {
-        	if(!hasPublicKey(pubkey)){
-            	    return constructResponse("No such user registered", clientNonce);
-        	}
-		if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
-	    	    return constructResponse("Invalid nonce", clientNonce);
-		_nonceTable.replace(pubkey, "0");
-		getGenAnnouncements().add(a);
-	    }
+        synchronized(_generalB) {
+            synchronized(_nonceTable) {
+                if(!hasPublicKey(pubkey)){
+                    return constructResponse("No such user registered", clientNonce);
+                }
+                if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
+                    return constructResponse("Invalid nonce", clientNonce);
+                _nonceTable.replace(pubkey, "0");
+                getGenAnnouncements().add(a);
+            }
 
             try {saveToFile("genboard");}
             catch (IOException e){
-            	System.out.println(e.getMessage());
+                System.out.println(e.getMessage());
             }
-	}
+        }
 
         return constructResponse("General announcement posted", clientNonce);
     }
@@ -296,22 +296,22 @@ public class Server implements ServerAPI{
     }
 
     private ArrayList<Announcement> getAllUserAnnouncements(PublicKey pubkey){
-      ArrayList<Announcement> all = getUserAnnouncements(pubkey);
-      for (Announcement ann : _generalB){
-        if(ann.getKey().equals(pubkey)){
-          all.add(ann);
+        ArrayList<Announcement> all = getUserAnnouncements(pubkey);
+        for (Announcement ann : _generalB){
+            if(ann.getKey().equals(pubkey)){
+                all.add(ann);
+            }
         }
-      }
-      return all;
+        return all;
     }
 
     private Announcement getUserAnnouncement(PublicKey pubkey, String id){ //falta verificar que pode nao haver anns com esta pubkey
-      for (Announcement ann : getAllUserAnnouncements(pubkey)){
-        if(ann.getId() == id){
-          return ann;
+        for (Announcement ann : getAllUserAnnouncements(pubkey)){
+            if(ann.getId() == id){
+                return ann;
+            }
         }
-      }
-      return null;
+        return null;
     }
 
     private Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
@@ -320,10 +320,10 @@ public class Server implements ServerAPI{
 
     public Response read(PublicKey pubkey, int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature) {
 
-	if(!verifyArguments(pubkey, senderKey, signature))
-	    return constructResponse("Invalid arguments", clientNonce);
+        if(!verifyArguments(pubkey, senderKey, signature))
+            return constructResponse("Invalid arguments", clientNonce);
 
-	//verify signature
+        //verify signature
         try {
             Message message = new Message();
             message.appendObject(pubkey);
@@ -342,24 +342,24 @@ public class Server implements ServerAPI{
             return constructResponse("No such user registered", clientNonce);
         }
 
-	synchronized(_nonceTable) {
-	    if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
-	    	return constructResponse("Invalid nonce", clientNonce);
-	    _nonceTable.replace(senderKey, "0");
-	}
+        synchronized(_nonceTable) {
+            if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
+                return constructResponse("Invalid nonce", clientNonce);
+            _nonceTable.replace(senderKey, "0");
+        }
 
-	synchronized(_announcementB) {
+        synchronized(_announcementB) {
             ArrayList<Announcement> userAnn = getUserAnnouncements(pubkey);
             return readFrom(userAnn, number, clientNonce);
-	}
+        }
     }
 
     public Response readGeneral(int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature) {
 
-	if(!verifyArguments(senderKey, signature))
-	    return constructResponse("Invalid arguments", clientNonce);
+        if(!verifyArguments(senderKey, signature))
+            return constructResponse("Invalid arguments", clientNonce);
 
-	//verify signature
+        //verify signature
         try {
             Message message = new Message();
             message.appendObject(number);
@@ -377,35 +377,35 @@ public class Server implements ServerAPI{
             return constructResponse("No such user registered", clientNonce);
         }
 
-	synchronized(_nonceTable) {
-	    if(_nonceTable.get(senderKey).equals("0") || !_nonceTable.get(senderKey).equals(serverNonce))
-	    	return constructResponse("Invalid nonce", clientNonce);
-	    _nonceTable.replace(senderKey, "0");
-	}
+        synchronized(_nonceTable) {
+            if(_nonceTable.get(senderKey).equals("0") || !_nonceTable.get(senderKey).equals(serverNonce))
+                return constructResponse("Invalid nonce", clientNonce);
+            _nonceTable.replace(senderKey, "0");
+        }
 
-	synchronized(_generalB) {
+        synchronized(_generalB) {
             ArrayList<Announcement> genAnn = getGenAnnouncements();
             return readFrom(genAnn, number, clientNonce);
-	}
+        }
     }
 
     private Response readFrom(ArrayList<Announcement> ann, int number, String clientNonce) {
 
-	if (number < 0)
+        if (number < 0)
             return constructResponse("Tried to read with a negative number.", clientNonce);
         else if (number > ann.size())
             return constructResponse("Tried to read with a number bigger than the number of announcements for that board.", clientNonce);
-	else if (number == 0)
-	    return constructResponse("read successful", ann, clientNonce);
-	else {
-	    ArrayList<Announcement> sublist;
-	    try {
-	        sublist = new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
-	    } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-	        return constructResponse("Thanos has snapped and the Universe stopped making sense", clientNonce);
-	    }
-	    return constructResponse("read successful", sublist, clientNonce);
-	}
+        else if (number == 0)
+            return constructResponse("read successful", ann, clientNonce);
+        else {
+            ArrayList<Announcement> sublist;
+            try {
+                sublist = new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
+            } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+                return constructResponse("Thanos has snapped and the Universe stopped making sense", clientNonce);
+            }
+            return constructResponse("read successful", sublist, clientNonce);
+        }
     }
 
     private Response constructResponse(String statusCode, String clientNonce, String serverNonce) {
@@ -413,7 +413,7 @@ public class Server implements ServerAPI{
         try {
             message.appendObject(statusCode);
             message.appendObject(clientNonce);
-	    message.appendObject(serverNonce);
+            message.appendObject(serverNonce);
         } catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
@@ -496,7 +496,7 @@ public class Server implements ServerAPI{
 
     private void loadFromFile(String path) throws IOException, ClassNotFoundException{
         try{
-          //  FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
+            //  FileInputStream fileInput = new FileInputStream("../resources/" + path + ".txt");
             FileInputStream fileInput = new FileInputStream("../resources/" + path + _id + ".txt");
             ObjectInputStream input = new ObjectInputStream(fileInput);
             if(path.equals("board")){
@@ -524,12 +524,12 @@ public class Server implements ServerAPI{
         System.out.println("#####");
 
         try {
-	    Server obj;
-	    if(args.length > 0){
-		    obj = new Server(args[0], args[1]);
-      }
-	    else
-		    obj = new Server();
+            Server obj;
+            if(args.length > 0){
+                obj = new Server(args[0], args[1]);
+            }
+            else
+                obj = new Server();
             //src.hello.Server obj = new src.hello.Server();
             ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(obj, 0);
 
