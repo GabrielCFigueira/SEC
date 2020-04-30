@@ -6,7 +6,7 @@ target
 *.log
 .idea
 .vscode
-resources/genboard.txt
-resources/board.txt
+resources/genboard*.txt
+resources/board*.txt
 
 ean
