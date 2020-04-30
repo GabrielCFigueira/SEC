@@ -18,6 +18,8 @@ import java.security.KeyStoreException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
@@ -91,8 +93,8 @@ public class Server implements ServerAPI{
     }
 
     public Server(int id) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
-        this("server", "server");
-        _id = id;
+	this("server" + id, "server" + id);
+  _id = id;
     }
 
     public void cleanup() {
@@ -517,24 +519,45 @@ public class Server implements ServerAPI{
         }
     }
 
+    public int getId() { return _id; }
+
+
+
 
 
     public static void main(String args[]) {
-        int registryPort = 1099;
+        int registryPort = 8000;
         System.out.println("#####");
 
         try {
-            Server obj;
-            if(args.length > 0){
-                obj = new Server(args[0], args[1]);
-            }
-            else
-                obj = new Server();
+	    Server obj;
+	    if(args.length == 1){
+		    obj = new Server(Integer.parseInt(args[0]));
+      	    }
+	    else if(args.length == 2) {
+		    obj = new Server(args[0], args[1]);
+	    }
+	    else
+		    obj = new Server();
             //src.hello.Server obj = new src.hello.Server();
             ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
-            //Registry registry = LocateRegistry.getRegistry();
+            //Registry registry = LocateRegistry.getRegistry();i
+	    BufferedReader reader;
+	    try {
+	    	reader = new BufferedReader(new FileReader("../resources/servers.txt"));
+		String line = reader.readLine();
+		while (line != null) {
+			String id = line.split(" ")[0];
+			if(Integer.parseInt(id) == obj.getId())
+				registryPort = Integer.parseInt(line.split(" ")[1].split("/")[2].split(":")[1]);
+			line = reader.readLine();
+		}
+		reader.close();
+	    } catch (IOException e) {
+		    e.printStackTrace();
+	    }
             Registry registry = LocateRegistry.createRegistry(registryPort); //no garbage collection
             registry.bind("ServerAPI", stub);
             //Naming.rebind("//localhost:1099/ServerAPI");
