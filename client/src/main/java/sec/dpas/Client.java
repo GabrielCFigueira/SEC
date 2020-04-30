@@ -41,6 +41,8 @@ public class Client {
     private int _clientId;
     private static int _counter = 0;
     private ArrayList<Announcement> _lastRead;
+    private int _f = 0;
+    private int _N = 1;
 
     public Client() throws FileNotFoundException, IOException {
         try {
@@ -63,6 +65,29 @@ public class Client {
         _lastRead = new ArrayList<Announcement>();
     }
 
+    public Client(int f, int N ) throws FileNotFoundException, IOException {
+        try {
+            _privKey = Crypto.readPrivateKey("../resources/key.store", "test", _keystorePassword, "testtest");
+        } catch(KeyStoreException e) {
+            System.out.println("KeyStoreException");
+        } catch(UnrecoverableKeyException e) {
+            System.out.println("UnrecoverableKeyException");
+        } catch(NoSuchAlgorithmException e) {
+            System.out.println("NoSuchAlgorithmException");
+        } catch(CertificateException e) {
+            System.out.println("CertificateException");
+        }
+
+        _pubkey = Crypto.readPublicKey("../resources/test.pub");
+
+        _annId = 0;
+        _clientId = _counter;
+        _counter++;
+        _lastRead = new ArrayList<Announcement>();
+        _f = f;
+        _N = N;
+    }
+
     public Client(String keyName, String password) throws FileNotFoundException, IOException {
         try {
             _privKey = Crypto.readPrivateKey("../resources/key.store", keyName, _keystorePassword, password);
@@ -82,6 +107,29 @@ public class Client {
         _clientId = _counter;
         _counter++;
         _lastRead = new ArrayList<Announcement>();
+    }
+
+    public Client(String keyName, String password, int f, int N) throws FileNotFoundException, IOException {
+        try {
+            _privKey = Crypto.readPrivateKey("../resources/key.store", keyName, _keystorePassword, password);
+        } catch(KeyStoreException e) {
+            System.out.println("KeyStoreException");
+        } catch(UnrecoverableKeyException e) {
+            System.out.println("UnrecoverableKeyException");
+        } catch(NoSuchAlgorithmException e) {
+            System.out.println("NoSuchAlgorithmException");
+        } catch(CertificateException e) {
+            System.out.println("CertificateException");
+        }
+
+        _pubkey = Crypto.readPublicKey("../resources/" + keyName + ".pub");
+
+        _annId = 0;
+        _clientId = _counter;
+        _counter++;
+        _lastRead = new ArrayList<Announcement>();
+        _f = f;
+        _N = N;
     }
 
     protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
@@ -132,28 +180,32 @@ public class Client {
     public String registerOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
-        Message message = new Message();
-        String clientNonce = Crypto.generateNonce();
-        message.appendObject(pubkey);
-        message.appendObject(clientNonce);
+        String ret = "";
+        for (int i = 0; i < _N; i++){
+          Message message = new Message();
+          String clientNonce = Crypto.generateNonce();
+          message.appendObject(pubkey);
+          message.appendObject(clientNonce);
 
-        // call function from ServerAPI
-        Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+          // call function from ServerAPI
+          Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
 
 
-        // verificacao da assinatura da response
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-        Message messageReceived = new Message();
+          // verificacao da assinatura da response
+          PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
+          Message messageReceived = new Message();
 
-        messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getClientNonce());
+          messageReceived.appendObject(response.getStatusCode());
+          messageReceived.appendObject(response.getClientNonce());
 
-        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-            return "Signature verification failed";
-        else if(clientNonce != response.getClientNonce())
-            return "Server returned invalid nonce: possible replay attack";
-        else
-            return response.getStatusCode();
+          if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+              ret += "Signature verification failed";
+          else if(clientNonce != response.getClientNonce())
+              ret += "Server returned invalid nonce: possible replay attack";
+          else
+              ret += response.getStatusCode();
+        }
+        return ret;
     }
 
     /**
