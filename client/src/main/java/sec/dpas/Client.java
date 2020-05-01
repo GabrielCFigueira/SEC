@@ -203,7 +203,7 @@ public class Client {
      * registerOption
      *
      */
-    public String registerOption(ServerAPI stub, PublicKey serverpubkey) throws IOException, FileNotFoundException, SigningException {
+    public String registerOption(ServerAPI stub, PublicKey serverpubkey) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
         String ret = "";
@@ -237,7 +237,7 @@ public class Client {
      * postOption
      *
      */
-    public String postOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+    public String postOption(ServerAPI stub, PublicKey serverpubkey, Announcement a) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
@@ -248,7 +248,6 @@ public class Client {
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
 
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
@@ -261,9 +260,6 @@ public class Client {
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
         String serverNonce = response.getServerNonce();
-
-        // creating Announcement
-        Announcement a = this.createAnnouncement();
 
         // creating Message
         message = new Message();
@@ -293,7 +289,7 @@ public class Client {
      * postGeneralOption
      *
      */
-    public String postGeneralOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+    public String postGeneralOption(ServerAPI stub, PublicKey serverpubkey, Announcement a) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
@@ -304,7 +300,6 @@ public class Client {
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
@@ -316,9 +311,6 @@ public class Client {
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
         String serverNonce = response.getServerNonce();
-
-        // creating Announcement
-        Announcement a = this.createAnnouncement();
 
         // creating Message
         message = new Message();
@@ -348,7 +340,7 @@ public class Client {
      * readOption
      *
      */
-    public String readOption(ServerAPI stub, int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException, ClassNotFoundException {
+    public String readOption(ServerAPI stub, PublicKey serverpubkey, int number, PublicKey pubkeyToRead) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
@@ -359,7 +351,6 @@ public class Client {
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
@@ -402,7 +393,7 @@ public class Client {
      * readGeneralOption
      *
      */
-    public String readGeneralOption(ServerAPI stub, int number) throws IOException, FileNotFoundException, SigningException, ClassNotFoundException {
+    public String readGeneralOption(ServerAPI stub, PublicKey serverpubkey, int number) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
@@ -413,7 +404,6 @@ public class Client {
         message.appendObject(clientNonce);
         Response response = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
         //response signature verification
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
@@ -453,26 +443,107 @@ public class Client {
     }
 
     //here be distributed section
-    public String register() throws IOException, FileNotFoundException, SigningException, ClassNotFoundException {
-	    String status = "";
-	    ServerAPI stub = null;
-	    String url, id;
-	    for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-		id = ids.nextElement();
- 	        url = _servers.get(id);
-		try {
-            	    stub = (ServerAPI) Naming.lookup(url);
-		} catch (Exception e) {
-			status += id + ":" + url + " : " + e.getMessage() + "\n";
-			e.printStackTrace();
-			continue;
-		}
-          	PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-		status += id + ":" + url + " : " + registerOption(stub, serverpubkey) + "\n";
+    public String register() throws IOException, FileNotFoundException, SigningException {
+	String status = "";
+	ServerAPI stub = null;
+	String url, id;
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+	    id = ids.nextElement();
+ 	    url = _servers.get(id);
+	    try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+		status += id + ": " + url + " : " + e.getMessage() + "\n";
+		e.printStackTrace();
+		continue;
 	    }
-	    return status;
+            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+	    status += id + ": " + url + " : " + registerOption(stub, serverpubkey) + "\n";
+	}
+	return status;
     }
 
+    public String post() throws IOException, FileNotFoundException, SigningException {
+	String status = "";
+	ServerAPI stub = null;
+	String url, id;
+	Announcement a = this.createAnnouncement();
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+	    id = ids.nextElement();
+ 	    url = _servers.get(id);
+	    try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+		status += id + ": " + url + " : " + e.getMessage() + "\n";
+		e.printStackTrace();
+		continue;
+	    }
+            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+	    status += id + ": " + url + " : " + postOption(stub, serverpubkey, a) + "\n";
+	}
+	return status;
+    }
+
+    public String postGeneral() throws IOException, FileNotFoundException, SigningException {
+	String status = "";
+	ServerAPI stub = null;
+	String url, id;
+	Announcement a = this.createAnnouncement();
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+	    id = ids.nextElement();
+ 	    url = _servers.get(id);
+	    try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+		status += id + ":" + url + " : " + e.getMessage() + "\n";
+		e.printStackTrace();
+		continue;
+	    }
+            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+	    status += id + ": " + url + " : " + postGeneralOption(stub, serverpubkey, a) + "\n";
+	}
+	return status;
+    }
+    
+    public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
+	String status = "";
+	ServerAPI stub = null;
+	String url, id;
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+	    id = ids.nextElement();
+ 	    url = _servers.get(id);
+	    try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+		status += id + ": " + url + " : " + e.getMessage() + "\n";
+		e.printStackTrace();
+		continue;
+	    }
+            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+	    status += id + ": " + url + " : " + readOption(stub, serverpubkey, number, pubkeyToRead) + "\n";
+	}
+	return status;
+    }
+    
+    public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
+	String status = "";
+	ServerAPI stub = null;
+	String url, id;
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+	    id = ids.nextElement();
+ 	    url = _servers.get(id);
+	    try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+		status += id + ": " + url + " : " + e.getMessage() + "\n";
+		e.printStackTrace();
+		continue;
+	    }
+            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+	    status += id + ": " + url + " : " + readGeneralOption(stub, serverpubkey, number) + "\n";
+	}
+	return status;
+    }
 
     /**
      * createAnnouncement
@@ -557,10 +628,10 @@ public class Client {
                         System.out.println(cli.register());
                         break;
                     case 2:
-                        System.out.println(cli.postOption(stub));
+                        System.out.println(cli.post());
                         break;
                     case 3:
-                        System.out.println(cli.postGeneralOption(stub));
+                        System.out.println(cli.postGeneral());
                         break;
                     case 4:
                         System.out.println("#===============================================#");
@@ -580,14 +651,14 @@ public class Client {
                         System.out.println("| Number of Announcements to read |");
                         System.out.println("#=================================#");
                         int number = Integer.parseInt(reader.readLine());
-                        System.out.println(cli.readOption(stub, number, pubkeyToRead));
+                        System.out.println(cli.read(number, pubkeyToRead));
                         break;
                     case 5:
                         System.out.println("#=================================#");
                         System.out.println("| Number of Announcements to read |");
                         System.out.println("#=================================#");
                         int number2 = Integer.parseInt(reader.readLine());
-                        System.out.println(cli.readGeneralOption(stub, number2));
+                        System.out.println(cli.readGeneral(number2));
                         break;
                     case 6:
                         bk = true;
