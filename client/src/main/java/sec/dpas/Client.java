@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.rmi.Naming;
 import java.rmi.Remote;
@@ -15,6 +17,7 @@ import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Enumeration;
 
 import javax.sound.sampled.SourceDataLine;
 
@@ -43,6 +46,25 @@ public class Client {
     private ArrayList<Announcement> _lastRead;
     private int _f = 0;
     private int _N = 1;
+    private Hashtable<String, String> _servers = new Hashtable<String, String>();
+
+    private void generateUrls() {
+	BufferedReader reader;
+        try {
+            reader = new BufferedReader(new FileReader("../resources/servers.txt"));
+            String line = reader.readLine();
+	    String[] words;
+            while (line != null) {
+		words = line.split(" ");
+                _servers.put(words[0], words[1]);
+		line = reader.readLine();
+            }
+            reader.close();
+        } catch (IOException e) {
+       	    e.printStackTrace();
+        }
+
+    }
 
     public Client() throws FileNotFoundException, IOException {
         try {
@@ -58,11 +80,12 @@ public class Client {
         }
 
         _pubkey = Crypto.readPublicKey("../resources/test.pub");
-
+	
         _annId = 0;
         _clientId = _counter;
         _counter++;
         _lastRead = new ArrayList<Announcement>();
+	generateUrls();
     }
 
     public Client(int f, int N ) throws FileNotFoundException, IOException {
@@ -86,6 +109,7 @@ public class Client {
         _lastRead = new ArrayList<Announcement>();
         _f = f;
         _N = N;
+	generateUrls();
     }
 
     public Client(String keyName, String password) throws FileNotFoundException, IOException {
@@ -107,6 +131,7 @@ public class Client {
         _clientId = _counter;
         _counter++;
         _lastRead = new ArrayList<Announcement>();
+	generateUrls();
     }
 
     public Client(String keyName, String password, int f, int N) throws FileNotFoundException, IOException {
@@ -130,6 +155,7 @@ public class Client {
         _lastRead = new ArrayList<Announcement>();
         _f = f;
         _N = N;
+	generateUrls();
     }
 
     protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
@@ -177,7 +203,7 @@ public class Client {
      * registerOption
      *
      */
-    public String registerOption(ServerAPI stub) throws IOException, FileNotFoundException, SigningException {
+    public String registerOption(ServerAPI stub, PublicKey serverpubkey) throws IOException, FileNotFoundException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
         String ret = "";
@@ -192,7 +218,6 @@ public class Client {
 
 
           // verificacao da assinatura da response
-          PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
           Message messageReceived = new Message();
 
           messageReceived.appendObject(response.getStatusCode());
@@ -200,7 +225,7 @@ public class Client {
 
           if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
               ret += "Signature verification failed";
-          else if(clientNonce != response.getClientNonce())
+          else if(!clientNonce.equals(response.getClientNonce()))
               ret += "Server returned invalid nonce: possible replay attack";
           else
               ret += response.getStatusCode();
@@ -231,7 +256,7 @@ public class Client {
         messageReceived.appendObject(response.getServerNonce());
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
@@ -258,7 +283,7 @@ public class Client {
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else
             return response.getStatusCode();
@@ -286,7 +311,7 @@ public class Client {
         messageReceived.appendObject(response.getServerNonce());
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
@@ -313,7 +338,7 @@ public class Client {
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else
             return response.getStatusCode();
@@ -341,7 +366,7 @@ public class Client {
         messageReceived.appendObject(response.getServerNonce());
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
@@ -364,7 +389,7 @@ public class Client {
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
@@ -395,7 +420,7 @@ public class Client {
         messageReceived.appendObject(response.getServerNonce());
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else if(!(response.getStatusCode().equals("Nonce generated")))
             return response.getStatusCode();
@@ -418,7 +443,7 @@ public class Client {
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
-        else if(response.getClientNonce() != clientNonce)
+        else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
@@ -426,6 +451,28 @@ public class Client {
             return response.getStatusCode();
         }
     }
+
+    //here be distributed section
+    public String register() throws IOException, FileNotFoundException, SigningException, ClassNotFoundException {
+	    String status = "";
+	    ServerAPI stub = null;
+	    String url, id;
+	    for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+		id = ids.nextElement();
+ 	        url = _servers.get(id);
+		try {
+            	    stub = (ServerAPI) Naming.lookup(url);
+		} catch (Exception e) {
+			status += id + ":" + url + " : " + e.getMessage() + "\n";
+			e.printStackTrace();
+			continue;
+		}
+          	PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+		status += id + ":" + url + " : " + registerOption(stub, serverpubkey) + "\n";
+	    }
+	    return status;
+    }
+
 
     /**
      * createAnnouncement
@@ -492,10 +539,9 @@ public class Client {
 	    else
 	    	cli = new Client();
 
-            ServerAPI stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
             int option = 0;
             boolean bk = false;
-
+	    ServerAPI stub = null;
             while(option != 6) {
 	    try {
                 cli.printOptions();
@@ -508,7 +554,7 @@ public class Client {
                 }
                 switch (option) {
                     case 1:
-                        System.out.println(cli.registerOption(stub));
+                        System.out.println(cli.register());
                         break;
                     case 2:
                         System.out.println(cli.postOption(stub));

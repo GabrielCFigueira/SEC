@@ -1,4 +1,2 @@
-1 http://localhost:8009/ServerAPI
-2 http://localhost:8002/ServerAPI
-3 http://localhost:8003/ServerAPI
-4 http://localhost:8004/ServerAPI
+1 //localhost:8009/ServerAPI
+2 //localhost:8002/ServerAPI
