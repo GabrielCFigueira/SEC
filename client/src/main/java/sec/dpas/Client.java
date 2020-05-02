@@ -165,10 +165,6 @@ public class Client {
 
     public PublicKey getPublicKey() throws FileNotFoundException, IOException{ return _pubkey; }
 
-    public Message reCreateMessage() {
-        return null;
-    }
-
     /**
      * printOptions
      *
@@ -444,13 +440,11 @@ public class Client {
     //here be distributed section
     public String register() throws IOException, FileNotFoundException, SigningException {
         String status = "";
-        //ServerAPI stub = null;
         String url, id;
 
-        int majority = _N;//3 * _f + 1;
+        int majority = _N;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
-        //private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
         for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -508,12 +502,17 @@ public class Client {
 
     public String post() throws IOException, FileNotFoundException, SigningException {
         String status = "";
-        ServerAPI stub = null;
         String url, id;
-        Announcement a = this.createAnnouncement();
+        final Announcement a = this.createAnnouncement();
+
+        int majority = 2 * _f + 1;
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+
         for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
             url = _servers.get(id);
+            final ServerAPI stub;
             try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
@@ -521,20 +520,62 @@ public class Client {
                 e.printStackTrace();
                 continue;
             }
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            status += id + ": " + url + " : " + postOption(stub, serverpubkey, a) + "\n";
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+
+            responses.add(threadpool.submit(() -> postOption(stub, serverpubkey, a)));
         }
+
+        /*
+         * Async Call
+         * 
+         */
+        int nResponses = 0;
+        while (nResponses < majority) {
+            status = "";
+            for(int i = responses.size()-1; i >= 0; --i) {
+                if(responses.get(i).isDone()) {
+                    try {
+                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                            nResponses++;
+                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
+                            //esta aqui um erro por causa de ids e urls
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Our Async get exception.");
+                    }
+                    responses.remove(i);
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch(Exception e) {
+                System.out.println("sleep exception");
+            }
+            System.out.println("FutureTask is not finished yet..."); 
+        }
+
+        threadpool.shutdown();
+        /*
+         * End of Async Call
+         * 
+         */
+
         return status;
     }
 
     public String postGeneral() throws IOException, FileNotFoundException, SigningException {
         String status = "";
-        ServerAPI stub = null;
         String url, id;
         Announcement a = this.createAnnouncement();
+
+        int majority = 2 * _f + 1;
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+
         for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
             url = _servers.get(id);
+            final ServerAPI stub;
             try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
@@ -542,9 +583,46 @@ public class Client {
                 e.printStackTrace();
                 continue;
             }
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            status += id + ": " + url + " : " + postGeneralOption(stub, serverpubkey, a) + "\n";
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+
+            responses.add(threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
         }
+
+        /*
+         * Async Call
+         * 
+         */
+        int nResponses = 0;
+        while (nResponses < majority) {
+            status = "";
+            for(int i = responses.size()-1; i >= 0; --i) {
+                if(responses.get(i).isDone()) {
+                    try {
+                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                            nResponses++;
+                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
+                            //esta aqui um erro por causa de ids e urls
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Our Async get exception.");
+                    }
+                    responses.remove(i);
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch(Exception e) {
+                System.out.println("sleep exception");
+            }
+            System.out.println("FutureTask is not finished yet..."); 
+        }
+
+        threadpool.shutdown();
+        /*
+         * End of Async Call
+         * 
+         */
+
         return status;
     }
 
