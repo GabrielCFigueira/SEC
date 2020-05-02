@@ -628,11 +628,16 @@ public class Client {
 
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
         String status = "";
-        ServerAPI stub = null;
         String url, id;
-        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+
+        int majority = 2 * _f + 1;
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
             url = _servers.get(id);
+            final ServerAPI stub;
             try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
@@ -640,31 +645,106 @@ public class Client {
                 e.printStackTrace();
                 continue;
             }
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            status += id + ": " + url + " : " + readOption(stub, serverpubkey, number, pubkeyToRead) + "\n";
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            responses.add(threadpool.submit(() -> readOption(stub, serverpubkey, number, pubkeyToRead)));
         }
+
+        /*
+         * Async Call
+         * 
+         */
+        int nResponses = 0;
+        while (nResponses < majority) {
+            status = "";
+            for(int i = responses.size()-1; i >= 0; --i) {
+                if(responses.get(i).isDone()) {
+                    try {
+                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                            nResponses++;
+                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
+                            //esta aqui um erro por causa de ids e urls
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Our Async get exception.");
+                    }
+                    responses.remove(i);
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch(Exception e) {
+                System.out.println("sleep exception");
+            }
+            System.out.println("FutureTask is not finished yet..."); 
+        }
+
+        threadpool.shutdown();
+        /*
+         * End of Async Call
+         * 
+         */
         return status;
     }
 
     public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
         String status = "";
-        ServerAPI stub = null;
         String url, id;
-        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+        int majority = 2 * _f + 1;
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
             url = _servers.get(id);
-            try {
+            final ServerAPI stub;
+	    try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
                 status += id + ": " + url + " : " + e.getMessage() + "\n";
                 e.printStackTrace();
                 continue;
             }
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            status += id + ": " + url + " : " + readGeneralOption(stub, serverpubkey, number) + "\n";
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            responses.add(threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number)));
         }
+
+        /*
+         * Async Call
+         * 
+         */
+        int nResponses = 0;
+        while (nResponses < majority) {
+            status = "";
+            for(int i = responses.size()-1; i >= 0; --i) {
+                if(responses.get(i).isDone()) {
+                    try {
+                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                            nResponses++;
+                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
+                            //esta aqui um erro por causa de ids e urls
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Our Async get exception.");
+                    }
+                    responses.remove(i);
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch(Exception e) {
+                System.out.println("sleep exception");
+            }
+            System.out.println("FutureTask is not finished yet..."); 
+        }
+
+        threadpool.shutdown();
+        /*
+         * End of Async Call
+         * 
+         */
         return status;
     }
+
 
     static class AsyncAnswer {
         final String value;
