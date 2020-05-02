@@ -500,10 +500,9 @@ public class Client {
         return status;
     }
 
-    public String post() throws IOException, FileNotFoundException, SigningException {
+    public String post(Announcement a) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-        final Announcement a = this.createAnnouncement();
 
         int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
@@ -563,10 +562,9 @@ public class Client {
         return status;
     }
 
-    public String postGeneral() throws IOException, FileNotFoundException, SigningException {
+    public String postGeneral(Announcement a) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-        Announcement a = this.createAnnouncement();
 
         int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
@@ -818,7 +816,7 @@ public class Client {
                 cli = new Client(args[0], args[1]);
             else
                 cli = new Client();
-
+	    Announcement a = null;
             int option = 0;
             boolean bk = false;
             ServerAPI stub = null;
@@ -837,10 +835,12 @@ public class Client {
                             System.out.println(cli.register());
                             break;
                         case 2:
-                            System.out.println(cli.post());
+			    a = cli.createAnnouncement();
+                            System.out.println(cli.post(a));
                             break;
                         case 3:
-                            System.out.println(cli.postGeneral());
+			    a = cli.createAnnouncement();
+                            System.out.println(cli.postGeneral(a));
                             break;
                         case 4:
                             System.out.println("#===============================================#");
