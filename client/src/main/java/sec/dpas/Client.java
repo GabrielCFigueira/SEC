@@ -444,7 +444,7 @@ public class Client {
 
         int majority = _N;
         ExecutorService threadpool = Executors.newCachedThreadPool();
-        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
 
         for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -459,7 +459,7 @@ public class Client {
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
 
-            responses.add(threadpool.submit(() -> registerOption(stub, serverpubkey)));
+            responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
         }
 
         /*
@@ -469,18 +469,18 @@ public class Client {
         int nResponses = 0;
         while (nResponses < majority) {
             status = "";
-            for(int i = responses.size()-1; i >= 0; --i) {
-                if(responses.get(i).isDone()) {
+            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+                if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
                             nResponses++;
-                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
-                            //esta aqui um erro por causa de ids e urls
+                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
                         }
                     } catch (Exception e) {
                         System.out.println("Our Async get exception.");
                     }
-                    responses.remove(i);
+                    responses.remove(id);
                 }
             }
             try {
@@ -506,7 +506,7 @@ public class Client {
 
         int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
-        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
 
         for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -521,7 +521,7 @@ public class Client {
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
 
-            responses.add(threadpool.submit(() -> postOption(stub, serverpubkey, a)));
+            responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
         }
 
         /*
@@ -531,18 +531,18 @@ public class Client {
         int nResponses = 0;
         while (nResponses < majority) {
             status = "";
-            for(int i = responses.size()-1; i >= 0; --i) {
-                if(responses.get(i).isDone()) {
+            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+                if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
                             nResponses++;
-                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
-                            //esta aqui um erro por causa de ids e urls
+                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
                         }
                     } catch (Exception e) {
                         System.out.println("Our Async get exception.");
                     }
-                    responses.remove(i);
+                    responses.remove(id);
                 }
             }
             try {
@@ -568,7 +568,7 @@ public class Client {
 
         int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
-        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
 
         for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -583,7 +583,7 @@ public class Client {
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
 
-            responses.add(threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
+            responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
         }
 
         /*
@@ -593,18 +593,18 @@ public class Client {
         int nResponses = 0;
         while (nResponses < majority) {
             status = "";
-            for(int i = responses.size()-1; i >= 0; --i) {
-                if(responses.get(i).isDone()) {
+            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+                if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
                             nResponses++;
-                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
-                            //esta aqui um erro por causa de ids e urls
+                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
                         }
                     } catch (Exception e) {
                         System.out.println("Our Async get exception.");
                     }
-                    responses.remove(i);
+                    responses.remove(id);
                 }
             }
             try {
@@ -630,7 +630,7 @@ public class Client {
 
         int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
-        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
         
 	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -644,7 +644,7 @@ public class Client {
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.add(threadpool.submit(() -> readOption(stub, serverpubkey, number, pubkeyToRead)));
+            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, number, pubkeyToRead)));
         }
 
         /*
@@ -654,18 +654,18 @@ public class Client {
         int nResponses = 0;
         while (nResponses < majority) {
             status = "";
-            for(int i = responses.size()-1; i >= 0; --i) {
-                if(responses.get(i).isDone()) {
+            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+                if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
                             nResponses++;
-                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
-                            //esta aqui um erro por causa de ids e urls
+                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
                         }
                     } catch (Exception e) {
                         System.out.println("Our Async get exception.");
                     }
-                    responses.remove(i);
+                    responses.remove(id);
                 }
             }
             try {
@@ -689,7 +689,7 @@ public class Client {
         String url, id;
         int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
-        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
         
 	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -703,7 +703,7 @@ public class Client {
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.add(threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number)));
+            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number)));
         }
 
         /*
@@ -713,18 +713,18 @@ public class Client {
         int nResponses = 0;
         while (nResponses < majority) {
             status = "";
-            for(int i = responses.size()-1; i >= 0; --i) {
-                if(responses.get(i).isDone()) {
+            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+                if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
                             nResponses++;
-                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
-                            //esta aqui um erro por causa de ids e urls
+                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
                         }
                     } catch (Exception e) {
                         System.out.println("Our Async get exception.");
                     }
-                    responses.remove(i);
+                    responses.remove(id);
                 }
             }
             try {
