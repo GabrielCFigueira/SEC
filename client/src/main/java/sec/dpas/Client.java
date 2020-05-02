@@ -18,6 +18,9 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.sound.sampled.SourceDataLine;
 
@@ -49,19 +52,19 @@ public class Client {
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
     private void generateUrls() {
-	BufferedReader reader;
+        BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader("../resources/servers.txt"));
             String line = reader.readLine();
-	    String[] words;
+            String[] words;
             while (line != null) {
-		words = line.split(" ");
+                words = line.split(" ");
                 _servers.put(words[0], words[1]);
-		line = reader.readLine();
+                line = reader.readLine();
             }
             reader.close();
         } catch (IOException e) {
-       	    e.printStackTrace();
+            e.printStackTrace();
         }
 
     }
@@ -80,12 +83,12 @@ public class Client {
         }
 
         _pubkey = Crypto.readPublicKey("../resources/test.pub");
-	
+
         _annId = 0;
         _clientId = _counter;
         _counter++;
         _lastRead = new ArrayList<Announcement>();
-	generateUrls();
+        generateUrls();
     }
 
     public Client(int f, int N ) throws FileNotFoundException, IOException {
@@ -109,7 +112,7 @@ public class Client {
         _lastRead = new ArrayList<Announcement>();
         _f = f;
         _N = N;
-	generateUrls();
+        generateUrls();
     }
 
     public Client(String keyName, String password) throws FileNotFoundException, IOException {
@@ -131,7 +134,7 @@ public class Client {
         _clientId = _counter;
         _counter++;
         _lastRead = new ArrayList<Announcement>();
-	generateUrls();
+        generateUrls();
     }
 
     public Client(String keyName, String password, int f, int N) throws FileNotFoundException, IOException {
@@ -155,7 +158,7 @@ public class Client {
         _lastRead = new ArrayList<Announcement>();
         _f = f;
         _N = N;
-	generateUrls();
+        generateUrls();
     }
 
     protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
@@ -206,31 +209,27 @@ public class Client {
     public String registerOption(ServerAPI stub, PublicKey serverpubkey) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
-        String ret = "";
-        for (int i = 0; i < _N; i++){
-          Message message = new Message();
-          String clientNonce = Crypto.generateNonce();
-          message.appendObject(pubkey);
-          message.appendObject(clientNonce);
 
-          // call function from ServerAPI
-          Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        // create message to send to server
+        Message message = new Message();
+        String clientNonce = Crypto.generateNonce();
+        message.appendObject(pubkey);
+        message.appendObject(clientNonce);
 
+        // call function from ServerAPI
+        Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
 
-          // verificacao da assinatura da response
-          Message messageReceived = new Message();
+        // verificacao da assinatura da response
+        Message messageReceived = new Message();
+        messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getClientNonce());
 
-          messageReceived.appendObject(response.getStatusCode());
-          messageReceived.appendObject(response.getClientNonce());
-
-          if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
-              ret += "Signature verification failed";
-          else if(!clientNonce.equals(response.getClientNonce()))
-              ret += "Server returned invalid nonce: possible replay attack";
-          else
-              ret += response.getStatusCode();
-        }
-        return ret;
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+            return "Signature verification failed";
+        else if(!clientNonce.equals(response.getClientNonce()))
+            return "Server returned invalid nonce: possible replay attack";
+        
+        return response.getStatusCode();
     }
 
     /**
@@ -444,105 +443,157 @@ public class Client {
 
     //here be distributed section
     public String register() throws IOException, FileNotFoundException, SigningException {
-	String status = "";
-	ServerAPI stub = null;
-	String url, id;
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-	    id = ids.nextElement();
- 	    url = _servers.get(id);
-	    try {
+        String status = "";
+        //ServerAPI stub = null;
+        String url, id;
+
+        int majority = _N;//3 * _f + 1;
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        ArrayList<Future<String>> responses = new ArrayList<Future<String>>();
+        //private Hashtable<String, String> _servers = new Hashtable<String, String>();
+
+        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            final ServerAPI stub;
+            try {
                 stub = (ServerAPI) Naming.lookup(url);
-	    } catch (Exception e) {
-		status += id + ": " + url + " : " + e.getMessage() + "\n";
-		e.printStackTrace();
-		continue;
-	    }
-            PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-	    status += id + ": " + url + " : " + registerOption(stub, serverpubkey) + "\n";
-	}
-	return status;
+            } catch (Exception e) {
+                status += id + ": " + url + " : " + e.getMessage() + "\n";
+                e.printStackTrace();
+                continue;
+            }
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+
+            responses.add(threadpool.submit(() -> registerOption(stub, serverpubkey)));
+        }
+
+        /*
+         * Async Call
+         * 
+         */
+        int nResponses = 0;
+        while (nResponses < majority) {
+            status = "";
+            for(int i = responses.size()-1; i >= 0; --i) {
+                if(responses.get(i).isDone()) {
+                    try {
+                        if(!responses.get(i).get().equals("Signature verification failed") && !responses.get(i).get().equals("Server returned invalid nonce: possible replay attack")) {
+                            nResponses++;
+                            status += i + ": " + _servers.get(i) + " : " + responses.get(i).get() + "\n";
+                            //esta aqui um erro por causa de ids e urls
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Our Async get exception.");
+                    }
+                    responses.remove(i);
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch(Exception e) {
+                System.out.println("sleep exception");
+            }
+            System.out.println("FutureTask is not finished yet..."); 
+        }
+
+        threadpool.shutdown();
+        /*
+         * End of Async Call
+         * 
+         */
+
+        return status;
     }
 
     public String post() throws IOException, FileNotFoundException, SigningException {
-	String status = "";
-	ServerAPI stub = null;
-	String url, id;
-	Announcement a = this.createAnnouncement();
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-	    id = ids.nextElement();
- 	    url = _servers.get(id);
-	    try {
+        String status = "";
+        ServerAPI stub = null;
+        String url, id;
+        Announcement a = this.createAnnouncement();
+        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            try {
                 stub = (ServerAPI) Naming.lookup(url);
-	    } catch (Exception e) {
-		status += id + ": " + url + " : " + e.getMessage() + "\n";
-		e.printStackTrace();
-		continue;
-	    }
+            } catch (Exception e) {
+                status += id + ": " + url + " : " + e.getMessage() + "\n";
+                e.printStackTrace();
+                continue;
+            }
             PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-	    status += id + ": " + url + " : " + postOption(stub, serverpubkey, a) + "\n";
-	}
-	return status;
+            status += id + ": " + url + " : " + postOption(stub, serverpubkey, a) + "\n";
+        }
+        return status;
     }
 
     public String postGeneral() throws IOException, FileNotFoundException, SigningException {
-	String status = "";
-	ServerAPI stub = null;
-	String url, id;
-	Announcement a = this.createAnnouncement();
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-	    id = ids.nextElement();
- 	    url = _servers.get(id);
-	    try {
+        String status = "";
+        ServerAPI stub = null;
+        String url, id;
+        Announcement a = this.createAnnouncement();
+        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            try {
                 stub = (ServerAPI) Naming.lookup(url);
-	    } catch (Exception e) {
-		status += id + ":" + url + " : " + e.getMessage() + "\n";
-		e.printStackTrace();
-		continue;
-	    }
+            } catch (Exception e) {
+                status += id + ":" + url + " : " + e.getMessage() + "\n";
+                e.printStackTrace();
+                continue;
+            }
             PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-	    status += id + ": " + url + " : " + postGeneralOption(stub, serverpubkey, a) + "\n";
-	}
-	return status;
+            status += id + ": " + url + " : " + postGeneralOption(stub, serverpubkey, a) + "\n";
+        }
+        return status;
     }
-    
+
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
-	String status = "";
-	ServerAPI stub = null;
-	String url, id;
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-	    id = ids.nextElement();
- 	    url = _servers.get(id);
-	    try {
+        String status = "";
+        ServerAPI stub = null;
+        String url, id;
+        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            try {
                 stub = (ServerAPI) Naming.lookup(url);
-	    } catch (Exception e) {
-		status += id + ": " + url + " : " + e.getMessage() + "\n";
-		e.printStackTrace();
-		continue;
-	    }
+            } catch (Exception e) {
+                status += id + ": " + url + " : " + e.getMessage() + "\n";
+                e.printStackTrace();
+                continue;
+            }
             PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-	    status += id + ": " + url + " : " + readOption(stub, serverpubkey, number, pubkeyToRead) + "\n";
-	}
-	return status;
+            status += id + ": " + url + " : " + readOption(stub, serverpubkey, number, pubkeyToRead) + "\n";
+        }
+        return status;
     }
-    
+
     public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
-	String status = "";
-	ServerAPI stub = null;
-	String url, id;
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-	    id = ids.nextElement();
- 	    url = _servers.get(id);
-	    try {
+        String status = "";
+        ServerAPI stub = null;
+        String url, id;
+        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            try {
                 stub = (ServerAPI) Naming.lookup(url);
-	    } catch (Exception e) {
-		status += id + ": " + url + " : " + e.getMessage() + "\n";
-		e.printStackTrace();
-		continue;
-	    }
+            } catch (Exception e) {
+                status += id + ": " + url + " : " + e.getMessage() + "\n";
+                e.printStackTrace();
+                continue;
+            }
             PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-	    status += id + ": " + url + " : " + readGeneralOption(stub, serverpubkey, number) + "\n";
-	}
-	return status;
+            status += id + ": " + url + " : " + readGeneralOption(stub, serverpubkey, number) + "\n";
+        }
+        return status;
+    }
+
+    static class AsyncAnswer {
+        final String value;
+
+        AsyncAnswer(String value) {
+            this.value = value;
+        }
     }
 
     /**
@@ -605,79 +656,79 @@ public class Client {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             Client cli;
 
-	    if(args.length > 0)
-		cli = new Client(args[0], args[1]);
-	    else
-	    	cli = new Client();
+            if(args.length > 0)
+                cli = new Client(args[0], args[1]);
+            else
+                cli = new Client();
 
             int option = 0;
             boolean bk = false;
-	    ServerAPI stub = null;
+            ServerAPI stub = null;
             while(option != 6) {
-	    try {
-                cli.printOptions();
-                option = 0;
                 try {
-                    option = Integer.parseInt(reader.readLine());
-                } catch (Exception e) {
-                    System.out.println("Exception: " + e.toString());
-                    //bk = true;
+                    cli.printOptions();
+                    option = 0;
+                    try {
+                        option = Integer.parseInt(reader.readLine());
+                    } catch (Exception e) {
+                        System.out.println("Exception: " + e.toString());
+                        //bk = true;
+                    }
+                    switch (option) {
+                        case 1:
+                            System.out.println(cli.register());
+                            break;
+                        case 2:
+                            System.out.println(cli.post());
+                            break;
+                        case 3:
+                            System.out.println(cli.postGeneral());
+                            break;
+                        case 4:
+                            System.out.println("#===============================================#");
+                            System.out.println("| Public key name to read from: (test or test1) |");
+                            System.out.println("#===============================================#");
+                            String keyName = reader.readLine();
+                            while (!(keyName.equals("test")) && !(keyName.equals("test1")) ){
+                                System.out.println("#===============================================#");
+                                System.out.println("| Public key name to read from: (test or test1) |");
+                                System.out.println("#===============================================#");
+                                System.out.print(keyName);
+                                keyName = reader.readLine();
+                            }
+                            PublicKey pubkeyToRead = Crypto.readPublicKey("../resources/" + keyName + ".pub");
+
+                            System.out.println("#=================================#");
+                            System.out.println("| Number of Announcements to read |");
+                            System.out.println("#=================================#");
+                            int number = Integer.parseInt(reader.readLine());
+                            System.out.println(cli.read(number, pubkeyToRead));
+                            break;
+                        case 5:
+                            System.out.println("#=================================#");
+                            System.out.println("| Number of Announcements to read |");
+                            System.out.println("#=================================#");
+                            int number2 = Integer.parseInt(reader.readLine());
+                            System.out.println(cli.readGeneral(number2));
+                            break;
+                        case 6:
+                            bk = true;
+                            break;
+
+                        default:
+                            break;
+                    }
+                    if(bk) break;
+
+                } catch (ConnectException e) {
+                    System.out.println("Do not forget to turn on the server :D");
+                    System.out.println("Retrying connection...");
+                    Thread.sleep(1000);
+                    stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
+                    option = 0;
+                    bk = false;
                 }
-                switch (option) {
-                    case 1:
-                        System.out.println(cli.register());
-                        break;
-                    case 2:
-                        System.out.println(cli.post());
-                        break;
-                    case 3:
-                        System.out.println(cli.postGeneral());
-                        break;
-                    case 4:
-                        System.out.println("#===============================================#");
-                        System.out.println("| Public key name to read from: (test or test1) |");
-                        System.out.println("#===============================================#");
-                        String keyName = reader.readLine();
-                        while (!(keyName.equals("test")) && !(keyName.equals("test1")) ){
-                          System.out.println("#===============================================#");
-                          System.out.println("| Public key name to read from: (test or test1) |");
-                          System.out.println("#===============================================#");
-                          System.out.print(keyName);
-                          keyName = reader.readLine();
-                        }
-                        PublicKey pubkeyToRead = Crypto.readPublicKey("../resources/" + keyName + ".pub");
-
-                        System.out.println("#=================================#");
-                        System.out.println("| Number of Announcements to read |");
-                        System.out.println("#=================================#");
-                        int number = Integer.parseInt(reader.readLine());
-                        System.out.println(cli.read(number, pubkeyToRead));
-                        break;
-                    case 5:
-                        System.out.println("#=================================#");
-                        System.out.println("| Number of Announcements to read |");
-                        System.out.println("#=================================#");
-                        int number2 = Integer.parseInt(reader.readLine());
-                        System.out.println(cli.readGeneral(number2));
-                        break;
-                    case 6:
-                        bk = true;
-                        break;
-
-                    default:
-                        break;
-                }
-                if(bk) break;
-
-            	} catch (ConnectException e) {
-            	    System.out.println("Do not forget to turn on the server :D");
-            	    System.out.println("Retrying connection...");
-            	    Thread.sleep(1000);
-            	    stub = (ServerAPI) Naming.lookup("//localhost:1099/ServerAPI");
-            	    option = 0;
-            	    bk = false;
-	        }
-	    }
+            }
         } catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
