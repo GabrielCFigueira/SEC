@@ -73,7 +73,7 @@ public class ITPostGeneralTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
+        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
     }
 
     @Test
@@ -84,9 +84,9 @@ public class ITPostGeneralTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
+        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
 
-        this.postGeneral(pubkey, privkey, stub, "A1", null, "0:1");
+        this.postGeneral(pubkey, privkey, stub, "A1", null, "0:1", 2);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class ITPostGeneralTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
+        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
 
         Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
@@ -105,7 +105,7 @@ public class ITPostGeneralTest {
 
         this.register(pubkey2, privkey2, stub);
 
-        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0");
+        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
     }
 
     @Test
@@ -116,9 +116,9 @@ public class ITPostGeneralTest {
 
         this.register(pubkey, privkey, stub);
 
-        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
+        this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
 
-        this.postGeneral(pubkey, privkey, stub, "A1", null, "0:1");
+        this.postGeneral(pubkey, privkey, stub, "A1", null, "0:1", 2);
 
         Client client2 = new Client("test1", "testtest1");
         PublicKey pubkey2 = client2.getPublicKey();
@@ -126,9 +126,9 @@ public class ITPostGeneralTest {
 
         this.register(pubkey2, privkey2, stub);
 
-        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0");
+        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
 
-        this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1");
+        this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 2);
     }
 
     @Test
@@ -146,6 +146,7 @@ public class ITPostGeneralTest {
         messageAnn.appendObject(body.toCharArray());
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
+        messageAnn.appendObject(1);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -192,6 +193,7 @@ public class ITPostGeneralTest {
         messageAnn.appendObject(body.toCharArray());
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
+        messageAnn.appendObject(1);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -236,6 +238,7 @@ public class ITPostGeneralTest {
         messageAnn.appendObject(body.toCharArray());
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
+        messageAnn.appendObject(1);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -282,6 +285,7 @@ public class ITPostGeneralTest {
         messageAnn.appendObject(bodyRepeated.toCharArray());
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
+        messageAnn.appendObject(1);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, bodyRepeated.toCharArray(), refs, signature, id);
 
@@ -327,6 +331,7 @@ public class ITPostGeneralTest {
         messageAnn.appendObject(body.toCharArray());
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
+        messageAnn.appendObject(1);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -378,13 +383,14 @@ public class ITPostGeneralTest {
     //  criar msg
     //  stub.post
     //  signature ver
-    public void postGeneral(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, String id) throws Exception {
+    public void postGeneral(PublicKey pubkey, PrivateKey privkey, ServerAPI stub, String body, ArrayList<Announcement> refs, String id, int timestamp) throws Exception {
         // create
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
+        messageAnn.appendObject(timestamp);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
