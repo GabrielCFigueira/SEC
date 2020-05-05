@@ -227,7 +227,22 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        synchronized(_announcementB) {
+        //verify Announcement signature
+        try {
+            Message message = new Message();
+            message.appendObject(a.getKey());
+            message.appendObject(a.getMessage());
+            message.appendObject(a.getReferences());
+            message.appendObject(a.getId());
+	    message.appendObject(a.getTimeStamp());
+            if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+        
+	synchronized(_announcementB) {
             synchronized(_nonceTable) {
                 if(!hasPublicKey(pubkey)){
                     return constructResponse("No such user registered", clientNonce);
@@ -265,7 +280,22 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        synchronized(_generalB) {
+        //verify Announcement signature
+        try {
+            Message message = new Message();
+            message.appendObject(a.getKey());
+            message.appendObject(a.getMessage());
+            message.appendObject(a.getReferences());
+            message.appendObject(a.getId());
+	    message.appendObject(a.getTimeStamp());
+            if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+                return constructResponse("Signature verification failed", clientNonce);
+            }
+        } catch(IOException e) {
+            return constructResponse(e.getMessage(), clientNonce);
+        }
+        
+	synchronized(_generalB) {
             synchronized(_nonceTable) {
                 if(!hasPublicKey(pubkey)){
                     return constructResponse("No such user registered", clientNonce);

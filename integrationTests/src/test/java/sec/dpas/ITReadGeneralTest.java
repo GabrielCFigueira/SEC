@@ -554,8 +554,7 @@ public class ITReadGeneralTest {
         PrivateKey privkey = client.getPrivateKey();
 
         this.register(pubkey, privkey, stub);
-
-        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0");
+        Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
         anns.add(ann);
 

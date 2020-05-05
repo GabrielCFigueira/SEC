@@ -50,6 +50,7 @@ public class Client {
     private int _f = 1;
     private int _N = 4;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
+    private int _timeStamp = 1;
 
     private void generateUrls() {
         BufferedReader reader;
@@ -655,12 +656,13 @@ public class Client {
         message.appendObject(this.getPublicKey());
         message.appendObject(msg.toCharArray());
         message.appendObject(refs);
-
-        byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
-
         String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
+	message.appendObject(id);
+	message.appendObject(_timeStamp);
+	byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
+
         _annId++;
-        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), refs, signature, id);
+        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), refs, signature, id, _timeStamp++);
 
         return a;
     }
