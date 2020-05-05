@@ -839,6 +839,8 @@ public class ITReadTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -879,6 +881,8 @@ public class ITReadTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 

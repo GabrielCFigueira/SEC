@@ -143,6 +143,8 @@ public class ITPostTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -189,6 +191,8 @@ public class ITPostTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -231,6 +235,8 @@ public class ITPostTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -275,6 +281,8 @@ public class ITPostTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(bodyRepeated.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, bodyRepeated.toCharArray(), refs, signature, id);
 
@@ -318,6 +326,8 @@ public class ITPostTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
@@ -374,6 +384,8 @@ public class ITPostTest {
         Message messageAnn = new Message();
         messageAnn.appendObject(pubkey);
         messageAnn.appendObject(body.toCharArray());
+        messageAnn.appendObject(refs);
+        messageAnn.appendObject(id);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
         Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id);
 
