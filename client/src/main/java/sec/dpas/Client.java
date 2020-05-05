@@ -47,8 +47,8 @@ public class Client {
     private int _clientId;
     private static int _counter = 0;
     private ArrayList<Announcement> _lastRead;
-    private int _f = 0;
-    private int _N = 1;
+    private int _f = 1;
+    private int _N = 4;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
     private void generateUrls() {
@@ -441,8 +441,6 @@ public class Client {
     public String register() throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-
-        int majority = _N;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
 
@@ -462,40 +460,9 @@ public class Client {
             responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
         }
 
-        /*
-         * Async Call
-         * 
-         */
-        int nResponses = 0;
-        while (nResponses < majority) {
-            status = "";
-            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-                if(responses.get(id).isDone()) {
-                    try {
-                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
-                            nResponses++;
-                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Our Async get exception.");
-                    }
-                    responses.remove(id);
-                }
-            }
-            try {
-                Thread.sleep(100);
-            } catch(Exception e) {
-                System.out.println("sleep exception");
-            }
-            System.out.println("FutureTask is not finished yet..."); 
-        }
+        // Init
 
-        threadpool.shutdown();
-        /*
-         * End of Async Call
-         * 
-         */
+        status = asyncCall(responses, threadpool);
 
         return status;
     }
@@ -503,8 +470,6 @@ public class Client {
     public String post(Announcement a) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-
-        int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
 
@@ -524,40 +489,7 @@ public class Client {
             responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
         }
 
-        /*
-         * Async Call
-         * 
-         */
-        int nResponses = 0;
-        while (nResponses < majority) {
-            status = "";
-            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-                if(responses.get(id).isDone()) {
-                    try {
-                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
-                            nResponses++;
-                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Our Async get exception.");
-                    }
-                    responses.remove(id);
-                }
-            }
-            try {
-                Thread.sleep(100);
-            } catch(Exception e) {
-                System.out.println("sleep exception");
-            }
-            System.out.println("FutureTask is not finished yet..."); 
-        }
-
-        threadpool.shutdown();
-        /*
-         * End of Async Call
-         * 
-         */
+        status = asyncCall(responses, threadpool);
 
         return status;
     }
@@ -565,8 +497,6 @@ public class Client {
     public String postGeneral(Announcement a) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-
-        int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
 
@@ -586,40 +516,7 @@ public class Client {
             responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
         }
 
-        /*
-         * Async Call
-         * 
-         */
-        int nResponses = 0;
-        while (nResponses < majority) {
-            status = "";
-            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-                if(responses.get(id).isDone()) {
-                    try {
-                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
-                            nResponses++;
-                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Our Async get exception.");
-                    }
-                    responses.remove(id);
-                }
-            }
-            try {
-                Thread.sleep(100);
-            } catch(Exception e) {
-                System.out.println("sleep exception");
-            }
-            System.out.println("FutureTask is not finished yet..."); 
-        }
-
-        threadpool.shutdown();
-        /*
-         * End of Async Call
-         * 
-         */
+        status = asyncCall(responses, threadpool);
 
         return status;
     }
@@ -627,8 +524,6 @@ public class Client {
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-
-        int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
         
@@ -647,47 +542,14 @@ public class Client {
             responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, number, pubkeyToRead)));
         }
 
-        /*
-         * Async Call
-         * 
-         */
-        int nResponses = 0;
-        while (nResponses < majority) {
-            status = "";
-            for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-                if(responses.get(id).isDone()) {
-                    try {
-                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
-                            nResponses++;
-                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Our Async get exception.");
-                    }
-                    responses.remove(id);
-                }
-            }
-            try {
-                Thread.sleep(100);
-            } catch(Exception e) {
-                System.out.println("sleep exception");
-            }
-            System.out.println("FutureTask is not finished yet..."); 
-        }
+        status = asyncCall(responses, threadpool);
 
-        threadpool.shutdown();
-        /*
-         * End of Async Call
-         * 
-         */
         return status;
     }
 
     public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
-        int majority = 2 * _f + 1;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
         
@@ -706,11 +568,23 @@ public class Client {
             responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number)));
         }
 
-        /*
-         * Async Call
-         * 
-         */
+        status = asyncCall(responses, threadpool);
+
+        return status;
+    }
+
+
+    /*
+     * Async Call
+     *
+     */
+    public String asyncCall(Hashtable<String, Future<String>> responses, ExecutorService threadpool) {
+    //public Hashtable<String, Future<String>> asyncCall(Hashtable<String, Future<String>> responses, ExecutorService threadpool) {
+        String id;
+        int majority = 2 * _f + 1;
         int nResponses = 0;
+        String status = "";
+
         while (nResponses < majority) {
             status = "";
             for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
@@ -718,13 +592,14 @@ public class Client {
                 if(responses.get(id).isDone()) {
                     try {
                         if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
+                            // necessario mudar este if para abrangir mais hipoteses
                             nResponses++;
                             status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
                         }
                     } catch (Exception e) {
-                        System.out.println("Our Async get exception.");
+                        System.out.println("Our Async got exception.");
                     }
-                    responses.remove(id);
+                    //responses.remove(id);
                 }
             }
             try {
@@ -736,20 +611,9 @@ public class Client {
         }
 
         threadpool.shutdown();
-        /*
-         * End of Async Call
-         * 
-         */
+
         return status;
-    }
-
-
-    static class AsyncAnswer {
-        final String value;
-
-        AsyncAnswer(String value) {
-            this.value = value;
-        }
+        //return responses;
     }
 
     /**
