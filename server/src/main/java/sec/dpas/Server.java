@@ -250,7 +250,8 @@ public class Server implements ServerAPI{
                 if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                     return constructResponse("Invalid nonce", clientNonce);
                 _nonceTable.replace(pubkey,  "0");
-                getUserAnnouncements(pubkey).add(a);
+		if(getUserAnnouncements(pubkey).size() == a.getTimeStamp() - 1)
+	            getUserAnnouncements(pubkey).add(a);
             }
 
             try {saveToFile("board");}
@@ -424,9 +425,9 @@ public class Server implements ServerAPI{
     private Response readFrom(ArrayList<Announcement> ann, int number, String clientNonce) {
 
         if (number < 0)
-            return constructResponse("Tried to read with a negative number.", clientNonce);
+            return constructResponse("Tried to read with a negative number.", (ArrayList<Announcement>) null, clientNonce);
         else if (number > ann.size())
-            return constructResponse("Tried to read with a number bigger than the number of announcements for that board.", clientNonce);
+            return constructResponse("Tried to read with a number bigger than the number of announcements for that board.", (ArrayList<Announcement>) null, clientNonce);
         else if (number == 0)
             return constructResponse("read successful", ann, clientNonce);
         else {
@@ -434,7 +435,7 @@ public class Server implements ServerAPI{
             try {
                 sublist = new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
             } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-                return constructResponse("Thanos has snapped and the Universe stopped making sense", clientNonce);
+                return constructResponse("Thanos has snapped and the Universe stopped making sense", (ArrayList<Announcement>) null, clientNonce);
             }
             return constructResponse("read successful", sublist, clientNonce);
         }

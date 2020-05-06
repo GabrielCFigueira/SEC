@@ -16,6 +16,7 @@ import java.rmi.ConnectException;
 import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.concurrent.Future;
@@ -51,6 +52,8 @@ public class Client {
     private int _N = 4;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
     private int _timeStamp = 1;
+    private ArrayList<ArrayList<Announcement>> _readList = new ArrayList<ArrayList<Announcement>>();
+    
 
     private void generateUrls() {
         BufferedReader reader;
@@ -380,7 +383,10 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
-            _lastRead = response.getAnnouncements();
+	    synchronized(_readList) {	
+	    	_readList.add(response.getAnnouncements());
+	    }
+	    _lastRead = response.getAnnouncements();
             return response.getStatusCode();
         }
     }
@@ -490,7 +496,7 @@ public class Client {
             responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
         }
 
-        status = asyncCall(responses, threadpool);
+        status += asyncCall(responses, threadpool);
 
         return status;
     }
@@ -517,7 +523,7 @@ public class Client {
             responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
         }
 
-        status = asyncCall(responses, threadpool);
+        status += asyncCall(responses, threadpool);
 
         return status;
     }
@@ -540,12 +546,32 @@ public class Client {
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, number, pubkeyToRead)));
+            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead)));
         }
 
-        status = asyncCall(responses, threadpool);
+        status += asyncCall(responses, threadpool);
+
+	List<Announcement> anns;
+	synchronized(_readList) {
+            anns = getMaxTimeStamp(_readList);
+	}
+
+	for(int i = anns.size() - 1; i > 0; i--)
+	    post(anns.get(i));
 
         return status;
+    }
+
+    private List<Announcement> getMaxTimeStamp(List<ArrayList<Announcement>> readList) {
+	List<Announcement> max = new ArrayList<Announcement>();
+	int stamp = 0;
+	for(List<Announcement> read : readList) {
+	    if(read.get(0).getTimeStamp() > stamp) {
+	        stamp = read.get(0).getTimeStamp();
+	    	max = read;
+	    }
+	}
+    	return max;
     }
 
     public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
@@ -569,7 +595,7 @@ public class Client {
             responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number)));
         }
 
-        status = asyncCall(responses, threadpool);
+        status += asyncCall(responses, threadpool);
 
         return status;
     }
@@ -594,13 +620,13 @@ public class Client {
                     try {
                         if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
                             // necessario mudar este if para abrangir mais hipoteses
-                            nResponses++;
-                            status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n";
+				status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n"; 
+	 			nResponses++;
                         }
                     } catch (Exception e) {
                         System.out.println("Our Async got exception.");
                     }
-                    //responses.remove(id);
+                    responses.remove(id);
                 }
             }
             try {

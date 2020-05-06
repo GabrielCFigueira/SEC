@@ -276,7 +276,7 @@ public class ITReadTest {
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
         Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0", 1);
         anns.add(ann);
-        ann = this.post(pubkey, privkey, stub, "A1", null, "0:1", 1);
+        ann = this.post(pubkey, privkey, stub, "A1", null, "0:1", 2);
         anns.add(ann);
 
 
@@ -395,6 +395,7 @@ public class ITReadTest {
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
         message.appendObject(responseRead.getClientNonce());
+	message.appendObject(responseRead.getAnnouncements());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("Tried to read with a negative number.", responseRead.getStatusCode());
@@ -602,7 +603,7 @@ public class ITReadTest {
       Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1", 2);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1", 1);
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -658,7 +659,7 @@ public class ITReadTest {
       Announcement ann = this.post(pubkey2, privkey2, stub, "A0", null, "0:0", 1);
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "B0", arr, "0:1", 2);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "B0", arr, "0:1", 1);
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 
@@ -772,7 +773,7 @@ public class ITReadTest {
       arr.add(ann);
       ann = this.post(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
       arr.add(ann);
-      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1", 2);
+      Announcement ann2 = this.post(pubkey, privkey, stub, "A1", arr, "0:1", 1);
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 

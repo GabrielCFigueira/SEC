@@ -388,7 +388,7 @@ public class ITReadGeneralTest {
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
         message.appendObject(responseRead.getClientNonce());
-
+	message.appendObject(responseRead.getAnnouncements());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("Tried to read with a negative number.", responseRead.getStatusCode());
     }
