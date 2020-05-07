@@ -52,7 +52,7 @@ public class Client {
     private int _N = 4;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
     private int _timeStamp = 1;
-    private ArrayList<ArrayList<Announcement>> _readList = new ArrayList<ArrayList<Announcement>>();
+    private int _generalBoardStamp = 0;
     
 
     private void generateUrls() {
@@ -168,6 +168,8 @@ public class Client {
     protected PrivateKey getPrivateKey() throws FileNotFoundException, IOException{ return _privKey; }
 
     public PublicKey getPublicKey() throws FileNotFoundException, IOException{ return _pubkey; }
+
+    public int getGeneralBoardStamp() { return _generalBoardStamp; }
 
     /**
      * printOptions
@@ -339,7 +341,7 @@ public class Client {
      * readOption
      *
      */
-    public String readOption(ServerAPI stub, PublicKey serverpubkey, int number, PublicKey pubkeyToRead) throws IOException, SigningException {
+    public String readOption(ServerAPI stub, PublicKey serverpubkey, int number, PublicKey pubkeyToRead, List<ArrayList<Announcement>> readList) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
@@ -383,10 +385,9 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
-	    synchronized(_readList) {	
-	    	_readList.add(response.getAnnouncements());
+	    synchronized(readList) {	
+	    	readList.add(response.getAnnouncements());
 	    }
-	    _lastRead = response.getAnnouncements();
             return response.getStatusCode();
         }
     }
@@ -395,7 +396,7 @@ public class Client {
      * readGeneralOption
      *
      */
-    public String readGeneralOption(ServerAPI stub, PublicKey serverpubkey, int number) throws IOException, SigningException {
+    public String readGeneralOption(ServerAPI stub, PublicKey serverpubkey, int number, List<ArrayList<Announcement>> readList) throws IOException, SigningException {
         PublicKey pubkey = this.getPublicKey();
         PrivateKey privkey = this.getPrivateKey();
 
@@ -439,7 +440,9 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
             this.printAnnouncements(response.getAnnouncements());
-            _lastRead = response.getAnnouncements();
+	    synchronized(readList) {
+		readList.add(response.getAnnouncements());
+	    }
             return response.getStatusCode();
         }
     }
@@ -528,11 +531,18 @@ public class Client {
         return status;
     }
 
+    public String postGeneral() throws IOException, FileNotFoundException, SigningException {
+	readGeneral(0);
+	Announcement a = this.createAnnouncement(_generalBoardStamp);
+	return postGeneral(a);
+    }
+
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
+	List<ArrayList<Announcement>> readList = new ArrayList<ArrayList<Announcement>>();
         
 	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -546,31 +556,32 @@ public class Client {
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead)));
+            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead, readList)));
         }
 
         status += asyncCall(responses, threadpool);
 
 	List<Announcement> anns;
-	synchronized(_readList) {
-            anns = getMaxTimeStamp(_readList);
+	synchronized(readList) {
+            anns = getMaxTimeStamp(readList);
 	}
 
-	for(int i = anns.size() - 1; i > 0; i--)
+	for(int i = 0; i < anns.size(); i++)
 	    post(anns.get(i));
 
         return status;
     }
 
     private List<Announcement> getMaxTimeStamp(List<ArrayList<Announcement>> readList) {
-	List<Announcement> max = new ArrayList<Announcement>();
+	ArrayList<Announcement> max = new ArrayList<Announcement>();
 	int stamp = 0;
-	for(List<Announcement> read : readList) {
+	for(ArrayList<Announcement> read : readList) {
 	    if(read.get(read.size() - 1).getTimeStamp() > stamp) {
 	        stamp = read.get(read.size() - 1).getTimeStamp();
 	    	max = read;
 	    }
 	}
+	_lastRead = max;
     	return max;
     }
 
@@ -579,6 +590,7 @@ public class Client {
         String url, id;
         ExecutorService threadpool = Executors.newCachedThreadPool();
         Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
+	List<ArrayList<Announcement>> readList = new ArrayList<ArrayList<Announcement>>();
         
 	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
             id = ids.nextElement();
@@ -592,12 +604,19 @@ public class Client {
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number)));
+            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number, readList)));
         }
 
         status += asyncCall(responses, threadpool);
 
-        return status;
+	List<Announcement> anns;
+	synchronized(readList) {
+            anns = getMaxTimeStamp(readList);
+	}
+
+	_generalBoardStamp = anns.size() + 1;
+
+	return status;
     }
 
 
@@ -647,7 +666,7 @@ public class Client {
      * createAnnouncement
      *
      */
-    public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException {
+    public Announcement createAnnouncement(int timeStamp) throws IOException, FileNotFoundException, SigningException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("#=====================================================#");
         System.out.println("| Write your Announcement Body (up to 255 characters) |");
@@ -684,13 +703,17 @@ public class Client {
         message.appendObject(refs);
         String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
 	message.appendObject(id);
-	message.appendObject(_timeStamp);
+	message.appendObject(timeStamp);
 	byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
         _annId++;
-        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), refs, signature, id, _timeStamp++);
+        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), refs, signature, id, timeStamp);
 
         return a;
+    }
+
+    public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException{
+	    return createAnnouncement(_timeStamp++);
     }
 
 

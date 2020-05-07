@@ -244,14 +244,14 @@ public class Server implements ServerAPI{
         
 	synchronized(_announcementB) {
             synchronized(_nonceTable) {
-                if(!hasPublicKey(pubkey)){
+                if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
                     return constructResponse("No such user registered", clientNonce);
                 }
                 if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                     return constructResponse("Invalid nonce", clientNonce);
                 _nonceTable.replace(pubkey,  "0");
-		if(getUserAnnouncements(pubkey).size() == a.getTimeStamp() - 1)
-	            getUserAnnouncements(pubkey).add(a);
+		if(getUserAnnouncements(a.getKey()).size() == a.getTimeStamp() - 1)
+	            getUserAnnouncements(a.getKey()).add(a);
             }
 
             try {saveToFile("board");}
@@ -298,7 +298,7 @@ public class Server implements ServerAPI{
         
 	synchronized(_generalB) {
             synchronized(_nonceTable) {
-                if(!hasPublicKey(pubkey)){
+                if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
                     return constructResponse("No such user registered", clientNonce);
                 }
                 if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
