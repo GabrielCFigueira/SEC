@@ -306,7 +306,7 @@ public class Server implements ServerAPI{
                     return constructResponse("Invalid nonce", clientNonce);
                 _nonceTable.replace(pubkey, "0");
 		if(getGenAnnouncements().size() != a.getTimeStamp() - 1)
-		    return constructResponse(getGenAnnouncements().size() + "Invalid Announcement TimeStamp", clientNonce);
+		    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
                 getGenAnnouncements().add(a);
             }
 

@@ -529,4 +529,90 @@ public class ReadTest {
 		Response response9 = server.read(pubkey, 1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
 		assertEquals(response9.getStatusCode(), "read successful");
 	}
+
+	@Test
+	public void testReadAfterInvalidTimeStamp() throws SigningException, IOException {
+
+		Message message = new Message();
+		String clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+
+		Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response.getStatusCode(),"User registered");
+
+		//constructing Announcement
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject("A1".toCharArray());
+		message.appendObject(null);
+		message.appendObject("0:0");
+		message.appendObject(1);
+		byte[] signature = Crypto.sign(privkey, message.getByteArray());
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+
+		message = new Message();
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+		Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+
+		assertEquals(response2.getStatusCode(), "Nonce generated");
+		String serverNonce = response2.getServerNonce();
+
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject(a);
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(clientNonce);
+		message.appendObject(serverNonce);
+		Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response3.getStatusCode(), "Announcement posted");
+
+
+		//constructing Announcement
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject("A2".toCharArray());
+		message.appendObject(null);
+		message.appendObject("0:1");
+		message.appendObject(3);
+		signature = Crypto.sign(privkey, message.getByteArray());
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 3);
+
+		message = new Message();
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+		Response response4 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response4.getStatusCode(), "Nonce generated");
+		serverNonce = response4.getServerNonce();
+
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject(a);
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(clientNonce);
+		message.appendObject(serverNonce);
+		Response response5 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response5.getStatusCode(), "Invalid Announcement TimeStamp");
+
+		message = new Message();
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(pubkey);
+		message.appendObject(clientNonce);
+		Response response6 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response6.getStatusCode(), "Nonce generated");
+		serverNonce = response6.getServerNonce();
+
+		message = new Message();
+		message.appendObject(pubkey);
+		message.appendObject(1);
+		message.appendObject(pubkey);
+		clientNonce = Crypto.generateNonce();
+		message.appendObject(clientNonce);
+		message.appendObject(serverNonce);
+		Response response7 = server.read(pubkey, 1, pubkey, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response7.getStatusCode(), "read successful");
+	}
 }
