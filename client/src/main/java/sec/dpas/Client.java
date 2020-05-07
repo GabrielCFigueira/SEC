@@ -504,6 +504,10 @@ public class Client {
         return status;
     }
 
+    public String post(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
+	    return this.post(this.createAnnouncement(msg, refs, _timeStamp++));
+    }
+
     public String postGeneral(Announcement a) throws IOException, FileNotFoundException, SigningException {
         String status = "";
         String url, id;
@@ -531,9 +535,9 @@ public class Client {
         return status;
     }
 
-    public String postGeneral() throws IOException, FileNotFoundException, SigningException {
+    public String postGeneral(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
 	readGeneral(0);
-	Announcement a = this.createAnnouncement(_generalBoardStamp);
+	Announcement a = this.createAnnouncement(msg, refs, _generalBoardStamp);
 	return postGeneral(a);
     }
 
@@ -697,9 +701,19 @@ public class Client {
         }
         if(refs.size() == 0) refs = null;
 
+
+        return createAnnouncement(msg.toCharArray(), refs, timeStamp);
+    }
+
+    public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException{
+	    return createAnnouncement(_timeStamp++);
+    }
+
+    public Announcement createAnnouncement(char[] msg, ArrayList<Announcement> refs, int timeStamp) throws IOException, FileNotFoundException, SigningException {
+
         Message message = new Message();
         message.appendObject(this.getPublicKey());
-        message.appendObject(msg.toCharArray());
+        message.appendObject(msg);
         message.appendObject(refs);
         String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
 	message.appendObject(id);
@@ -707,15 +721,19 @@ public class Client {
 	byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
         _annId++;
-        Announcement a = new Announcement(this.getPublicKey(), msg.toCharArray(), refs, signature, id, timeStamp);
-
-        return a;
+        return new Announcement(this.getPublicKey(), msg, refs, signature, id, timeStamp);
     }
 
-    public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException{
-	    return createAnnouncement(_timeStamp++);
+    public boolean verifyAnnouncement(Announcement a) throws IOException, FileNotFoundException {
+	
+        Message message = new Message();
+        message.appendObject(this.getPublicKey());
+        message.appendObject(a.getMessage());
+        message.appendObject(a.getReferences());
+	message.appendObject(a.getId());
+	message.appendObject(a.getTimeStamp());
+	return Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature());
     }
-
 
     /**
      * main
