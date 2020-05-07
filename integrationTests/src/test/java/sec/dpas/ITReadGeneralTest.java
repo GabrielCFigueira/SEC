@@ -220,7 +220,7 @@ public class ITReadGeneralTest {
         compareAnnouncements(anns, responseRead.getAnnouncements());
 
         ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
-        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 2);
         anns2.add(ann);
 
         // get server nonce
@@ -311,9 +311,9 @@ public class ITReadGeneralTest {
         compareAnnouncements(anns, responseRead.getAnnouncements());
 
         ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
-        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 3);
         anns2.add(ann);
-        ann = this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 2);
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 4);
         anns2.add(ann);
 
 
@@ -509,9 +509,9 @@ public class ITReadGeneralTest {
         anns.add(ann);
         ann = this.postGeneral(pubkey, privkey, stub, "A1", null, "0:1", 2);
         anns.add(ann);
-        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 3);
         anns.add(ann);
-        ann = this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 2);
+        ann = this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 4);
         anns.add(ann);
 
         // get server nonce
@@ -644,7 +644,7 @@ public class ITReadGeneralTest {
         Announcement ann = this.post(pubkey, privkey, stub, "A0", null, "0:0", 1);
         ArrayList<Announcement> arr = new ArrayList<Announcement>();
         arr.add(ann);
-        Announcement ann2 = this.postGeneral(pubkey, privkey, stub, "A1", arr, "0:1", 2);
+        Announcement ann2 = this.postGeneral(pubkey, privkey, stub, "A1", arr, "0:1", 1);
         ArrayList<Announcement> anns = new ArrayList<Announcement>();
         anns.add(ann2);
 
@@ -699,7 +699,7 @@ public class ITReadGeneralTest {
       Announcement ann = this.postGeneral(pubkey, privkey, stub, "A0", null, "0:0", 1);
       ArrayList<Announcement> arr = new ArrayList<Announcement>();
       arr.add(ann);
-      Announcement ann2 = this.postGeneral(pubkey2, privkey2, stub, "B0", arr, "1:0", 1);
+      Announcement ann2 = this.postGeneral(pubkey2, privkey2, stub, "B0", arr, "1:0", 2);
       ArrayList<Announcement> anns = new ArrayList<Announcement>();
       anns.add(ann2);
 

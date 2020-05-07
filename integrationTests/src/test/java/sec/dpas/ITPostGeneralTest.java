@@ -105,7 +105,7 @@ public class ITPostGeneralTest {
 
         this.register(pubkey2, privkey2, stub);
 
-        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
+        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 2);
     }
 
     @Test
@@ -126,9 +126,9 @@ public class ITPostGeneralTest {
 
         this.register(pubkey2, privkey2, stub);
 
-        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 1);
+        this.postGeneral(pubkey2, privkey2, stub, "B0", null, "1:0", 3);
 
-        this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 2);
+        this.postGeneral(pubkey2, privkey2, stub, "B1", null, "1:1", 4);
     }
 
     @Test
