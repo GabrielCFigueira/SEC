@@ -384,6 +384,9 @@ public class Client {
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else {
+	    for(Announcement a : response.getAnnouncements())
+		if(!verifyAnnouncement(a))
+	    	    return "Signature verification failed";
             this.printAnnouncements(response.getAnnouncements());
 	    synchronized(readList) {	
 	    	readList.add(response.getAnnouncements());
@@ -439,6 +442,9 @@ public class Client {
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else {
+	    for(Announcement a : response.getAnnouncements())
+		if(!verifyAnnouncement(a))
+	    	    return "Signature verification failed";
             this.printAnnouncements(response.getAnnouncements());
 	    synchronized(readList) {
 		readList.add(response.getAnnouncements());
