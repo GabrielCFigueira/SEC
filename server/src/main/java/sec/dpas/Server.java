@@ -250,9 +250,10 @@ public class Server implements ServerAPI{
                 if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                     return constructResponse("Invalid nonce", clientNonce);
                 _nonceTable.replace(pubkey,  "0");
-		if(getUserAnnouncements(a.getKey()).size() != a.getTimeStamp() - 1)
-		    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
-                getUserAnnouncements(a.getKey()).add(a);
+		if(getUserAnnouncements(a.getKey()).size() == a.getTimeStamp() - 1)
+                    getUserAnnouncements(a.getKey()).add(a);
+		else if (getUserAnnouncements(a.getKey()).size() < a.getTimeStamp() - 1)
+	            return constructResponse("Invalid Announcement TimeStamp", clientNonce);
             }
 
             try {saveToFile("board");}
@@ -305,9 +306,10 @@ public class Server implements ServerAPI{
                 if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                     return constructResponse("Invalid nonce", clientNonce);
                 _nonceTable.replace(pubkey, "0");
-		if(getGenAnnouncements().size() != a.getTimeStamp() - 1)
-		    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
-                getGenAnnouncements().add(a);
+		if(getGenAnnouncements().size() == a.getTimeStamp() - 1)
+                    getGenAnnouncements().add(a);
+		else if (getGenAnnouncements().size() < a.getTimeStamp() - 1)
+	            return constructResponse("Invalid Announcement TimeStamp", clientNonce);
             }
 
             try {saveToFile("genboard");}

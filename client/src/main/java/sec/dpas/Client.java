@@ -645,7 +645,7 @@ public class Client {
             	id = ids.nextElement();
                 if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(id).get().equals(expectedCode)) {
+                        if(responses.get(id).get().equals(expectedCode)) {
                             // necessario mudar este if para abrangir mais hipoteses
 			    status = responses.get(id).get(); 
 	 		    nResponses++;

@@ -302,9 +302,9 @@ public class PostGeneralTest {
         message.appendObject("A1".toCharArray());
         message.appendObject(null);
 	message.appendObject("0:0");
-        message.appendObject(0);
+        message.appendObject(2);
 	byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 0);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 2);
 
 	message = new Message();
 	clientNonce = Crypto.generateNonce();
