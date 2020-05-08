@@ -449,59 +449,57 @@ public class Client {
 
     //here be distributed section
     public String register() throws IOException, FileNotFoundException, SigningException {
-        String status = "";
         String url, id;
-        ExecutorService threadpool = Executors.newCachedThreadPool();
-        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
+        ExecutorService threadpool;
+        Hashtable<String, Future<String>> responses;
+	while (true) {
+	    threadpool = Executors.newCachedThreadPool();
+	    responses = new Hashtable<String, Future<String>>();
+            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+            	url = _servers.get(id);
+            	final ServerAPI stub;
+            	try {
+                    stub = (ServerAPI) Naming.lookup(url);
+	        } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+            	}
+            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            	responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
+	    }
 
-        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            id = ids.nextElement();
-            url = _servers.get(id);
-            final ServerAPI stub;
-            try {
-                stub = (ServerAPI) Naming.lookup(url);
-            } catch (Exception e) {
-                status += id + ": " + url + " : " + e.getMessage() + "\n";
-                e.printStackTrace();
-                continue;
-            }
-            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-
-            responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
-        }
-
-        // Init
-
-        status = asyncCall(responses, threadpool);
-
-        return status;
+            String status = asyncCall(responses, "User registered", threadpool);
+	    if (!status.equals("Try again"))
+	    	return status;
+	}
+	
     }
 
     public String post(Announcement a) throws IOException, FileNotFoundException, SigningException {
-        String status = "";
         String url, id;
-        ExecutorService threadpool = Executors.newCachedThreadPool();
-        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
-
-        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            id = ids.nextElement();
-            url = _servers.get(id);
-            final ServerAPI stub;
-            try {
-                stub = (ServerAPI) Naming.lookup(url);
-            } catch (Exception e) {
-                status += id + ": " + url + " : " + e.getMessage() + "\n";
-                e.printStackTrace();
-                continue;
-            }
-            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-
-            responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
-        }
-
-        status += asyncCall(responses, threadpool);
-
-        return status;
+        ExecutorService threadpool;
+        Hashtable<String, Future<String>> responses;
+	while (true) {
+	    threadpool = Executors.newCachedThreadPool();
+	    responses = new Hashtable<String, Future<String>>();
+            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+            	url = _servers.get(id);
+            	final ServerAPI stub;
+            	try {
+                    stub = (ServerAPI) Naming.lookup(url);
+	        } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+            	}
+            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            	responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
+	    }
+            String status = asyncCall(responses, "Announcement posted", threadpool);
+	    if (!status.equals("Try again"))
+	    	return status;
+	}
     }
 
     public String post(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
@@ -509,30 +507,29 @@ public class Client {
     }
 
     public String postGeneral(Announcement a) throws IOException, FileNotFoundException, SigningException {
-        String status = "";
         String url, id;
-        ExecutorService threadpool = Executors.newCachedThreadPool();
-        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
-
-        for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            id = ids.nextElement();
-            url = _servers.get(id);
-            final ServerAPI stub;
-            try {
-                stub = (ServerAPI) Naming.lookup(url);
-            } catch (Exception e) {
-                status += id + ":" + url + " : " + e.getMessage() + "\n";
-                e.printStackTrace();
-                continue;
-            }
-            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-
-            responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
-        }
-
-        status += asyncCall(responses, threadpool);
-
-        return status;
+        ExecutorService threadpool;
+        Hashtable<String, Future<String>> responses;
+	while (true) {
+	    threadpool = Executors.newCachedThreadPool();
+	    responses = new Hashtable<String, Future<String>>();
+            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+            	url = _servers.get(id);
+            	final ServerAPI stub;
+            	try {
+                    stub = (ServerAPI) Naming.lookup(url);
+	        } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+            	}
+            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            	responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
+	    }
+            String status = asyncCall(responses, "General announcement posted", threadpool);
+	    if (!status.equals("Try again"))
+	    	return status;
+	}
     }
 
     public String postGeneral(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
@@ -542,33 +539,37 @@ public class Client {
     }
 
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
-        String status = "";
-        String url, id;
-        ExecutorService threadpool = Executors.newCachedThreadPool();
-        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
-	List<ArrayList<Announcement>> readList = new ArrayList<ArrayList<Announcement>>();
-        
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            id = ids.nextElement();
-            url = _servers.get(id);
-            final ServerAPI stub;
-            try {
-                stub = (ServerAPI) Naming.lookup(url);
-            } catch (Exception e) {
-                status += id + ": " + url + " : " + e.getMessage() + "\n";
-                e.printStackTrace();
-                continue;
-            }
-            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead, readList)));
-        }
-
-        status += asyncCall(responses, threadpool);
-
-	List<Announcement> anns;
-	synchronized(readList) {
-            anns = getMaxTimeStamp(readList);
+        String url, id, status;
+        ExecutorService threadpool;
+        Hashtable<String, Future<String>> responses;
+	List<ArrayList<Announcement>> readList;
+	while (true) {
+	    threadpool = Executors.newCachedThreadPool();
+	    responses = new Hashtable<String, Future<String>>();
+	    ArrayList<ArrayList<Announcement>> tempReadList = new ArrayList<ArrayList<Announcement>>();
+            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+            	url = _servers.get(id);
+            	final ServerAPI stub;
+            	try {
+                    stub = (ServerAPI) Naming.lookup(url);
+	        } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+            	}
+            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            	responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead, tempReadList)));
+	    }
+            status = asyncCall(responses, "read successful", threadpool);
+	    readList = (List<ArrayList<Announcement>>) tempReadList.clone();
+	    if (!status.equals("Try again"))
+	    	break;
 	}
+
+	if (!status.equals("read successful"))
+	    return status;
+	
+	List<Announcement> anns = getMaxTimeStamp(readList);
 
 	for(int i = 0; i < anns.size(); i++)
 	    post(anns.get(i));
@@ -590,34 +591,37 @@ public class Client {
     }
 
     public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
-        String status = "";
-        String url, id;
-        ExecutorService threadpool = Executors.newCachedThreadPool();
-        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
-	List<ArrayList<Announcement>> readList = new ArrayList<ArrayList<Announcement>>();
-        
-	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            id = ids.nextElement();
-            url = _servers.get(id);
-            final ServerAPI stub;
-	    try {
-                stub = (ServerAPI) Naming.lookup(url);
-            } catch (Exception e) {
-                status += id + ": " + url + " : " + e.getMessage() + "\n";
-                e.printStackTrace();
-                continue;
-            }
-            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number, readList)));
-        }
-
-        status += asyncCall(responses, threadpool);
-
-	List<Announcement> anns;
-	synchronized(readList) {
-            anns = getMaxTimeStamp(readList);
+        String url, id, status;
+        ExecutorService threadpool;
+        Hashtable<String, Future<String>> responses;
+	List<ArrayList<Announcement>> readList;
+	while (true) {
+	    threadpool = Executors.newCachedThreadPool();
+	    responses = new Hashtable<String, Future<String>>();
+	    ArrayList<ArrayList<Announcement>> tempReadList = new ArrayList<ArrayList<Announcement>>();
+            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            	id = ids.nextElement();
+            	url = _servers.get(id);
+            	final ServerAPI stub;
+            	try {
+                    stub = (ServerAPI) Naming.lookup(url);
+	        } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+            	}
+            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            	responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, 0, tempReadList)));
+	    }
+            status = asyncCall(responses, "read successful", threadpool);
+	    readList = (List<ArrayList<Announcement>>) tempReadList.clone();
+	    if (!status.equals("Try again"))
+	    	break;
 	}
 
+	if (!status.equals("read successful"))
+	    return status;
+	
+	List<Announcement> anns = getMaxTimeStamp(readList);
 	_generalBoardStamp = anns.size() + 1;
 
 	return status;
@@ -628,24 +632,29 @@ public class Client {
      * Async Call
      *
      */
-    public String asyncCall(Hashtable<String, Future<String>> responses, ExecutorService threadpool) {
+    public String asyncCall(Hashtable<String, Future<String>> responses, String expectedCode, ExecutorService threadpool) {
     //public Hashtable<String, Future<String>> asyncCall(Hashtable<String, Future<String>> responses, ExecutorService threadpool) {
         String id;
         int majority = 2 * _f + 1;
         int nResponses = 0;
         String status = "";
+	boolean error = false;
 
         while (nResponses < majority) {
-            status = "";
             for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
             	id = ids.nextElement();
                 if(responses.get(id).isDone()) {
                     try {
-                        if(!responses.get(id).get().equals("Signature verification failed") && !responses.get(id).get().equals("Server returned invalid nonce: possible replay attack")) {
+                        if(!responses.get(id).get().equals(expectedCode)) {
                             // necessario mudar este if para abrangir mais hipoteses
-				status += id + ": " + _servers.get(id) + " : " + responses.get(id).get() + "\n"; 
-	 			nResponses++;
-                        }
+			    status = responses.get(id).get(); 
+	 		    nResponses++;
+                        } else {
+			    if (status != "")
+		      		return "Try again";
+			    status = responses.get(id).get();
+			    expectedCode = status;
+			}
                     } catch (Exception e) {
                         System.out.println("Our Async got exception.");
                     }
