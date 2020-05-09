@@ -219,9 +219,9 @@ public class Client {
         message.appendObject(clientNonce);
 
         // call function from ServerAPI
-        Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
-
-        // verificacao da assinatura da response
+	Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        
+	// verificacao da assinatura da response
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
@@ -277,12 +277,11 @@ public class Client {
         messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
-
-        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
-        else
+        else 
             return response.getStatusCode();
     }
 

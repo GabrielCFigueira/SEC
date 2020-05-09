@@ -174,7 +174,6 @@ public class Server implements ServerAPI{
 
 
     public Response register(PublicKey pubkey, String clientNonce, byte[] signature) {
-
         if(!verifyArguments(pubkey, signature))
             return constructResponse("Invalid arguments", clientNonce);
 
@@ -446,7 +445,7 @@ public class Server implements ServerAPI{
         }
     }
 
-    private Response constructResponse(String statusCode, String clientNonce, String serverNonce) {
+    public Response constructResponse(String statusCode, String clientNonce, String serverNonce) {
         Message message = new Message();
         try {
             message.appendObject(statusCode);
@@ -468,7 +467,7 @@ public class Server implements ServerAPI{
         return new Response(statusCode, clientNonce, serverNonce, serverSignature);
     }
 
-    private  Response constructResponse(String statusCode, String clientNonce) {
+    public Response constructResponse(String statusCode, String clientNonce) {
         Message message = new Message();
         try {
             message.appendObject(statusCode);
@@ -489,7 +488,7 @@ public class Server implements ServerAPI{
         return new Response(statusCode,(ArrayList<Announcement>) null, clientNonce, serverSignature);
     }
 
-    private Response constructResponse(String statusCode, ArrayList<Announcement> an, String clientNonce) {
+    public Response constructResponse(String statusCode, ArrayList<Announcement> an, String clientNonce) {
         Message message = new Message();
 
         try {
