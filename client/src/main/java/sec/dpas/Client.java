@@ -384,7 +384,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
 	    for(Announcement a : response.getAnnouncements())
-		if(!verifyAnnouncement(a))
+		if(!verifyAnnouncement(a, pubkeyToRead))
 	    	    return "Signature verification failed";
             this.printAnnouncements(response.getAnnouncements());
 	    synchronized(readList) {	
@@ -442,7 +442,7 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
 	    for(Announcement a : response.getAnnouncements())
-		if(!verifyAnnouncement(a))
+		if(!verifyAnnouncement(a, a.getKey()))
 	    	    return "Signature verification failed";
             this.printAnnouncements(response.getAnnouncements());
 	    synchronized(readList) {
@@ -661,7 +661,7 @@ public class Client {
 			    expectedCode = status;
 			}
                     } catch (Exception e) {
-                        System.out.println("Our Async got exception.");
+                        System.out.println(e.getMessage() + " :Our Async got exception.");
                     }
                     responses.remove(id);
                 }
@@ -738,15 +738,15 @@ public class Client {
         return new Announcement(this.getPublicKey(), msg, refs, signature, id, timeStamp);
     }
 
-    public boolean verifyAnnouncement(Announcement a) throws IOException, FileNotFoundException {
+    public boolean verifyAnnouncement(Announcement a, PublicKey key) throws IOException, FileNotFoundException {
 	
         Message message = new Message();
-        message.appendObject(this.getPublicKey());
+        message.appendObject(a.getKey());
         message.appendObject(a.getMessage());
         message.appendObject(a.getReferences());
 	message.appendObject(a.getId());
 	message.appendObject(a.getTimeStamp());
-	return Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature());
+	return Crypto.verifySignature(key, message.getByteArray(), a.getSignature());
     }
 
     /**

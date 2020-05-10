@@ -101,7 +101,6 @@ public class ITByzantineServerTest {
 
     @Test
     public void SimpleTestWithMocks() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
-	
   	 
 	Server mockedServer = mock(Server.class);
         registry1.unbind("ServerAPI");
@@ -119,75 +118,74 @@ public class ITByzantineServerTest {
 	    return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
 	});
 
-	client1.post(a);
+	assertEquals("Announcement posted", client1.post(a));
 	
     }
 
-    public void signatureVerification(Response response, String statusCode) throws Exception {
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
 
-        Message message = new Message();
-        message.appendObject(response.getStatusCode());
-        message.appendObject(response.getClientNonce());
+    @Test
+    public void FirstReturnInvalid() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
+  	 
+	Server mockedServer = mock(Server.class);
+        registry1.unbind("ServerAPI");
+        UnicastRemoteObject.unexportObject(registry1, true);
+        stub1 = (ServerAPI) UnicastRemoteObject.exportObject(mockedServer, 0);
+        registry1 = LocateRegistry.createRegistry(8009);
+        registry1.bind("ServerAPI", stub1);
+	
+	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1);
 
-        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
-        assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
+	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
+	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
+	});
+	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
+	    return server1.constructResponse("Signature verification failed", (String) i.getArgument(2));
+	}).thenAnswer(i -> {
+	    return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
+	});
+
+	assertEquals("Announcement posted", client1.post(a));
+	
     }
 
-    public void signatureVerificationNonce(Response response, String statusCode) throws Exception {
-        PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
 
-        Message message = new Message();
-        message.appendObject(response.getStatusCode());
-        message.appendObject(response.getClientNonce());
-        message.appendObject(response.getServerNonce());
+    @Test
+    public void WrongRead() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
 
-        assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
-        assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
+	Announcement a1 = client1.createAnnouncement("Boas".toCharArray(), null, 1);
+	Announcement a2 = client2.createAnnouncement("Boas".toCharArray(), null, 1);
+	assertEquals("Announcement posted", client1.post(a1));
+
+	Server mockedServer = mock(Server.class);
+        registry1.unbind("ServerAPI");
+        UnicastRemoteObject.unexportObject(registry1, true);
+        stub1 = (ServerAPI) UnicastRemoteObject.exportObject(mockedServer, 0);
+        registry1 = LocateRegistry.createRegistry(8009);
+        registry1.bind("ServerAPI", stub1);
+
+	ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
+	ArrayList<Announcement> anns1 = new ArrayList<Announcement>();
+	anns2.add(a2);
+	anns1.add(a1);
+	
+
+	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
+	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
+	});
+	
+	when(mockedServer.read(any(PublicKey.class), any(Integer.class), any(PublicKey.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
+	    return server1.constructResponse("read successful", anns2, (String) i.getArgument(3));
+	}).thenAnswer(i -> {
+	    return server1.constructResponse("read successful", anns1, (String) i.getArgument(3));
+	});
+	
+	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
+	    return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
+	});
+
+	assertEquals("read successful", client1.read(0, client1.getPublicKey()));
+	
     }
 
-    public void announcementVerification(Announcement ann1, Announcement ann2) throws Exception {
-      PublicKey serverpubkey = Crypto.readPublicKey("../resources/server.pub");
-      assertEquals(ann1.getKey(), ann2.getKey());
-      String msg1 = "";
-      String msg2 = "";
-      for (char l : ann1.getMessage()){
-        msg1 +=l;
-      }
-      for (char l : ann2.getMessage()){
-        msg2 +=l;
-      }
-      assertEquals(msg1, msg2);
-      assertEquals(ann1.getId(), ann2.getId());
-      if (ann1.getReferences() == null || ann2.getReferences() == null){
-        assertEquals(ann1.getReferences(), ann2.getReferences());
-      }
-      else {
-        assertEquals(ann1.getReferences().size(), ann2.getReferences().size());
-        for (int i = 0; i < ann1.getReferences().size(); i++){
-          announcementVerification(ann1.getReferences().get(i), ann2.getReferences().get(i));
-        }
-      }
 
-      String sig1 = "";
-      String sig2 = "";
-      for (byte b : ann1.getSignature()){
-        sig1 +=b;
-      }
-      for (byte b : ann2.getSignature()){
-        sig2 +=b;
-      }
-      assertEquals(sig1,sig2);
-
-
-    }
-
-    public void compareAnnouncements(ArrayList<Announcement> anns, ArrayList<Announcement> anns2) throws Exception{
-      assertEquals(anns.size(),anns2.size());
-      for (int i = 0; i < anns.size(); i++){
-        announcementVerification(anns.get(i), anns2.get(i));
-      }
-    }
 }
