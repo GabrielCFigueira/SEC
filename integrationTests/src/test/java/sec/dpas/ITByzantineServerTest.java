@@ -109,7 +109,7 @@ public class ITByzantineServerTest {
         registry1 = LocateRegistry.createRegistry(8009);
         registry1.bind("ServerAPI", stub1);
 	
-	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1);
+	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
 
 	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
 	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
@@ -133,7 +133,7 @@ public class ITByzantineServerTest {
         registry1 = LocateRegistry.createRegistry(8009);
         registry1.bind("ServerAPI", stub1);
 	
-	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1);
+	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
 
 	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
 	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
@@ -152,8 +152,8 @@ public class ITByzantineServerTest {
     @Test
     public void WrongRead() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
 
-	Announcement a1 = client1.createAnnouncement("Boas".toCharArray(), null, 1);
-	Announcement a2 = client2.createAnnouncement("Boas".toCharArray(), null, 1);
+	Announcement a1 = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
+	Announcement a2 = client2.createAnnouncement("Boas".toCharArray(), null, 1, false);
 	assertEquals("Announcement posted", client1.post(a1));
 
 	Server mockedServer = mock(Server.class);

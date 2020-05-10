@@ -191,7 +191,7 @@ public class Client {
      * printAnnouncements
      *
      */
-    public void printAnnouncements(ArrayList<Announcement> anns) {
+    public void printAnnouncements(List<Announcement> anns) {
         System.out.println("#===============#");
         System.out.println("| Announcements |");
         System.out.println("#===============#");
@@ -384,9 +384,8 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
 	    for(Announcement a : response.getAnnouncements())
-		if(!verifyAnnouncement(a, pubkeyToRead))
+		if(!verifyAnnouncement(a, pubkeyToRead, false))
 	    	    return "Signature verification failed";
-            this.printAnnouncements(response.getAnnouncements());
 	    synchronized(readList) {	
 	    	readList.add(response.getAnnouncements());
 	    }
@@ -442,9 +441,8 @@ public class Client {
             return "Server returned invalid nonce: possible replay attack";
         else {
 	    for(Announcement a : response.getAnnouncements())
-		if(!verifyAnnouncement(a, a.getKey()))
+		if(!verifyAnnouncement(a, a.getKey(), true))
 	    	    return "Signature verification failed";
-            this.printAnnouncements(response.getAnnouncements());
 	    synchronized(readList) {
 		readList.add(response.getAnnouncements());
 	    }
@@ -508,7 +506,7 @@ public class Client {
     }
 
     public String post(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
-	    return this.post(this.createAnnouncement(msg, refs, _timeStamp++));
+	    return this.post(this.createAnnouncement(msg, refs, _timeStamp++, false));
     }
 
     public String postGeneral(Announcement a) throws IOException, FileNotFoundException, SigningException {
@@ -539,7 +537,7 @@ public class Client {
 
     public String postGeneral(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
 	readGeneral(0);
-	Announcement a = this.createAnnouncement(msg, refs, _generalBoardStamp);
+	Announcement a = this.createAnnouncement(msg, refs, _generalBoardStamp, true);
 	return postGeneral(a);
     }
 
@@ -576,6 +574,7 @@ public class Client {
 	
 	List<Announcement> anns = getMaxTimeStamp(readList);
 
+        this.printAnnouncements(anns);
 	for(int i = 0; i < anns.size(); i++)
 	    post(anns.get(i));
 
@@ -627,6 +626,7 @@ public class Client {
 	    return status;
 	
 	List<Announcement> anns = getMaxTimeStamp(readList);
+        this.printAnnouncements(anns);
 	_generalBoardStamp = anns.size() + 1;
 
 	return status;
@@ -684,7 +684,7 @@ public class Client {
      * createAnnouncement
      *
      */
-    public Announcement createAnnouncement(int timeStamp) throws IOException, FileNotFoundException, SigningException {
+    public Announcement createAnnouncement(int timeStamp, boolean isGeneralBoard) throws IOException, FileNotFoundException, SigningException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("#=====================================================#");
         System.out.println("| Write your Announcement Body (up to 255 characters) |");
@@ -716,14 +716,14 @@ public class Client {
         if(refs.size() == 0) refs = null;
 
 
-        return createAnnouncement(msg.toCharArray(), refs, timeStamp);
+        return createAnnouncement(msg.toCharArray(), refs, timeStamp, isGeneralBoard);
     }
 
     public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException{
-	    return createAnnouncement(_timeStamp++);
+	    return createAnnouncement(_timeStamp++, false);
     }
 
-    public Announcement createAnnouncement(char[] msg, ArrayList<Announcement> refs, int timeStamp) throws IOException, FileNotFoundException, SigningException {
+    public Announcement createAnnouncement(char[] msg, ArrayList<Announcement> refs, int timeStamp, boolean isGeneralBoard) throws IOException, FileNotFoundException, SigningException {
 
         Message message = new Message();
         message.appendObject(this.getPublicKey());
@@ -732,13 +732,14 @@ public class Client {
         String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
 	message.appendObject(id);
 	message.appendObject(timeStamp);
+	message.appendObject(isGeneralBoard);
 	byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
         _annId++;
-        return new Announcement(this.getPublicKey(), msg, refs, signature, id, timeStamp);
+        return new Announcement(this.getPublicKey(), msg, refs, signature, id, timeStamp, isGeneralBoard);
     }
 
-    public boolean verifyAnnouncement(Announcement a, PublicKey key) throws IOException, FileNotFoundException {
+    public boolean verifyAnnouncement(Announcement a, PublicKey key, boolean expected) throws IOException, FileNotFoundException {
 	
         Message message = new Message();
         message.appendObject(a.getKey());
@@ -746,6 +747,9 @@ public class Client {
         message.appendObject(a.getReferences());
 	message.appendObject(a.getId());
 	message.appendObject(a.getTimeStamp());
+	message.appendObject(a.isGeneralBoard());
+	if(expected != a.isGeneralBoard())
+	    return false;
 	return Crypto.verifySignature(key, message.getByteArray(), a.getSignature());
     }
 
@@ -786,7 +790,8 @@ public class Client {
                             System.out.println(cli.post(a));
                             break;
                         case 3:
-			    a = cli.createAnnouncement();
+			    cli.readGeneral(0);
+			    a = cli.createAnnouncement(cli.getGeneralBoardStamp(), true);
                             System.out.println(cli.postGeneral(a));
                             break;
                         case 4:

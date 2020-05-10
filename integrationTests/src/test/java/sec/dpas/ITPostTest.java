@@ -146,8 +146,9 @@ public class ITPostTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(1);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1, false);
 
         // get server nonce
         Message messageServerNonce = new Message();
@@ -195,8 +196,9 @@ public class ITPostTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(1);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1, false);
 
         // get server nonce
         Message messageServerNonce = new Message();
@@ -240,8 +242,9 @@ public class ITPostTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(1);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1, false);
 
         // get server nonce
         Message messageServerNonce = new Message();
@@ -287,8 +290,9 @@ public class ITPostTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(1);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, bodyRepeated.toCharArray(), refs, signature, id, 1);
+        Announcement ann = new Announcement(pubkey, bodyRepeated.toCharArray(), refs, signature, id, 1, false);
 
         // get server nonce
         Message messageServerNonce = new Message();
@@ -333,8 +337,9 @@ public class ITPostTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(1);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, 1, false);
 
         // get server nonce
         Message messageServerNonce = new Message();
@@ -392,8 +397,9 @@ public class ITPostTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(timestamp);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, timestamp);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, timestamp, false);
 
         // get server nonce
         Message messageServerNonce = new Message();

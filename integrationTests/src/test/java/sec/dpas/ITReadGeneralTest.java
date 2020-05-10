@@ -881,8 +881,9 @@ public class ITReadGeneralTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(ts);
+        messageAnn.appendObject(true);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, ts);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, ts, true);
 
         // get server nonce
         Message messageServerNonce = new Message();
@@ -918,8 +919,9 @@ public class ITReadGeneralTest {
         messageAnn.appendObject(refs);
         messageAnn.appendObject(id);
         messageAnn.appendObject(ts);
+        messageAnn.appendObject(false);
         byte[] signature = Crypto.sign(privkey, messageAnn.getByteArray());
-        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, ts);
+        Announcement ann = new Announcement(pubkey, body.toCharArray(), refs, signature, id, ts, false);
 
         // get server nonce
         Message messageServerNonce = new Message();

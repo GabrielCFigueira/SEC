@@ -92,8 +92,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:0");
 		message.appendObject(1);
+		message.appendObject(true);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -120,8 +121,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:1");
 		message.appendObject(2);
+		message.appendObject(true);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 2);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 2, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -175,8 +177,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:0");
 		message.appendObject(1);
+		message.appendObject(true);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -192,8 +195,8 @@ public class ReadGeneralTest {
 		clientNonce = Crypto.generateNonce();
 		message.appendObject(clientNonce);
 		message.appendObject(serverNonce);
-		Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
-		assertEquals(response3.getStatusCode(), "Announcement posted");
+		Response response3 = server.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response3.getStatusCode(), "General announcement posted");
 
 
 		//constructing Announcement
@@ -203,8 +206,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:1");
 		message.appendObject(2);
+		message.appendObject(true);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 2);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 2, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -220,8 +224,8 @@ public class ReadGeneralTest {
 		clientNonce = Crypto.generateNonce();
 		message.appendObject(clientNonce);
 		message.appendObject(serverNonce);
-		Response response5 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
-		assertEquals(response5.getStatusCode(), "Announcement posted");
+		Response response5 = server.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response5.getStatusCode(), "General announcement posted");
 
 		message = new Message();
 		message.appendObject(1);
@@ -250,8 +254,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:0");
 		message.appendObject(1);
+		message.appendObject(true);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -278,8 +283,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:1");
 		message.appendObject(2);
+		message.appendObject(true);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 2);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 2, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -334,8 +340,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:0");
 		message.appendObject(1);
+		message.appendObject(true);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -351,8 +358,8 @@ public class ReadGeneralTest {
 		clientNonce = Crypto.generateNonce();
 		message.appendObject(clientNonce);
 		message.appendObject(serverNonce);
-		Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
-		assertEquals(response3.getStatusCode(), "Announcement posted");
+		Response response3 = server.postGeneral(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+		assertEquals(response3.getStatusCode(), "General announcement posted");
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -390,8 +397,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:0");
 		message.appendObject(1);
+		message.appendObject(true);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -450,8 +458,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:0");
 		message.appendObject(1);
+		message.appendObject(true);
 		byte[] signature = Crypto.sign(privkey, message.getByteArray());
-		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+		Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();
@@ -478,8 +487,9 @@ public class ReadGeneralTest {
 		message.appendObject(null);
 		message.appendObject("0:1");
 		message.appendObject(3);
+		message.appendObject(true);
 		signature = Crypto.sign(privkey, message.getByteArray());
-		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 3);
+		a = new Announcement(pubkey, "A2".toCharArray(), null, signature, "0:1", 3, true);
 
 		message = new Message();
 		clientNonce = Crypto.generateNonce();

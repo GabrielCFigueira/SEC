@@ -64,8 +64,9 @@ public class PostTest
 	message.appendObject(null);
 	message.appendObject("0:0");
 	message.appendObject(1);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, false);
 
 	message = new Message();
         clientNonce = Crypto.generateNonce();
@@ -102,8 +103,9 @@ public class PostTest
 	message.appendObject(null);
 	message.appendObject("0:0");
 	message.appendObject(1);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, false);
 
 
 	message = new Message();
@@ -134,8 +136,9 @@ public class PostTest
         message.appendObject(null);
 	message.appendObject("1:0");
 	message.appendObject(1);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pub2, "A1".toCharArray(), null, signature, "1:0", 1);
+        Announcement a = new Announcement(pub2, "A1".toCharArray(), null, signature, "1:0", 1, false);
 
 	message = new Message();
         clientNonce = Crypto.generateNonce();
@@ -166,8 +169,9 @@ public class PostTest
         message.appendObject(null);
 	message.appendObject("0:0");
 	message.appendObject(1);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, false);
 
 	message = new Message();
         String clientNonce = Crypto.generateNonce();
@@ -206,8 +210,9 @@ public class PostTest
         message.appendObject(null);
 	message.appendObject("1:0");
 	message.appendObject(1);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pub2, "A1".toCharArray(), null, signature, "1:0", 1);
+        Announcement a = new Announcement(pub2, "A1".toCharArray(), null, signature, "1:0", 1, false);
 
         //Constructing announcement
         message = new Message();
@@ -217,7 +222,8 @@ public class PostTest
 	message.appendObject("1:1");
 	message.appendObject(2);
         signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a1 = new Announcement(pub2, "Good Morning".toCharArray(), null, signature, "1:1", 2);
+	message.appendObject(false);
+        Announcement a1 = new Announcement(pub2, "Good Morning".toCharArray(), null, signature, "1:1", 2, false);
 
 	message = new Message();
         clientNonce = Crypto.generateNonce();
@@ -256,8 +262,9 @@ public class PostTest
         message.appendObject(null);
 	message.appendObject("0:0");
 	message.appendObject(1);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, false);
 
 	message = new Message();
         clientNonce = Crypto.generateNonce();
@@ -306,8 +313,9 @@ public class PostTest
 	message.appendObject(null);
 	message.appendObject("0:0");
 	message.appendObject(2);
+	message.appendObject(false);
         byte[] signature = Crypto.sign(privkey, message.getByteArray());
-        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 2);
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 2, false);
 
 	message = new Message();
         clientNonce = Crypto.generateNonce();
@@ -325,5 +333,44 @@ public class PostTest
 	message.appendObject(serverNonce);
         Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
         assertEquals(response3.getStatusCode(), "Invalid Announcement TimeStamp");
+    }
+    
+    @Test
+    public void testWrongBoard() throws SigningException, IOException {
+
+	Message message = new Message();
+        String clientNonce = Crypto.generateNonce();
+	message.appendObject(pubkey);
+        message.appendObject(clientNonce);
+        Response response = server.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        assertEquals(response.getStatusCode(), "User registered");
+
+        //Constructing announcement
+        message = new Message();
+        message.appendObject(pubkey);
+        message.appendObject("A1".toCharArray());
+	message.appendObject(null);
+	message.appendObject("0:0");
+	message.appendObject(1);
+	message.appendObject(true);
+        byte[] signature = Crypto.sign(privkey, message.getByteArray());
+        Announcement a = new Announcement(pubkey, "A1".toCharArray(), null, signature, "0:0", 1, true);
+
+	message = new Message();
+        clientNonce = Crypto.generateNonce();
+	message.appendObject(pubkey);
+        message.appendObject(clientNonce);
+        Response response2 = server.getNonce(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+        assertEquals(response2.getStatusCode(), "Nonce generated");
+        String serverNonce = response2.getServerNonce();
+
+	message = new Message();
+        message.appendObject(pubkey);
+        message.appendObject(a);
+        clientNonce = Crypto.generateNonce();
+	message.appendObject(clientNonce);
+	message.appendObject(serverNonce);
+        Response response3 = server.post(pubkey, a, clientNonce, serverNonce, Crypto.sign(privkey, message.getByteArray()));
+        assertEquals(response3.getStatusCode(), "Wrong Board");
     }
 }

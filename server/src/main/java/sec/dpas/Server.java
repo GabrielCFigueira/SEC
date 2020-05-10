@@ -234,12 +234,16 @@ public class Server implements ServerAPI{
             message.appendObject(a.getReferences());
             message.appendObject(a.getId());
 	    message.appendObject(a.getTimeStamp());
+	    message.appendObject(a.isGeneralBoard());
             if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
                 return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
             return constructResponse(e.getMessage(), clientNonce);
         }
+
+	if(a.isGeneralBoard()) 
+	    return constructResponse("Wrong Board", clientNonce);
         
 	synchronized(_announcementB) {
             synchronized(_nonceTable) {
@@ -290,12 +294,16 @@ public class Server implements ServerAPI{
             message.appendObject(a.getReferences());
             message.appendObject(a.getId());
 	    message.appendObject(a.getTimeStamp());
-            if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+            message.appendObject(a.isGeneralBoard());
+	    if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
                 return constructResponse("Signature verification failed", clientNonce);
             }
         } catch(IOException e) {
             return constructResponse(e.getMessage(), clientNonce);
         }
+
+	if(!a.isGeneralBoard()) 
+	    return constructResponse("Wrong Board", clientNonce);
         
 	synchronized(_generalB) {
             synchronized(_nonceTable) {
