@@ -472,14 +472,14 @@ public class Client {
             	responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
 	    }
 
-            String status = asyncCall(responses, "User registered", threadpool);
+            String status = asyncCall(responses, "User registered", _N, threadpool); //FIXME 2f+1?
 	    if (!status.equals("Try again"))
 	    	return status;
 	}
 	
     }
 
-    public String post(Announcement a) throws IOException, FileNotFoundException, SigningException {
+    public String post(Announcement a, int majority) throws IOException, FileNotFoundException, SigningException {
         String url, id;
         ExecutorService threadpool;
         Hashtable<String, Future<String>> responses;
@@ -499,10 +499,14 @@ public class Client {
             	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
             	responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
 	    }
-            String status = asyncCall(responses, "Announcement posted", threadpool);
+            String status = asyncCall(responses, "Announcement posted", majority, threadpool);
 	    if (!status.equals("Try again"))
 	    	return status;
 	}
+    }
+
+    public String post(Announcement a) throws IOException, FileNotFoundException, SigningException {
+	    return post(a, 2 * _f + 1);
     }
 
     public String post(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
@@ -529,7 +533,7 @@ public class Client {
             	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
             	responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
 	    }
-            String status = asyncCall(responses, "General announcement posted", threadpool);
+            String status = asyncCall(responses, "General announcement posted", 2 * _f + 1, threadpool);
 	    if (!status.equals("Try again"))
 	    	return status;
 	}
@@ -563,7 +567,7 @@ public class Client {
             	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
             	responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead, tempReadList)));
 	    }
-            status = asyncCall(responses, "read successful", threadpool);
+            status = asyncCall(responses, "read successful", 2 * _f + 1, threadpool);
 	    readList = (List<ArrayList<Announcement>>) tempReadList.clone();
 	    if (!status.equals("Try again"))
 	    	break;
@@ -576,7 +580,7 @@ public class Client {
 
         this.printAnnouncements(anns);
 	for(int i = 0; i < anns.size(); i++)
-	    post(anns.get(i));
+	    post(anns.get(i), Math.round((((float) _N) + _f) / 2));
 
         return status;
     }
@@ -616,7 +620,7 @@ public class Client {
             	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
             	responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, 0, tempReadList)));
 	    }
-            status = asyncCall(responses, "read successful", threadpool);
+            status = asyncCall(responses, "read successful", 2 * _f + 1, threadpool);
 	    readList = (List<ArrayList<Announcement>>) tempReadList.clone();
 	    if (!status.equals("Try again"))
 	    	break;
@@ -637,10 +641,9 @@ public class Client {
      * Async Call
      *
      */
-    public String asyncCall(Hashtable<String, Future<String>> responses, String expectedCode, ExecutorService threadpool) {
+    public String asyncCall(Hashtable<String, Future<String>> responses, String expectedCode, int majority, ExecutorService threadpool) {
     //public Hashtable<String, Future<String>> asyncCall(Hashtable<String, Future<String>> responses, ExecutorService threadpool) {
         String id;
-        int majority = 2 * _f + 1;
         int nResponses = 0;
         String status = "";
 	boolean error = false;
