@@ -32,11 +32,12 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.*;
-
+ 
 import sec.dpas.exceptions.SigningException;
 
 import java.math.BigInteger;
@@ -48,11 +49,103 @@ import java.math.BigInteger;
 
 public class Server implements ServerAPI{
 
+    private class Broadcast {
+	
+	private boolean sentecho = false;
+	private boolean sentready = false;
+	private boolean delivered = false;
+
+	private Announcement ready = null;
+
+	private ConcurrentHashMap<PublicKey, Announcement> echos = new ConcurrentHashMap<PublicKey, Announcement>();
+	private ConcurrentHashMap<byte[], ArrayList<Announcement>> echosByAnn = new ConcurrentHashMap<byte[], ArrayList<Announcement>>();
+	private ConcurrentHashMap<PublicKey, Announcement> readys = new ConcurrentHashMap<PublicKey, Announcement>();
+	private ConcurrentHashMap<byte[], ArrayList<Announcement>> readysByAnn = new ConcurrentHashMap<byte[], ArrayList<Announcement>>();
+
+    }
+
+    public void echo(PublicKey serverpubkey, Announcement a, byte[] signature) {
+	// signature verification
+	// announcement verification
+	
+	String key = a.getKey().toString() + Integer.toString(a.getTimeStamp());
+	if(_broadcastTable.contains(key))
+	    _broadcastTable.put(key, new Broadcast());
+	Broadcast brd = _broadcastTable.get(key);
+	
+	if(!brd.echos.containsKey(a.getKey())) {
+	    brd.echos.put(a.getKey(), a);
+	    if(brd.echosByAnn.containsKey(a.getSignature()))
+		brd.echosByAnn.put(a.getSignature(), new ArrayList<Announcement>());
+	    brd.echosByAnn.get(a.getSignature()).add(a);
+	}
+
+	if(brd.sentready == false) {
+	    int max = 0;
+	    ArrayList<Announcement> anns = null;
+	    for(ArrayList<Announcement> as : brd.echosByAnn.values()) {
+	    	if(as.size() > max) {
+		    max = as.size();
+		    anns = as;
+		}
+	    }
+	    if(max >= Math.round((((float) _N) + _f) / 2)) {
+		brd.sentready = true;
+		brd.ready = anns.get(0);
+		// send ready to all
+	    
+	    } else if(brd.sentready == false && _N  - brd.readysByAnn.values().size() + max <  Math.round((((float)_N) + _f) / 2)) {
+	    	// send abort
+	    }
+	}
+    }
+
+    public void ready(PublicKey serverpubkey, Announcement a, byte[] signature) {	
+	// signature verification
+	// announcement verification
+	String key = a.getKey().toString() + Integer.toString(a.getTimeStamp());
+	if(_broadcastTable.contains(key))
+	    _broadcastTable.put(key, new Broadcast());
+	Broadcast brd = _broadcastTable.get(key);
+	
+	if(!brd.readys.containsKey(a.getKey())) {
+	    brd.readys.put(a.getKey(), a);
+	    if(brd.readysByAnn.containsKey(a.getSignature()))
+		brd.readysByAnn.put(a.getSignature(), new ArrayList<Announcement>());
+	    brd.readysByAnn.get(a.getSignature()).add(a);
+	}
+
+	int max = 0;
+	ArrayList<Announcement> anns = null;
+	for(ArrayList<Announcement> as : brd.readysByAnn.values()) {
+	    if(as.size() > max) {
+		max = as.size();
+		anns = as;
+	    }
+	}
+	if(brd.sentready == false && max > _f) {
+	    brd.sentready = true;
+	    brd.ready = anns.get(0);
+	    // send ready to all
+	} else if(max > 2 * _f && brd.delivered == false) {
+	    brd.delivered = true;
+	    // deliver
+	} else if(brd.sentready == false && _N  - brd.readysByAnn.values().size() + max < _f + 1 
+		|| brd.sentready == true && _N - brd.readysByAnn.values().size() + max < 2 * _f + 1) {
+	    //abort
+	}
+
+    }
+
+    private ConcurrentHashMap<String, Broadcast> _broadcastTable;
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
     private Hashtable<PublicKey, String> _nonceTable;
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
     private int _id = 1;
+    private int _N = 4;
+    private int _f = 1;
+    private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
 
     public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
@@ -85,8 +178,28 @@ public class Server implements ServerAPI{
                 _generalB = new ArrayList<Announcement>();
             }
         }
+
+	generateUrls();
     }
 
+    private void generateUrls() {
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader(new FileReader("../resources/servers.txt"));
+            String line = reader.readLine();
+            String[] words;
+            while (line != null) {
+                words = line.split(" ");
+		if(!words[0].equals(_id))
+		    _servers.put(words[0], words[1]);
+                line = reader.readLine();
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     public Server() throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         this("server", "server");
@@ -95,6 +208,13 @@ public class Server implements ServerAPI{
     public Server(int id) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
 	this("server" + id, "server" + id);
   _id = id;
+    }
+
+    public Server(int id, int N, int f) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
+	this(id);
+  	_id = id;
+	_N = N;
+	_f = f;
     }
 
     public void cleanup() {
