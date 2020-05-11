@@ -40,7 +40,7 @@ import java.util.concurrent.ExecutorService;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.*;
- 
+
 import sec.dpas.exceptions.SigningException;
 
 import java.math.BigInteger;
@@ -53,7 +53,7 @@ import java.math.BigInteger;
 public class Server implements ServerAPI{
 
     private class Broadcast {
-	
+
 	private boolean sentecho = false;
 	private boolean sentready = false;
 	private boolean delivered = false;
@@ -73,13 +73,45 @@ public class Server implements ServerAPI{
 
     public void echo(int serverId, Announcement a, byte[] signature) {
 	    //signature verification
+      boolean status1 = false;
+      boolean status2 = false;
+
+      try {
+          Message message = new Message();
+          message.appendObject(serverId);
+          message.appendObject(a);
+          if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), signature)) {
+              status1 = true;
+          }
+      } catch(IOException e) {
+          System.out.println(e.getMessage());
+      }
 	    ///announcement verification
-	    echo(serverId, a);
+      try {
+          Message message = new Message();
+          message.appendObject(a.getKey());
+          message.appendObject(a.getMessage());
+          message.appendObject(a.getReferences());
+          message.appendObject(a.getId());
+          message.appendObject(a.getTimeStamp());
+          message.appendObject(a.isGeneralBoard());
+          if(!Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature)) {
+              status2 = true;
+          }
+      } catch(IOException e) {
+          System.out.println(e.getMessage());
+      }
+      System.out.println("status1"+status1);
+      System.out.println("status2"+status2);
+      if(status1 == true && status2 == true){
+	       echo(serverId, a);
+      }
+      //echo(serverId, a);
     }
 
 
     private void echo(int serverId, Announcement a) {
-	
+
 	Broadcast brd;
 	synchronized(_broadcastTable) {
 	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
@@ -105,22 +137,49 @@ public class Server implements ServerAPI{
 		brd.sentready = true;
 		_pendingWrites.put(a.getKey(), true);
 		sendReady(a, false);
-	    }    
+	    }
 	}
 	}
-	
+
     }
 
-    public void ready(int serverId, Announcement a, boolean abort, byte[] signature) {	
+
+
+    public void ready(int serverId, Announcement a, boolean abort, byte[] signature) {
 	// signature verification
-	// announcement verification
-	
+  try {
+      Message message = new Message();
+      message.appendObject(serverId);
+      message.appendObject(a);
+      if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), signature)) {
+          //do sth
+      }
+  } catch(IOException e) {
+      System.out.println(e.getMessage());
+  }
+  ///announcement verification
+
+  try {
+      Message message = new Message();
+      message.appendObject(a.getKey());
+      message.appendObject(a.getMessage());
+      message.appendObject(a.getReferences());
+      message.appendObject(a.getId());
+      message.appendObject(a.getTimeStamp());
+      message.appendObject(a.isGeneralBoard());
+      if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+          //pls do sth. I have a wife and kids
+      }
+  } catch(IOException e) {
+      System.out.println(e.getMessage());
+  }
+
 	Broadcast brd;
 	synchronized(_broadcastTable) {
 	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
 	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
 	    brd = _broadcastTable.get(new String(a.getSignature()));
-	
+
 //	if(!brd.readys.containsKey(serverId) && !brd.aborts.containsKey(serverId)) {
 	    if(abort)
 		brd.aborts++;
@@ -132,8 +191,8 @@ public class Server implements ServerAPI{
 	int max = brd.readys;
 
 	System.out.println(max);
-	
-	if(brd.sentready == false ) { 
+
+	if(brd.sentready == false ) {
 	    if(_pendingWrites.get(a.getKey())) {
 		brd.sentready = true;
 		brd.sentAbort = true;
@@ -158,7 +217,7 @@ public class Server implements ServerAPI{
 	    brd.delivered = true;
 	    brd.aborted = true;
 	    if(!brd.sentAbort)
-		_pendingWrites.put(a.getKey(), false);	
+		_pendingWrites.put(a.getKey(), false);
 	    try {
 	    	brd.notifyAll();
 	    } catch (Exception e) {
@@ -172,13 +231,11 @@ public class Server implements ServerAPI{
 
     public void sendReady(Announcement a, boolean abort) {
 	//create signature
-	byte[] signature = null;
-	
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
 	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
-		    stub.ready(_id, a, abort, signature);
+		    stub.ready(_id, a, abort, signBroadcast(a));
 	    } catch (Exception e) {
 		    System.out.println(e.getMessage());
 	    }});
@@ -187,18 +244,30 @@ public class Server implements ServerAPI{
 
     public void sendEcho(Announcement a) {
 	//create signature
-	byte[] signature = null;
-	
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
 	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
-		    stub.echo(_id, a, signature);
+		    stub.echo(_id, a, signBroadcast(a));
 	    } catch (Exception e) {
 		    System.out.println(e.getMessage());
 	    }});
 	}
     }
+
+  private byte[] signBroadcast(Announcement a){
+    byte[] signature = null;
+    try {
+      Message message = new Message();
+      message.appendObject(_id);
+      message.appendObject(a);
+      signature = Crypto.sign(_serverKey, message.getByteArray());
+    }
+    catch(Exception e){
+      System.out.println(e.getMessage());
+    }
+    return signature;
+  }
 
 
     private ConcurrentHashMap<String, Broadcast> _broadcastTable = new ConcurrentHashMap<String, Broadcast>();
@@ -206,6 +275,7 @@ public class Server implements ServerAPI{
     private Hashtable<PublicKey, String> _nonceTable;
     private ArrayList<Announcement> _generalB;
     private Key _serverKey;
+    private PublicKey _serverPubKey;
     private int _id = 1;
     private int _N = 4;
     private int _f = 1;
@@ -220,6 +290,7 @@ public class Server implements ServerAPI{
         _nonceTable = new Hashtable<PublicKey, String>();
         _generalB = new ArrayList<Announcement>();
         _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
+        _serverPubKey = Crypto.readPublicKey("../resources/server" + _id + ".pub");
 
 
         File f = new File("../resources/board" + _id + ".txt");
@@ -431,9 +502,9 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	if(a.isGeneralBoard()) 
+	if(a.isGeneralBoard())
 	    return constructResponse("Wrong Board", clientNonce);
-        
+
         synchronized(_nonceTable) {
             if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
                 return constructResponse("No such user registered", clientNonce);
@@ -443,21 +514,21 @@ public class Server implements ServerAPI{
             _nonceTable.replace(pubkey,  "0");
 	}
 	int boardSize;
-	
+
 	synchronized(_announcementB) {
 	    boardSize = getUserAnnouncements(a.getKey()).size();
 	}
 	if (boardSize < a.getTimeStamp() - 1)
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
-        
+
 
 	String status = "Announcement posted";
-	
+
 	if(boardSize == a.getTimeStamp() - 1) {
 	    if(_broadcast) {
             	echo(_id, a);
 	    	sendEcho(a);
-		
+
 	    	try {
 	    	    synchronized(_broadcastTable) {
         	    	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
@@ -479,7 +550,7 @@ public class Server implements ServerAPI{
             	}
 	    }
 	}
-	
+
         return constructResponse(status, clientNonce);
     }
 
@@ -517,9 +588,9 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	if(!a.isGeneralBoard()) 
+	if(!a.isGeneralBoard())
 	    return constructResponse("Wrong Board", clientNonce);
-        
+
 	synchronized(_generalB) {
             synchronized(_nonceTable) {
                 if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
