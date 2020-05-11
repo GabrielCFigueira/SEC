@@ -36,6 +36,8 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.Set;
+import java.util.HashSet;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -61,13 +63,16 @@ public class Server implements ServerAPI{
 	private boolean sentAbort = false;
 	private boolean aborted = false;
 
-	private int echos = 0;
+	//private int echos = 0;
 	private int readys = 0;
 	private int aborts = 0;
 
 	//private ConcurrentHashMap<Integer, Integer> echos = new ConcurrentHashMap<Integer, Integer>();
 	//private ConcurrentHashMap<Integer, Integer> readys = new ConcurrentHashMap<Integer, Integer>();
 	//private ConcurrentHashMap<Integer, Integer> aborts = new ConcurrentHashMap<Integer, Integer>();
+  private Set<Integer> echos = new HashSet<Integer>();
+  //private Set<Integer> readys = new HashSet<Integer>();
+  //private Set<Integer> aborts = new HashSet<Integer>();
 
     }
 
@@ -75,6 +80,7 @@ public class Server implements ServerAPI{
 	    //signature verification
       boolean status1 = false;
       boolean status2 = false;
+      boolean status3 = false;
 
       try {
           Message message = new Message();
@@ -101,8 +107,10 @@ public class Server implements ServerAPI{
       } catch(IOException e) {
           System.out.println(e.getMessage());
       }
+
       System.out.println("status1"+status1);
       System.out.println("status2"+status2);
+      System.out.println("status3"+status3);
       if(status1 == true && status2 == true){
 	       echo(serverId, a);
       }
@@ -112,54 +120,51 @@ public class Server implements ServerAPI{
 
     private void echo(int serverId, Announcement a) {
 
-	Broadcast brd;
-	synchronized(_broadcastTable) {
+	    Broadcast brd;
+	    synchronized(_broadcastTable) {
 	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
 	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
 	    brd = _broadcastTable.get(new String(a.getSignature()));
 
-/*	if(!brd.echos.containsKey(serverId)) {
-	    brd.echos.put(serverId, serverId);
+      if(!brd.echos.contains(serverId)) {
+    	    brd.echos.add(serverId);
+          if(brd.sentready == false) {
+              //int max = brd.echos;
+              int max = brd.echos.size();
+              if(_pendingWrites.get(a.getKey())) {
+            brd.sentready = true;
+            brd.sentAbort = true;
+            sendReady(a, true);
+              }
+              else if(max >= Math.round((((float) _N) + _f) / 2)) {
+            brd.sentready = true;
+            _pendingWrites.put(a.getKey(), true);
+            sendReady(a, false);
+              }
+          }
+        }
 
-	}*/
-
-	brd.echos++;
-
-
-	if(brd.sentready == false) {
-	    int max = brd.echos;
-	    if(_pendingWrites.get(a.getKey())) {
-		brd.sentready = true;
-		brd.sentAbort = true;
-		sendReady(a, true);
-	    }
-	    else if(max >= Math.round((((float) _N) + _f) / 2)) {
-		brd.sentready = true;
-		_pendingWrites.put(a.getKey(), true);
-		sendReady(a, false);
-	    }
-	}
-	}
+	   }
 
     }
 
-
-
     public void ready(int serverId, Announcement a, boolean abort, byte[] signature) {
-	// signature verification
-  try {
+    // signature verification
+    boolean s1 = false;
+    boolean s2 = false;
+    try {
       Message message = new Message();
       message.appendObject(serverId);
       message.appendObject(a);
       if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), signature)) {
-          //do sth
+          s1 = true;
       }
-  } catch(IOException e) {
+    } catch(IOException e) {
       System.out.println(e.getMessage());
-  }
-  ///announcement verification
+    }
+    ///announcement verification
 
-  try {
+    try {
       Message message = new Message();
       message.appendObject(a.getKey());
       message.appendObject(a.getMessage());
@@ -167,67 +172,78 @@ public class Server implements ServerAPI{
       message.appendObject(a.getId());
       message.appendObject(a.getTimeStamp());
       message.appendObject(a.isGeneralBoard());
-      if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+      if(!Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature)) {
           //pls do sth. I have a wife and kids
+          s2 = true;
       }
-  } catch(IOException e) {
+    } catch(IOException e) {
       System.out.println(e.getMessage());
-  }
+    }
 
-	Broadcast brd;
-	synchronized(_broadcastTable) {
-	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
-	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
-	    brd = _broadcastTable.get(new String(a.getSignature()));
-
-//	if(!brd.readys.containsKey(serverId) && !brd.aborts.containsKey(serverId)) {
-	    if(abort)
-		brd.aborts++;
-	    else
-	    	brd.readys++;
-//	}
-
-
-	int max = brd.readys;
-
-	System.out.println(max);
-
-	if(brd.sentready == false ) {
-	    if(_pendingWrites.get(a.getKey())) {
-		brd.sentready = true;
-		brd.sentAbort = true;
-		sendReady(a, true);
-	    }
-	    else if(max > _f) {
-	    	brd.sentready = true;
-	    	sendReady(a, false);
-	    }
-	} else if(max > 2 * _f && brd.delivered == false) {
-	    brd.delivered = true;
-	    System.out.println("delivered");
-	    getUserAnnouncements(a.getKey()).add(a);
-	    _pendingWrites.put(a.getKey(), false);
-	    try {
-	    	_broadcastTable.notifyAll();
-	    } catch (Exception e) {
-		System.out.println("1" + e.getMessage());
-		System.exit(-1);
-	    }
-	} else if(_N - brd.aborts < 2 * _f + 1) {
-	    brd.delivered = true;
-	    brd.aborted = true;
-	    if(!brd.sentAbort)
-		_pendingWrites.put(a.getKey(), false);
-	    try {
-	    	brd.notifyAll();
-	    } catch (Exception e) {
-		System.out.println(e.getMessage());
-		System.exit(-1);
-	    }
-	}
-	}
+    if(s1 == true && s2 == true){
+      ready(serverId, a, abort);
+    }
 
     }
+
+
+
+
+    public void ready (int serverId, Announcement a, boolean abort){
+      Broadcast brd;
+    	synchronized(_broadcastTable) {
+    	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
+    	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
+    	    brd = _broadcastTable.get(new String(a.getSignature()));
+
+    	//if(!brd.readys.contains(serverId) && !brd.aborts.contains(serverId)) {
+    	    if(abort)
+    		    brd.aborts++;
+    	    else
+    	    	brd.readys++;
+    //	}
+
+
+    	int max = brd.readys;
+
+    	System.out.println(max);
+
+    	if(brd.sentready == false ) {
+    	    if(_pendingWrites.get(a.getKey())) {
+    		brd.sentready = true;
+    		brd.sentAbort = true;
+    		sendReady(a, true);
+    	    }
+    	    else if(max > _f) {
+    	    	brd.sentready = true;
+    	    	sendReady(a, false);
+    	    }
+    	} else if(max > 2 * _f && brd.delivered == false) {
+    	    brd.delivered = true;
+    	    System.out.println("delivered");
+    	    getUserAnnouncements(a.getKey()).add(a);
+    	    _pendingWrites.put(a.getKey(), false);
+    	    try {
+    	    	_broadcastTable.notifyAll();
+    	    } catch (Exception e) {
+    		System.out.println("1" + e.getMessage());
+    		System.exit(-1);
+    	    }
+    	} else if(_N - brd.aborts < 2 * _f + 1) {
+    	    brd.delivered = true;
+    	    brd.aborted = true;
+    	    if(!brd.sentAbort)
+    		_pendingWrites.put(a.getKey(), false);
+    	    try {
+    	    	brd.notifyAll();
+    	    } catch (Exception e) {
+    		System.out.println(e.getMessage());
+    		System.exit(-1);
+    	    }
+    	}
+    	}
+    }
+
 
     public void sendReady(Announcement a, boolean abort) {
 	//create signature
