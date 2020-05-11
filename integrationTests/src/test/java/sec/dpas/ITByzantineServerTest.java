@@ -80,6 +80,7 @@ public class ITByzantineServerTest {
 	client2 = new Client("test1", "testtest1", 1, 4);
 	
 	client1.register();
+	client2.register();
     }
 
     @After
@@ -102,21 +103,21 @@ public class ITByzantineServerTest {
     @Test
     public void SimpleTestWithMocks() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
   	 
-	Server mockedServer = mock(Server.class);
+/*	Server mockedServer = mock(Server.class);
         registry1.unbind("ServerAPI");
         UnicastRemoteObject.unexportObject(registry1, true);
         stub1 = (ServerAPI) UnicastRemoteObject.exportObject(mockedServer, 0);
         registry1 = LocateRegistry.createRegistry(8009);
-        registry1.bind("ServerAPI", stub1);
+        registry1.bind("ServerAPI", stub1);*/
 	
 	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
-
+/*
 	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
 	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
 	});
 	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
 	    return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
-	});
+	});*/
 
 	assertEquals("Announcement posted", client1.post(a));
 	

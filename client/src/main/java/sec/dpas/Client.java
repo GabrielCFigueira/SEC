@@ -642,7 +642,6 @@ public class Client {
      *
      */
     public String asyncCall(Hashtable<String, Future<String>> responses, String expectedCode, int majority, ExecutorService threadpool) {
-    //public Hashtable<String, Future<String>> asyncCall(Hashtable<String, Future<String>> responses, ExecutorService threadpool) {
         String id;
         int nResponses = 0;
         String status = "";
@@ -654,7 +653,6 @@ public class Client {
                 if(responses.get(id).isDone()) {
                     try {
                         if(responses.get(id).get().equals(expectedCode)) {
-                            // necessario mudar este if para abrangir mais hipoteses
 			    status = responses.get(id).get(); 
 	 		    nResponses++;
                         } else {
@@ -662,6 +660,7 @@ public class Client {
 		      		return "Try again";
 			    status = responses.get(id).get();
 			    expectedCode = status;
+			    nResponses = 1;
 			}
                     } catch (Exception e) {
                         System.out.println(e.getMessage() + " :Our Async got exception.");

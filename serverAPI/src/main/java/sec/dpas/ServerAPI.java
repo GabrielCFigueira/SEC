@@ -31,4 +31,8 @@ public interface ServerAPI extends Remote {
     Response readGeneral(int number, PublicKey senderKey, String clientNonce, String serverNonce, byte[] signature)
             throws RemoteException;
 
+    void echo(int serverId, Announcement a, byte[] signature) throws RemoteException;
+    
+    void ready(int serverId, Announcement a, boolean abort, byte[] signature) throws RemoteException;
+
 }
