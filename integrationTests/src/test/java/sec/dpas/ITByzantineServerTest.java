@@ -149,7 +149,7 @@ public class ITByzantineServerTest {
 	
     }
 
-
+    
     @Test
     public void WrongRead() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
 

@@ -213,7 +213,7 @@ public class Server implements ServerAPI{
 
     private Hashtable<PublicKey, Boolean> _pendingWrites = new Hashtable<PublicKey, Boolean>();
     private boolean _pendingGeneralWrite = false;
-
+    private boolean _broadcast = false;
 
     public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
@@ -275,6 +275,7 @@ public class Server implements ServerAPI{
     public Server(int id) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
 	this("server" + id, "server" + id);
   _id = id;
+  _broadcast = true;
     }
 
     public Server(int id, int N, int f) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
@@ -446,34 +447,37 @@ public class Server implements ServerAPI{
 	synchronized(_announcementB) {
 	    boardSize = getUserAnnouncements(a.getKey()).size();
 	}
-	if(boardSize == a.getTimeStamp() - 1) {
-            echo(_id, a);
-	    sendEcho(a);
-	}
-	else if (boardSize < a.getTimeStamp() - 1)
+	if (boardSize < a.getTimeStamp() - 1)
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
         
 
-            /*try {saveToFile("board");}
-            catch (IOException e){
-                System.out.println(e.getMessage());
-            }*/
-	String status = "";
-	try {
-	    synchronized(_broadcastTable) {
-        	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
-	    	while(!brd.delivered) {
-			System.out.println("not delivered");
-		    _broadcastTable.wait();
-		}
-	    	if(brd.aborted)
-		    status = "Announcement aborted";
-	    	else
-		    status = "Announcement posted";
+	String status = "Announcement posted";
+	
+	if(boardSize == a.getTimeStamp() - 1) {
+	    if(_broadcast) {
+            	echo(_id, a);
+	    	sendEcho(a);
+		
+	    	try {
+	    	    synchronized(_broadcastTable) {
+        	    	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
+	    	    	while(!brd.delivered)
+		    	     _broadcastTable.wait();
+	    	    	if(brd.aborted)
+		    	    status = "Announcement aborted";
+	    	    }
+	    	} catch (InterruptedException e) {
+		    System.out.println(e.getMessage());
+		    System.exit(-1);
+	    	}
 	    }
-	} catch (InterruptedException e) {
-		System.out.println(e.getMessage());
-		System.exit(-1);
+	    else {
+                getUserAnnouncements(a.getKey()).add(a);
+		try {saveToFile("board");}
+            	catch (IOException e){
+                    System.out.println(e.getMessage());
+            	}
+	    }
 	}
 	
         return constructResponse(status, clientNonce);
