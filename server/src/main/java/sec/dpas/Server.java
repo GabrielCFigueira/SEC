@@ -80,10 +80,11 @@ public class Server implements ServerAPI{
 
     private void echo(int serverId, Announcement a) {
 	
-    	synchronized(_broadcastTable) {
-	if(!_broadcastTable.containsKey(new String(a.getSignature())))
-	    _broadcastTable.put(new String(a.getSignature()), new Broadcast());
-	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
+	Broadcast brd;
+	synchronized(_broadcastTable) {
+	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
+	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
+	    brd = _broadcastTable.get(new String(a.getSignature()));
 
 /*	if(!brd.echos.containsKey(serverId)) {
 	    brd.echos.put(serverId, serverId);
@@ -113,10 +114,12 @@ public class Server implements ServerAPI{
     public void ready(int serverId, Announcement a, boolean abort, byte[] signature) {	
 	// signature verification
 	// announcement verification
+	
+	Broadcast brd;
 	synchronized(_broadcastTable) {
-	if(!_broadcastTable.containsKey(new String(a.getSignature())))
-	    _broadcastTable.put(new String(a.getSignature()), new Broadcast());
-	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
+	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
+	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
+	    brd = _broadcastTable.get(new String(a.getSignature()));
 	
 //	if(!brd.readys.containsKey(serverId) && !brd.aborts.containsKey(serverId)) {
 	    if(abort)
@@ -127,8 +130,9 @@ public class Server implements ServerAPI{
 
 
 	int max = brd.readys;
+
+	System.out.println(max);
 	
-	System.out.println("max" + max);
 	if(brd.sentready == false ) { 
 	    if(_pendingWrites.get(a.getKey())) {
 		brd.sentready = true;
@@ -141,12 +145,13 @@ public class Server implements ServerAPI{
 	    }
 	} else if(max > 2 * _f && brd.delivered == false) {
 	    brd.delivered = true;
+	    System.out.println("delivered");
 	    getUserAnnouncements(a.getKey()).add(a);
 	    _pendingWrites.put(a.getKey(), false);
 	    try {
-	    	brd.notify();
+	    	_broadcastTable.notifyAll();
 	    } catch (Exception e) {
-		System.out.println(e.getMessage());
+		System.out.println("1" + e.getMessage());
 		System.exit(-1);
 	    }
 	} else if(_N - brd.aborts < 2 * _f + 1) {
@@ -155,7 +160,7 @@ public class Server implements ServerAPI{
 	    if(!brd.sentAbort)
 		_pendingWrites.put(a.getKey(), false);	
 	    try {
-	    	brd.notify();
+	    	brd.notifyAll();
 	    } catch (Exception e) {
 		System.out.println(e.getMessage());
 		System.exit(-1);
@@ -457,8 +462,10 @@ public class Server implements ServerAPI{
 	try {
 	    synchronized(_broadcastTable) {
         	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
-	    	while(!brd.delivered)
+	    	while(!brd.delivered) {
+			System.out.println("not delivered");
 		    _broadcastTable.wait();
+		}
 	    	if(brd.aborted)
 		    status = "Announcement aborted";
 	    	else
