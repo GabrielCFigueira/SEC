@@ -77,27 +77,20 @@ public class Server implements ServerAPI{
           Message message = new Message();
           message.appendObject(serverId);
           message.appendObject(a);
-          if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), signature)) {
+          if(Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature)) {
               status1 = true;
           }
       } catch(IOException e) {
           System.out.println(e.getMessage());
       }
 	    ///announcement verification
-      try {
-          Message message = new Message();
-          message.appendObject(a.getKey());
-          message.appendObject(a.getMessage());
-          message.appendObject(a.getReferences());
-          message.appendObject(a.getId());
-          message.appendObject(a.getTimeStamp());
-          message.appendObject(a.isGeneralBoard());
-          if(!Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature)) {
-              status2 = true;
-          }
-      } catch(IOException e) {
-          System.out.println(e.getMessage());
+    try {
+      if(verifyAnnouncement(a, a.getKey())) {
+          status2 = true;
       }
+    } catch(IOException e) {
+      System.out.println(e.getMessage());
+    }
 
       System.out.println("status1"+status1);
       System.out.println("status2"+status2);
@@ -122,7 +115,6 @@ public class Server implements ServerAPI{
       if(!brd.echos.contains(serverId)) {
     	    brd.echos.add(serverId);
           if(brd.sentready == false) {
-              //int max = brd.echos;
               int max = brd.echos.size();
               if(max >= Math.round((((float) _N) + _f) / 2)) {
                   brd.sentready = true;
@@ -146,7 +138,6 @@ public class Server implements ServerAPI{
       if(!brd.echos.contains(serverId)) {
     	    brd.echos.add(serverId);
           if(brd.sentready == false) {
-              //int max = brd.echos;
               int max = brd.echos.size();
               if(max >= Math.round((((float) _N) + _f) / 2)) {
             brd.sentready = true;
@@ -167,7 +158,7 @@ public class Server implements ServerAPI{
       Message message = new Message();
       message.appendObject(serverId);
       message.appendObject(a);
-      if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), signature)) {
+      if(Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature)) {
           s1 = true;
       }
     } catch(IOException e) {
@@ -176,15 +167,7 @@ public class Server implements ServerAPI{
     ///announcement verification
 
     try {
-      Message message = new Message();
-      message.appendObject(a.getKey());
-      message.appendObject(a.getMessage());
-      message.appendObject(a.getReferences());
-      message.appendObject(a.getId());
-      message.appendObject(a.getTimeStamp());
-      message.appendObject(a.isGeneralBoard());
-      if(!Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature)) {
-          //pls do sth. I have a wife and kids
+      if(verifyAnnouncement(a, a.getKey())) {
           s2 = true;
       }
     } catch(IOException e) {
@@ -279,7 +262,6 @@ public class Server implements ServerAPI{
 
 
     public void sendReady(Announcement a) {
-	//create signature
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
@@ -292,7 +274,6 @@ public class Server implements ServerAPI{
     }
 
     public void sendEcho(Announcement a) {
-	//create signature
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
@@ -319,6 +300,26 @@ public class Server implements ServerAPI{
     return signature;
   }
 
+
+    public boolean verifyAnnouncement(Announcement a, PublicKey key) throws IOException {
+	
+        Message message = new Message();
+        message.appendObject(a.getKey());
+        message.appendObject(a.getMessage());
+        message.appendObject(a.getReferences());
+	message.appendObject(a.getId());
+	message.appendObject(a.getTimeStamp());
+	message.appendObject(a.isGeneralBoard());
+	if(a.getReferences() != null)
+	    for(Announcement an : a.getReferences()) {
+		if(an.getTimeStamp() > a.getTimeStamp())
+		    return false;
+		else if(!verifyAnnouncement(an, an.getKey()))
+		    return false;
+	    }
+	return Crypto.verifySignature(key, message.getByteArray(), a.getSignature());
+    }
+    
 
     private ConcurrentHashMap<String, Broadcast> _broadcastTable = new ConcurrentHashMap<String, Broadcast>();
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
@@ -553,16 +554,8 @@ public class Server implements ServerAPI{
 
         //verify Announcement signature
         try {
-            Message message = new Message();
-            message.appendObject(a.getKey());
-            message.appendObject(a.getMessage());
-            message.appendObject(a.getReferences());
-            message.appendObject(a.getId());
-	    message.appendObject(a.getTimeStamp());
-	    message.appendObject(a.isGeneralBoard());
-            if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+      	    if(!verifyAnnouncement(a, a.getKey()))
                 return constructResponse("Signature verification failed", clientNonce);
-            }
         } catch(IOException e) {
             return constructResponse(e.getMessage(), clientNonce);
         }
@@ -637,16 +630,8 @@ public class Server implements ServerAPI{
 
         //verify Announcement signature
         try {
-            Message message = new Message();
-            message.appendObject(a.getKey());
-            message.appendObject(a.getMessage());
-            message.appendObject(a.getReferences());
-            message.appendObject(a.getId());
-	    message.appendObject(a.getTimeStamp());
-            message.appendObject(a.isGeneralBoard());
-	    if(!Crypto.verifySignature(a.getKey(), message.getByteArray(), a.getSignature())) {
+      	    if(!verifyAnnouncement(a, a.getKey()))
                 return constructResponse("Signature verification failed", clientNonce);
-            }
         } catch(IOException e) {
             return constructResponse(e.getMessage(), clientNonce);
         }
