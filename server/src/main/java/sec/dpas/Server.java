@@ -58,9 +58,9 @@ public class Server implements ServerAPI{
 
     private class Broadcast {
 
-	private boolean sentecho = false;
-	private boolean sentready = false;
-	private boolean delivered = false;
+        private boolean sentecho = false;
+        private boolean sentready = false;
+        private boolean delivered = false;
 
   	private Set<Integer> echos = new HashSet<Integer>();
   	private Set<Integer> readys = new HashSet<Integer>();
@@ -102,11 +102,11 @@ public class Server implements ServerAPI{
 
     private void echo(int serverId, Announcement a) {
 
-	    Broadcast brd;
-	    synchronized(_broadcastTable) {
-	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
-	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
-	    brd = _broadcastTable.get(new String(a.getSignature()));
+        Broadcast brd;
+        synchronized(_broadcastTable) {
+            if(!_broadcastTable.containsKey(new String(a.getSignature())))
+                _broadcastTable.put(new String(a.getSignature()), new Broadcast());
+            brd = _broadcastTable.get(new String(a.getSignature()));
 
       if(!brd.echos.contains(serverId)) {
     	    brd.echos.add(serverId);
@@ -119,17 +119,16 @@ public class Server implements ServerAPI{
           }
         }
 
-	   }
-
+    }
     }
 
     private void echoGen(int serverId, Announcement a) {
 
-	    Broadcast brd;
-	    synchronized(_broadcastTable) {
-	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
-	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
-	    brd = _broadcastTable.get(new String(a.getSignature()));
+        Broadcast brd;
+        synchronized(_broadcastTable) {
+            if(!_broadcastTable.containsKey(new String(a.getSignature())))
+                _broadcastTable.put(new String(a.getSignature()), new Broadcast());
+            brd = _broadcastTable.get(new String(a.getSignature()));
 
       if(!brd.echos.contains(serverId)) {
     	    brd.echos.add(serverId);
@@ -141,8 +140,6 @@ public class Server implements ServerAPI{
               }
           }
         }
-
-	   }
 
     }
 
@@ -193,7 +190,7 @@ public class Server implements ServerAPI{
     	    brd.readys.add(serverId);
 
 
-    	int max = brd.readys.size();
+            int max = brd.readys.size();
 
     	System.out.println("id :" + serverId + " max: " + max);
 
@@ -230,9 +227,9 @@ public class Server implements ServerAPI{
           brd.readys.add(serverId);
 
 
-      int max = brd.readys.size();
+            int max = brd.readys.size();
 
-      System.out.println(max);
+            System.out.println(max);
 
       if(brd.sentready == false ) {
           if(max > _f) {
@@ -283,19 +280,19 @@ public class Server implements ServerAPI{
     }
 
 
-  private byte[] signBroadcast(Announcement a){
-    byte[] signature = null;
-    try {
-      Message message = new Message();
-      message.appendObject(_id);
-      message.appendObject(a);
-      signature = Crypto.sign(_serverKey, message.getByteArray());
+    private byte[] signBroadcast(Announcement a){
+        byte[] signature = null;
+        try {
+            Message message = new Message();
+            message.appendObject(_id);
+            message.appendObject(a);
+            signature = Crypto.sign(_serverKey, message.getByteArray());
+        }
+        catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+        return signature;
     }
-    catch(Exception e){
-      System.out.println(e.getMessage());
-    }
-    return signature;
-  }
 
 
     public boolean verifyAnnouncement(Announcement a, PublicKey key) throws IOException {
@@ -388,14 +385,19 @@ public class Server implements ServerAPI{
         try {
             reader = new BufferedReader(new FileReader("../resources/servers.txt"));
             String line = reader.readLine();
-            String[] words;
-            while (line != null) {
-                words = line.split(" ");
-		if(!words[0].equals(Integer.toString(_id)))
-		    _servers.put(words[0], words[1]);
+            ArrayList<String> lines = new ArrayList<String>();
+            while(line != null) {
+                lines.add(line);
                 line = reader.readLine();
             }
             reader.close();
+
+            String[] words;
+            for(int i = 0; i < _N || i < lines.size() ; ++i) {
+                words = lines.get(i).split(" ");
+                if(!words[0].equals(_id))
+                    _servers.put(words[0], words[1]);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -556,8 +558,8 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	if(a.isGeneralBoard())
-	    return constructResponse("Wrong Board", clientNonce);
+        if(a.isGeneralBoard())
+            return constructResponse("Wrong Board", clientNonce);
 
         synchronized(_nonceTable) {
             if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
@@ -576,7 +578,7 @@ public class Server implements ServerAPI{
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
 
 
-	String status = "Announcement posted";
+        String status = "Announcement posted";
 
 	if(maxTimeStamp == a.getTimeStamp() - 1) {
 	    if(_broadcast) {
@@ -596,12 +598,12 @@ public class Server implements ServerAPI{
 	    }
 	    else {
                 getUserAnnouncements(a.getKey()).add(a);
-		try {saveToFile("board");}
-            	catch (IOException e){
+                try {saveToFile("board");}
+                catch (IOException e){
                     System.out.println(e.getMessage());
-            	}
-	    }
-	}
+                }
+            }
+        }
 
         return constructResponse(status, clientNonce);
     }
@@ -632,8 +634,8 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-	if(!a.isGeneralBoard())
-	    return constructResponse("Wrong Board", clientNonce);
+        if(!a.isGeneralBoard())
+            return constructResponse("Wrong Board", clientNonce);
 
 
   synchronized(_generalB) {
@@ -686,9 +688,9 @@ public class Server implements ServerAPI{
 	else
 	    status = "Invalid Announcement TimeStamp";
     }
-
-      return constructResponse(status, clientNonce);
-  }
+    
+    return constructResponse(status, clientNonce);
+    }
 
 
 
@@ -976,37 +978,37 @@ public class Server implements ServerAPI{
         System.out.println("#####");
 
         try {
-	    Server obj;
-	    if(args.length == 1){
-		    obj = new Server(Integer.parseInt(args[0]));
-      	    }
-	    else if(args.length == 2) {
-		    obj = new Server(args[0], args[1]);
-	    }
-	    else if(args.length == 3) {
-		    obj = new Server(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-	    }
-	    else
-		    obj = new Server();
+            Server obj;
+            if(args.length == 1){
+                obj = new Server(Integer.parseInt(args[0]));
+            }
+            else if(args.length == 2) {
+                obj = new Server(args[0], args[1]);
+            }
+            else if(args.length == 3) {
+                obj = new Server(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+            }
+            else
+                obj = new Server();
             //src.hello.Server obj = new src.hello.Server();
             ServerAPI stub = (ServerAPI) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
             //Registry registry = LocateRegistry.getRegistry();i
-	    BufferedReader reader;
-	    try {
-	    	reader = new BufferedReader(new FileReader("../resources/servers.txt"));
-		String line = reader.readLine();
-		while (line != null) {
-			String id = line.split(" ")[0];
-			if(Integer.parseInt(id) == obj.getId())
-				registryPort = Integer.parseInt(line.split(" ")[1].split("/")[2].split(":")[1]);
-			line = reader.readLine();
-		}
-		reader.close();
-	    } catch (IOException e) {
-		    e.printStackTrace();
-	    }
+            BufferedReader reader;
+            try {
+                reader = new BufferedReader(new FileReader("../resources/servers.txt"));
+                String line = reader.readLine();
+                while (line != null) {
+                    String id = line.split(" ")[0];
+                    if(Integer.parseInt(id) == obj.getId())
+                        registryPort = Integer.parseInt(line.split(" ")[1].split("/")[2].split(":")[1]);
+                    line = reader.readLine();
+                }
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Registry registry = LocateRegistry.createRegistry(registryPort); //no garbage collection
             registry.bind("ServerAPI", stub);
             //Naming.rebind("//localhost:1099/ServerAPI");

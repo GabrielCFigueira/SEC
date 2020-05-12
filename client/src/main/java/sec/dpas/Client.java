@@ -53,20 +53,25 @@ public class Client {
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
     private int _timeStamp = 1;
     private int _generalBoardStamp = 0;
-    
+
 
     private void generateUrls() {
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader("../resources/servers.txt"));
             String line = reader.readLine();
-            String[] words;
-            while (line != null) {
-                words = line.split(" ");
-                _servers.put(words[0], words[1]);
+            ArrayList<String> lines = new ArrayList<String>();
+            while(line != null) {
+                lines.add(line);
                 line = reader.readLine();
             }
             reader.close();
+
+            String[] words;
+            for(int i = 0; i < _N || i < lines.size() ; ++i) {
+                words = lines.get(i).split(" ");
+                _servers.put(words[0], words[1]);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -171,6 +176,8 @@ public class Client {
 
     public int getGeneralBoardStamp() { return _generalBoardStamp; }
 
+    public ArrayList<Announcement> getLastRead() { return _lastRead; }
+
     /**
      * printOptions
      *
@@ -219,9 +226,9 @@ public class Client {
         message.appendObject(clientNonce);
 
         // call function from ServerAPI
-	Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
-        
-	// verificacao da assinatura da response
+        Response response = stub.register(pubkey, clientNonce, Crypto.sign(privkey, message.getByteArray()));
+
+        // verificacao da assinatura da response
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
@@ -230,7 +237,7 @@ public class Client {
             return "Signature verification failed";
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
-        
+
         return response.getStatusCode();
     }
 
@@ -277,11 +284,11 @@ public class Client {
         messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
         messageReceived.appendObject(response.getClientNonce());
-	if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
+        if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
-        else 
+        else
             return response.getStatusCode();
     }
 
@@ -383,12 +390,12 @@ public class Client {
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else {
-	    for(Announcement a : response.getAnnouncements())
-		if(!verifyAnnouncement(a, pubkeyToRead, false))
-	    	    return "Signature verification failed";
-	    synchronized(readList) {	
-	    	readList.add(response.getAnnouncements());
-	    }
+            for(Announcement a : response.getAnnouncements())
+                if(!verifyAnnouncement(a, pubkeyToRead, false))
+                    return "Signature verification failed";
+            synchronized(readList) {
+                readList.add(response.getAnnouncements());
+            }
             return response.getStatusCode();
         }
     }
@@ -440,12 +447,12 @@ public class Client {
         else if(!clientNonce.equals(response.getClientNonce()))
             return "Server returned invalid nonce: possible replay attack";
         else {
-	    for(Announcement a : response.getAnnouncements())
-		if(!verifyAnnouncement(a, a.getKey(), true))
-	    	    return "Signature verification failed";
-	    synchronized(readList) {
-		readList.add(response.getAnnouncements());
-	    }
+            for(Announcement a : response.getAnnouncements())
+                if(!verifyAnnouncement(a, a.getKey(), true))
+                    return "Signature verification failed";
+            synchronized(readList) {
+                readList.add(response.getAnnouncements());
+            }
             return response.getStatusCode();
         }
     }
@@ -455,94 +462,94 @@ public class Client {
         String url, id;
         ExecutorService threadpool;
         Hashtable<String, Future<String>> responses;
-	while (true) {
-	    threadpool = Executors.newCachedThreadPool();
-	    responses = new Hashtable<String, Future<String>>();
+        while (true) {
+            threadpool = Executors.newCachedThreadPool();
+            responses = new Hashtable<String, Future<String>>();
             for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-            	url = _servers.get(id);
-            	final ServerAPI stub;
-            	try {
+                id = ids.nextElement();
+                url = _servers.get(id);
+                final ServerAPI stub;
+                try {
                     stub = (ServerAPI) Naming.lookup(url);
-	        } catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     continue;
-            	}
-            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            	responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
-	    }
+                }
+                final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+                responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
+            }
 
             String status = asyncCall(responses, "User registered", _N, threadpool); //FIXME 2f+1?
-	    if (!status.equals("Try again"))
-	    	return status;
-	}
-	
+            if (!status.equals("Try again"))
+                return status;
+        }
+
     }
 
     public String post(Announcement a, int majority) throws IOException, FileNotFoundException, SigningException {
         String url, id;
         ExecutorService threadpool;
         Hashtable<String, Future<String>> responses;
-	while (true) {
-	    threadpool = Executors.newCachedThreadPool();
-	    responses = new Hashtable<String, Future<String>>();
+        while (true) {
+            threadpool = Executors.newCachedThreadPool();
+            responses = new Hashtable<String, Future<String>>();
             for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-            	url = _servers.get(id);
-            	final ServerAPI stub;
-            	try {
+                id = ids.nextElement();
+                url = _servers.get(id);
+                final ServerAPI stub;
+                try {
                     stub = (ServerAPI) Naming.lookup(url);
-	        } catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     continue;
-            	}
-            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            	responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
-	    }
+                }
+                final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+                responses.put(id, threadpool.submit(() -> postOption(stub, serverpubkey, a)));
+            }
             String status = asyncCall(responses, "Announcement posted", majority, threadpool);
-	    if (!status.equals("Try again"))
-	    	return status;
-	}
+            if (!status.equals("Try again"))
+                return status;
+        }
     }
 
     public String post(Announcement a) throws IOException, FileNotFoundException, SigningException {
-	    return post(a, 2 * _f + 1);
+        return post(a, 2 * _f + 1);
     }
 
     public String post(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
-	    return this.post(this.createAnnouncement(msg, refs, _timeStamp++, false));
+        return this.post(this.createAnnouncement(msg, refs, _timeStamp++, false));
     }
 
     public String postGeneral(Announcement a) throws IOException, FileNotFoundException, SigningException {
         String url, id;
         ExecutorService threadpool;
         Hashtable<String, Future<String>> responses;
-	while (true) {
-	    threadpool = Executors.newCachedThreadPool();
-	    responses = new Hashtable<String, Future<String>>();
+        while (true) {
+            threadpool = Executors.newCachedThreadPool();
+            responses = new Hashtable<String, Future<String>>();
             for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-            	url = _servers.get(id);
-            	final ServerAPI stub;
-            	try {
+                id = ids.nextElement();
+                url = _servers.get(id);
+                final ServerAPI stub;
+                try {
                     stub = (ServerAPI) Naming.lookup(url);
-	        } catch (Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     continue;
-            	}
-            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            	responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
-	    }
+                }
+                final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+                responses.put(id, threadpool.submit(() -> postGeneralOption(stub, serverpubkey, a)));
+            }
             String status = asyncCall(responses, "General announcement posted", 2 * _f + 1, threadpool);
-	    if (!status.equals("Try again"))
-	    	return status;
-	}
+            if (!status.equals("Try again"))
+                return status;
+        }
     }
 
     public String postGeneral(char[] msg, ArrayList<Announcement> refs) throws IOException, FileNotFoundException, SigningException {
-	readGeneral(0);
-	Announcement a = this.createAnnouncement(msg, refs, _generalBoardStamp, true);
-	return postGeneral(a);
+        readGeneral(0);
+        Announcement a = this.createAnnouncement(msg, refs, _generalBoardStamp, true);
+        return postGeneral(a);
     }
 
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
@@ -571,9 +578,11 @@ public class Client {
 	
 	List<Announcement> anns = getMaxTimeStampList((ArrayList<ArrayList<Announcement>>) readList.clone());
 
+        List<Announcement> anns = getMaxTimeStamp(readList);
+
         this.printAnnouncements(anns);
-	for(int i = 0; i < anns.size(); i++)
-	    post(anns.get(i), Math.round((((float) _N) + _f) / 2));
+        for(int i = 0; i < anns.size(); i++)
+            post(anns.get(i), Math.round((((float) _N) + _f) / 2));
 
         return status;
     }
@@ -627,7 +636,7 @@ public class Client {
         this.printAnnouncements(anns);
 	_generalBoardStamp = getMaxTimeStamp(anns) + 1;
 
-	return status;
+        return status;
     }
 
 
@@ -639,11 +648,11 @@ public class Client {
         String id;
         int nResponses = 0;
         String status = "";
-	boolean error = false;
+        boolean error = false;
 
         while (nResponses < majority) {
             for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
+                id = ids.nextElement();
                 if(responses.get(id).isDone()) {
 		    nResponses++;
                     try {
@@ -660,7 +669,7 @@ public class Client {
             } catch(Exception e) {
                 System.out.println("sleep exception");
             }
-            System.out.println("FutureTask is not finished yet..."); 
+            System.out.println("FutureTask is not finished yet...");
         }
 
         threadpool.shutdown();
@@ -709,7 +718,7 @@ public class Client {
     }
 
     public Announcement createAnnouncement() throws IOException, FileNotFoundException, SigningException{
-	    return createAnnouncement(_timeStamp++, false);
+        return createAnnouncement(_timeStamp++, false);
     }
 
     public Announcement createAnnouncement(char[] msg, ArrayList<Announcement> refs, int timeStamp, boolean isGeneralBoard) throws IOException, FileNotFoundException, SigningException {
@@ -719,27 +728,27 @@ public class Client {
         message.appendObject(msg);
         message.appendObject(refs);
         String id = String.valueOf(_clientId) + ":" + String.valueOf(_annId);
-	message.appendObject(id);
-	message.appendObject(timeStamp);
-	message.appendObject(isGeneralBoard);
-	byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
+        message.appendObject(id);
+        message.appendObject(timeStamp);
+        message.appendObject(isGeneralBoard);
+        byte[] signature = Crypto.sign(this.getPrivateKey(), message.getByteArray());
 
         _annId++;
         return new Announcement(this.getPublicKey(), msg, refs, signature, id, timeStamp, isGeneralBoard);
     }
 
     public boolean verifyAnnouncement(Announcement a, PublicKey key, boolean expected) throws IOException, FileNotFoundException {
-	
+
         Message message = new Message();
         message.appendObject(a.getKey());
         message.appendObject(a.getMessage());
         message.appendObject(a.getReferences());
-	message.appendObject(a.getId());
-	message.appendObject(a.getTimeStamp());
-	message.appendObject(a.isGeneralBoard());
-	if(expected != a.isGeneralBoard())
-	    return false;
-	return Crypto.verifySignature(key, message.getByteArray(), a.getSignature());
+        message.appendObject(a.getId());
+        message.appendObject(a.getTimeStamp());
+        message.appendObject(a.isGeneralBoard());
+        if(expected != a.isGeneralBoard())
+            return false;
+        return Crypto.verifySignature(key, message.getByteArray(), a.getSignature());
     }
 
     /**
@@ -756,7 +765,7 @@ public class Client {
                 cli = new Client(args[0], args[1]);
             else
                 cli = new Client();
-	    Announcement a = null;
+            Announcement a = null;
             int option = 0;
             boolean bk = false;
             ServerAPI stub = null;
@@ -775,12 +784,12 @@ public class Client {
                             System.out.println(cli.register());
                             break;
                         case 2:
-			    a = cli.createAnnouncement();
+                            a = cli.createAnnouncement();
                             System.out.println(cli.post(a));
                             break;
                         case 3:
-			    cli.readGeneral(0);
-			    a = cli.createAnnouncement(cli.getGeneralBoardStamp(), true);
+                            cli.readGeneral(0);
+                            a = cli.createAnnouncement(cli.getGeneralBoardStamp(), true);
                             System.out.println(cli.postGeneral(a));
                             break;
                         case 4:
