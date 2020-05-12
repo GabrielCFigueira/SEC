@@ -67,7 +67,7 @@ public class Server implements ServerAPI{
 
     }
 
-    public void echo(int serverId, Announcement a, byte[] signature, boolean gen) {
+    public void echo(int serverId, Announcement a, byte[] signature) {
 	    //signature verification
       boolean status1 = false;
       boolean status2 = false;
@@ -103,7 +103,7 @@ public class Server implements ServerAPI{
       System.out.println("status2"+status2);
       System.out.println("status3"+status3);
       if(status1 == true && status2 == true){
-        if(gen == true)
+        if(a.isGeneralBoard())
 	         echoGen(serverId, a);
         else
             echo(serverId, a);
@@ -126,7 +126,7 @@ public class Server implements ServerAPI{
               int max = brd.echos.size();
               if(max >= Math.round((((float) _N) + _f) / 2)) {
                   brd.sentready = true;
-            	  sendReady(a, false);
+            	  sendReady(a);
               }
           }
         }
@@ -150,7 +150,7 @@ public class Server implements ServerAPI{
               int max = brd.echos.size();
               if(max >= Math.round((((float) _N) + _f) / 2)) {
             brd.sentready = true;
-            sendReady(a, true);
+            sendReady(a);
               }
           }
         }
@@ -159,7 +159,7 @@ public class Server implements ServerAPI{
 
     }
 
-    public void ready(int serverId, Announcement a, byte[] signature, boolean gen) {
+    public void ready(int serverId, Announcement a, byte[] signature) {
     // signature verification
     boolean s1 = false;
     boolean s2 = false;
@@ -192,7 +192,7 @@ public class Server implements ServerAPI{
     }
 
     if(s1 == true && s2 == true){
-      if(gen == true)
+      if(a.isGeneralBoard() == true)
         readyGen(serverId, a);
       else
         ready(serverId, a);
@@ -221,11 +221,15 @@ public class Server implements ServerAPI{
     	if(brd.sentready == false ) {
     	    if(max > _f) {
     	    	brd.sentready = true;
-    	    	sendReady(a, false);
+    	    	sendReady(a);
     	    }
     	} else if(max > 2 * _f && brd.delivered == false) {
     	    brd.delivered = true;
     	    getUserAnnouncements(a.getKey()).add(a);
+	    try {saveToFile("board");}
+            catch (IOException e) {
+                System.out.println(e.getMessage());
+	    }
     	    try {
     	    	_broadcastTable.notifyAll();
     	    } catch (Exception e) {
@@ -233,7 +237,7 @@ public class Server implements ServerAPI{
     		System.exit(-1);
     	    }
     	}
-    	}
+	}
     }
 
     public void readyGen (int serverId, Announcement a){
@@ -254,11 +258,15 @@ public class Server implements ServerAPI{
       if(brd.sentready == false ) {
           if(max > _f) {
             brd.sentready = true;
-            sendReady(a, true);
+            sendReady(a);
           }
       } else if(max > 2 * _f && brd.delivered == false) {
           brd.delivered = true;
-          getUserAnnouncements(a.getKey()).add(a);
+          getGenAnnouncements().add(a);
+	      try {saveToFile("genboard");}
+              catch (IOException e){
+                  System.out.println(e.getMessage());
+	      }
           try {
             _broadcastTable.notifyAll();
           } catch (Exception e) {
@@ -270,26 +278,26 @@ public class Server implements ServerAPI{
     }
 
 
-    public void sendReady(Announcement a, boolean gen) {
+    public void sendReady(Announcement a) {
 	//create signature
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
 	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
-		    stub.ready(_id, a, signBroadcast(a), gen);
+		    stub.ready(_id, a, signBroadcast(a));
 	    } catch (Exception e) {
 		    System.out.println(e.getMessage());
 	    }});
 	}
     }
 
-    public void sendEcho(Announcement a, boolean gen) {
+    public void sendEcho(Announcement a) {
 	//create signature
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
 	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
-		    stub.echo(_id, a, signBroadcast(a), gen);
+		    stub.echo(_id, a, signBroadcast(a));
 	    } catch (Exception e) {
 		    System.out.println(e.getMessage());
 	    }});
@@ -584,7 +592,7 @@ public class Server implements ServerAPI{
 	if(maxTimeStamp == a.getTimeStamp() - 1) {
 	    if(_broadcast) {
         	echo(_id, a);
-	    	sendEcho(a, false);
+	    	sendEcho(a);
 
 	    	try {
 	    	    synchronized(_broadcastTable) {
@@ -672,7 +680,7 @@ public class Server implements ServerAPI{
 		status = "Invalid Announcement TimeStamp";	
 	else {
   	    echoGen(_id, a);
-	    sendEcho(a, true);
+	    sendEcho(a);
 
     	    try {
       		synchronized(_broadcastTable) {
