@@ -547,36 +547,29 @@ public class Client {
 
     public String read(int number, PublicKey pubkeyToRead) throws IOException, FileNotFoundException, SigningException {
         String url, id, status;
-        ExecutorService threadpool;
-        Hashtable<String, Future<String>> responses;
-	List<ArrayList<Announcement>> readList;
-	while (true) {
-	    threadpool = Executors.newCachedThreadPool();
-	    responses = new Hashtable<String, Future<String>>();
-	    ArrayList<ArrayList<Announcement>> tempReadList = new ArrayList<ArrayList<Announcement>>();
-            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-            	url = _servers.get(id);
-            	final ServerAPI stub;
-            	try {
-                    stub = (ServerAPI) Naming.lookup(url);
-	        } catch (Exception e) {
-                    e.printStackTrace();
-                    continue;
-            	}
-            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            	responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead, tempReadList)));
-	    }
-            status = asyncCall(responses, "read successful", 2 * _f + 1, threadpool);
-	    readList = (List<ArrayList<Announcement>>) tempReadList.clone();
-	    if (!status.equals("Try again"))
-	    	break;
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
+	ArrayList<ArrayList<Announcement>> readList = new ArrayList<ArrayList<Announcement>>();
+        
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            final ServerAPI stub;
+            try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            responses.put(id, threadpool.submit(() -> readOption(stub, serverpubkey, 0, pubkeyToRead, readList)));
 	}
+        status = asyncCall(responses, "read successful", 2 * _f + 1, threadpool);
 
 	if (!status.equals("read successful"))
 	    return status;
 	
-	List<Announcement> anns = getMaxTimeStamp(readList);
+	List<Announcement> anns = getMaxTimeStampList((ArrayList<ArrayList<Announcement>>) readList.clone());
 
         this.printAnnouncements(anns);
 	for(int i = 0; i < anns.size(); i++)
@@ -585,7 +578,15 @@ public class Client {
         return status;
     }
 
-    private List<Announcement> getMaxTimeStamp(List<ArrayList<Announcement>> readList) {
+    private int getMaxTimeStamp(ArrayList<Announcement> readList) {
+	int stamp = 0;
+	for(Announcement a : readList)
+	    if(stamp < a.getTimeStamp())
+		stamp = a.getTimeStamp();
+    	return stamp;
+    }
+
+    private ArrayList<Announcement> getMaxTimeStampList(ArrayList<ArrayList<Announcement>> readList) {
 	ArrayList<Announcement> max = new ArrayList<Announcement>();
 	int stamp = 0;
 	for(ArrayList<Announcement> read : readList) {
@@ -600,38 +601,31 @@ public class Client {
 
     public String readGeneral(int number) throws IOException, FileNotFoundException, SigningException {
         String url, id, status;
-        ExecutorService threadpool;
-        Hashtable<String, Future<String>> responses;
-	List<ArrayList<Announcement>> readList;
-	while (true) {
-	    threadpool = Executors.newCachedThreadPool();
-	    responses = new Hashtable<String, Future<String>>();
-	    ArrayList<ArrayList<Announcement>> tempReadList = new ArrayList<ArrayList<Announcement>>();
-            for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
-            	id = ids.nextElement();
-            	url = _servers.get(id);
-            	final ServerAPI stub;
-            	try {
-                    stub = (ServerAPI) Naming.lookup(url);
-	        } catch (Exception e) {
-                    e.printStackTrace();
-                    continue;
-            	}
-            	final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            	responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, 0, tempReadList)));
+        ExecutorService threadpool = Executors.newCachedThreadPool();
+        Hashtable<String, Future<String>> responses = new Hashtable<String, Future<String>>();
+	ArrayList<ArrayList<Announcement>> readList = new ArrayList<ArrayList<Announcement>>();
+        
+	for(Enumeration<String> ids = _servers.keys(); ids.hasMoreElements();) {
+            id = ids.nextElement();
+            url = _servers.get(id);
+            final ServerAPI stub;
+            try {
+                stub = (ServerAPI) Naming.lookup(url);
+	    } catch (Exception e) {
+                e.printStackTrace();
+                continue;
 	    }
-            status = asyncCall(responses, "read successful", 2 * _f + 1, threadpool);
-	    readList = (List<ArrayList<Announcement>>) tempReadList.clone();
-	    if (!status.equals("Try again"))
-	    	break;
+            final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
+            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, 0, readList)));
 	}
+        status = asyncCall(responses, "read successful", 2 * _f + 1, threadpool);
 
 	if (!status.equals("read successful"))
 	    return status;
 	
-	List<Announcement> anns = getMaxTimeStamp(readList);
+	ArrayList<Announcement> anns = getMaxTimeStampList((ArrayList<ArrayList<Announcement>>) readList.clone());
         this.printAnnouncements(anns);
-	_generalBoardStamp = anns.size() + 1;
+	_generalBoardStamp = getMaxTimeStamp(anns) + 1;
 
 	return status;
     }
@@ -651,17 +645,10 @@ public class Client {
             for(Enumeration<String> ids = responses.keys(); ids.hasMoreElements();) {
             	id = ids.nextElement();
                 if(responses.get(id).isDone()) {
+		    nResponses++;
                     try {
-                        if(responses.get(id).get().equals(expectedCode)) {
+                        if(responses.get(id).get().equals(expectedCode) || status.equals(""))
 			    status = responses.get(id).get(); 
-	 		    nResponses++;
-                        } else {
-			    if (status != "")
-		      		return "Try again";
-			    status = responses.get(id).get();
-			    expectedCode = status;
-			    nResponses = 1;
-			}
                     } catch (Exception e) {
                         System.out.println(e.getMessage() + " :Our Async got exception.");
                     }

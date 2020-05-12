@@ -141,8 +141,6 @@ public class ITByzantineServerTest {
 	});
 	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
 	    return server1.constructResponse("Signature verification failed", (String) i.getArgument(2));
-	}).thenAnswer(i -> {
-	    return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
 	});
 
 	assertEquals("Announcement posted", client1.post(a));
@@ -176,8 +174,6 @@ public class ITByzantineServerTest {
 	
 	when(mockedServer.read(any(PublicKey.class), any(Integer.class), any(PublicKey.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
 	    return server1.constructResponse("read successful", anns2, (String) i.getArgument(3));
-	}).thenAnswer(i -> {
-	    return server1.constructResponse("read successful", anns1, (String) i.getArgument(3));
 	});
 	
 	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
@@ -187,6 +183,5 @@ public class ITByzantineServerTest {
 	assertEquals("read successful", client1.read(0, client1.getPublicKey()));
 	
     }
-
 
 }
