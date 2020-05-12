@@ -67,6 +67,112 @@ public class Server implements ServerAPI{
 
     }
 
+    public void echo(int serverId, PublicKey pubkey, byte[] signature) {
+        try {
+            Message message = new Message();
+            message.appendObject(serverId);
+            message.appendObject(pubkey);
+            if(!Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature))
+                return;
+        } catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+	Broadcast brd;
+	synchronized(_broadcastRegister) {
+	    if(!_broadcastRegister.containsKey(pubkey))
+	    	_broadcastRegister.put(pubkey, new Broadcast());
+	    brd = _broadcastRegister.get(pubkey);
+      	    
+	    if(!brd.echos.contains(serverId))
+    	    	brd.echos.add(serverId);
+
+            if(brd.sentready == false) {
+                int max = brd.echos.size();
+                if(max >= Math.round((((float) _N) + _f) / 2)) {
+                    brd.sentready = true;
+            	    sendReady(pubkey);
+              	}
+          
+            }
+        }
+    }
+
+    public void ready(int serverId, PublicKey pubkey, byte[] signature) {
+        try {
+            Message message = new Message();
+            message.appendObject(serverId);
+            message.appendObject(pubkey);
+            if(!Crypto.verifySignature(Crypto.readPublicKey("../resources/server" + serverId + ".pub"), message.getByteArray(), signature))
+                return;
+        } catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+	Broadcast brd;
+	synchronized(_broadcastRegister) {
+	    if(!_broadcastRegister.containsKey(pubkey))
+	    	_broadcastRegister.put(pubkey, new Broadcast());
+	    brd = _broadcastRegister.get(pubkey);
+      	    
+	    if(!brd.readys.contains(serverId))
+    	    	brd.readys.add(serverId);
+
+        
+    	    int max = brd.readys.size();
+    	    if(brd.sentready == false ) {
+    	        if(max > _f) {
+    	    	    brd.sentready = true;
+    	    	    sendReady(pubkey);
+    	        }
+    	    } else if(max > 2 * _f && brd.delivered == false) {
+    	    	brd.delivered = true;
+        	synchronized(_announcementB) {
+            	    synchronized(_nonceTable) {
+                	_announcementB.put(pubkey,new ArrayList<Announcement>());
+                	_nonceTable.put(pubkey, "0");
+			try {saveToFile("board");}
+            		catch (IOException e) {
+                	    System.out.println(e.getMessage());
+	    		}
+		    }
+		}
+    	    	try {
+    	    	    _broadcastRegister.notifyAll();
+    	    	} catch (Exception e) {
+    		    System.out.println(e.getMessage());
+    		    System.exit(-1);
+    	        }
+    	    }
+        }
+    }
+
+    public void sendReady(PublicKey pubkey) {
+	ready(_id, pubkey, signBroadcast(pubkey));
+	ExecutorService threadpool = Executors.newCachedThreadPool();
+	for (String id : _servers.keySet()) {
+	    threadpool.submit(() -> { try {
+	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
+		    stub.ready(_id, pubkey, signBroadcast(pubkey));
+	    } catch (Exception e) {
+		    System.out.println(e.getMessage());
+	    }});
+	}
+    }
+
+    public void sendEcho(PublicKey pubkey) {
+	ExecutorService threadpool = Executors.newCachedThreadPool();
+	for (String id : _servers.keySet()) {
+	    threadpool.submit(() -> { try {
+	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
+		    stub.echo(_id, pubkey, signBroadcast(pubkey));
+	    } catch (Exception e) {
+		    System.out.println(e.getMessage());
+	    }});
+	}
+    }
+
+
     public void echo(int serverId, Announcement a, byte[] signature) {
 	    //signature verification
       boolean status1 = false;
@@ -295,8 +401,25 @@ public class Server implements ServerAPI{
     }
 
 
+  private byte[] signBroadcast(PublicKey pubkey){
+    byte[] signature = null;
+    try {
+      Message message = new Message();
+      message.appendObject(_id);
+      message.appendObject(pubkey);
+      signature = Crypto.sign(_serverKey, message.getByteArray());
+    }
+    catch(Exception e){
+      System.out.println(e.getMessage());
+    }
+    return signature;
+  }
+
     public boolean verifyAnnouncement(Announcement a, PublicKey key) throws IOException {
-	
+	synchronized(_announcementB) {
+    	    if(!hasPublicKey(a.getKey()))
+    	    	return false;		
+	}
         Message message = new Message();
         message.appendObject(a.getKey());
         message.appendObject(a.getMessage());
@@ -316,6 +439,7 @@ public class Server implements ServerAPI{
     
 
     private ConcurrentHashMap<String, Broadcast> _broadcastTable = new ConcurrentHashMap<String, Broadcast>();
+    private ConcurrentHashMap<PublicKey, Broadcast> _broadcastRegister = new ConcurrentHashMap<PublicKey, Broadcast>();
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
     private Hashtable<PublicKey, String> _nonceTable;
     private TreeSet<Announcement> _generalB;
@@ -326,7 +450,7 @@ public class Server implements ServerAPI{
     private int _f = 1;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
-    public class AnnouncementComparer implements Comparator<Announcement> {
+    private class AnnouncementComparer implements Comparator<Announcement> {
 	@Override
 	public int compare(Announcement a1, Announcement a2) {
 	    if(a1.getTimeStamp() > a2.getTimeStamp())
@@ -513,19 +637,38 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
+
         synchronized(_announcementB) {
             synchronized(_nonceTable) {
                 if(hasPublicKey(pubkey))
                     return constructResponse("User was already registered", clientNonce);
-                _announcementB.put(pubkey,new ArrayList<Announcement>());
-                _nonceTable.put(pubkey, "0");
-            }
+		if(!_broadcast) {
+                    _announcementB.put(pubkey,new ArrayList<Announcement>());
+                    _nonceTable.put(pubkey, "0");
+		
 
-            try {saveToFile("board");}
-            catch (IOException e){
-                System.out.println(e.getMessage());
-            }
-        }
+            	    try {saveToFile("board");}
+            	    catch (IOException e){
+                	System.out.println(e.getMessage());
+            	    }
+        	}
+	    }
+	}
+
+	if(_broadcast) {
+	    echo(_id, pubkey, signBroadcast(pubkey));
+	    sendEcho(pubkey);
+	    try {
+	        synchronized(_broadcastRegister) {
+        	    Broadcast brd = _broadcastRegister.get(pubkey);
+	    	    while(!brd.delivered)
+		         _broadcastRegister.wait();
+	    	}
+	    } catch (InterruptedException e) {
+		System.out.println(e.getMessage());
+		System.exit(-1);
+	    }
+	}
 
         return constructResponse("User registered", clientNonce);
     }
@@ -550,7 +693,12 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        //verify Announcement signature
+        synchronized(_announcementB) {
+            if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
+                return constructResponse("No such user registered", clientNonce);
+            }
+	}
+	//verify Announcement signature
         try {
       	    if(!verifyAnnouncement(a, a.getKey()))
                 return constructResponse("Signature verification failed", clientNonce);
@@ -562,9 +710,6 @@ public class Server implements ServerAPI{
             return constructResponse("Wrong Board", clientNonce);
 
         synchronized(_nonceTable) {
-            if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
-                return constructResponse("No such user registered", clientNonce);
-            }
             if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                 return constructResponse("Invalid nonce", clientNonce);
             _nonceTable.replace(pubkey,  "0");
@@ -596,14 +741,16 @@ public class Server implements ServerAPI{
 		    System.exit(-1);
 	    	}
 	    }
-	    else {
-                getUserAnnouncements(a.getKey()).add(a);
-                try {saveToFile("board");}
-                catch (IOException e){
-                    System.out.println(e.getMessage());
-                }
-            }
-        }
+	    else 
+		synchronized(_announcementB) {
+                    getUserAnnouncements(a.getKey()).add(a);
+		    try {saveToFile("board");}
+            	    catch (IOException e){
+                    	System.out.println(e.getMessage());
+            	    }
+		}
+	    
+	}
 
         return constructResponse(status, clientNonce);
     }
@@ -626,6 +773,12 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
+        synchronized(_announcementB) {
+            if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
+                return constructResponse("No such user registered", clientNonce);
+            }
+	}
+
         //verify Announcement signature
         try {
       	    if(!verifyAnnouncement(a, a.getKey()))
@@ -638,17 +791,13 @@ public class Server implements ServerAPI{
             return constructResponse("Wrong Board", clientNonce);
 
 
-  synchronized(_generalB) {
       synchronized(_nonceTable) {
-          if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
-                return constructResponse("No such user registered", clientNonce);
-          }
           if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                 return constructResponse("Invalid nonce", clientNonce);
           _nonceTable.replace(pubkey, "0");
-          }
-  }
-  int maxTimeStamp;
+      }
+  
+      int maxTimeStamp;
 
 	synchronized(_generalB) {
 	    maxTimeStamp = getMaxStamp(getGenAnnouncements());
@@ -773,9 +922,11 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
+        synchronized(_announcementB) {
+            if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
+            	return constructResponse("No such user registered", clientNonce);
+            }
+	}
 
         synchronized(_nonceTable) {
             if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
@@ -808,9 +959,11 @@ public class Server implements ServerAPI{
             return constructResponse(e.getMessage(), clientNonce);
         }
 
-        if(!hasPublicKey(senderKey)){
-            return constructResponse("No such user registered", clientNonce);
-        }
+        synchronized(_announcementB) {
+            if(!hasPublicKey(senderKey)){
+            	return constructResponse("No such user registered", clientNonce);
+            }
+	}
 
         synchronized(_nonceTable) {
             if(_nonceTable.get(senderKey).equals("0") || !_nonceTable.get(senderKey).equals(serverNonce))

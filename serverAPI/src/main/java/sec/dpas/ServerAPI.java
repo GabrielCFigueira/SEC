@@ -35,4 +35,7 @@ public interface ServerAPI extends Remote {
 
     void ready(int serverId, Announcement a, byte[] signature) throws RemoteException;
 
+    void echo(int serverId, PublicKey pubkey, byte[] signature) throws RemoteException;
+
+    void ready(int serverId, PublicKey pubkey, byte[] signature) throws RemoteException;
 }
