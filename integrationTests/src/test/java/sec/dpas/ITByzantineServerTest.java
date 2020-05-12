@@ -130,20 +130,6 @@ public class ITByzantineServerTest {
         stub1 = (ServerAPI) UnicastRemoteObject.exportObject(mockedServer, 0);
         registry1 = LocateRegistry.createRegistry(8001);
         registry1.bind("ServerAPI", stub1);
-<<<<<<< Updated upstream
-	
-	final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
-
-	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
-	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
-	});
-	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
-	    return server1.constructResponse("Signature verification failed", (String) i.getArgument(2));
-	});
-
-	assertEquals("Announcement posted", client1.post(a));
-	
-=======
 
         final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
 
@@ -158,7 +144,6 @@ public class ITByzantineServerTest {
 
         assertEquals("Announcement posted", client1.post(a));
 
->>>>>>> Stashed changes
     }
 
 
@@ -176,28 +161,6 @@ public class ITByzantineServerTest {
         registry1 = LocateRegistry.createRegistry(8001);
         registry1.bind("ServerAPI", stub1);
 
-<<<<<<< Updated upstream
-	ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
-	ArrayList<Announcement> anns1 = new ArrayList<Announcement>();
-	anns2.add(a2);
-	anns1.add(a1);
-	
-
-	when(mockedServer.getNonce(any(PublicKey.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
-	    return server1.constructResponse("Nonce generated", (String) i.getArgument(1), "5");
-	});
-	
-	when(mockedServer.read(any(PublicKey.class), any(Integer.class), any(PublicKey.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
-	    return server1.constructResponse("read successful", anns2, (String) i.getArgument(3));
-	});
-	
-	when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
-	    return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
-	});
-
-	assertEquals("read successful", client1.read(0, client1.getPublicKey()));
-	
-=======
         ArrayList<Announcement> anns2 = new ArrayList<Announcement>();
         ArrayList<Announcement> anns1 = new ArrayList<Announcement>();
         anns2.add(a2);
@@ -223,7 +186,7 @@ public class ITByzantineServerTest {
     }
 
 
-    @Test
+    /*@Test
     public void SimpleTest4Servers4Clients() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
 
         /*Server mockedServer = mock(Server.class);
@@ -231,7 +194,7 @@ public class ITByzantineServerTest {
         UnicastRemoteObject.unexportObject(registry1, true);
         stub1 = (ServerAPI) UnicastRemoteObject.exportObject(mockedServer, 0);
         registry1 = LocateRegistry.createRegistry(8001);
-        registry1.bind("ServerAPI", stub1);*/
+        registry1.bind("ServerAPI", stub1);*
 
         //final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
 
@@ -249,8 +212,7 @@ public class ITByzantineServerTest {
             return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
         });
 
-        assertEquals("Announcement posted", client1.post(a)); */
->>>>>>> Stashed changes
-    }
+        assertEquals("Announcement posted", client1.post(a)); *
+    }*/
 
 }
