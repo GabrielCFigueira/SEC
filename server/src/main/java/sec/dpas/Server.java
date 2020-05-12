@@ -71,7 +71,6 @@ public class Server implements ServerAPI{
 	    //signature verification
       boolean status1 = false;
       boolean status2 = false;
-      boolean status3 = false;
 
       try {
           Message message = new Message();
@@ -92,9 +91,6 @@ public class Server implements ServerAPI{
       System.out.println(e.getMessage());
     }
 
-      System.out.println("status1"+status1);
-      System.out.println("status2"+status2);
-      System.out.println("status3"+status3);
       if(status1 == true && status2 == true){
         if(a.isGeneralBoard())
 	         echoGen(serverId, a);
@@ -199,7 +195,7 @@ public class Server implements ServerAPI{
 
     	int max = brd.readys.size();
 
-    	System.out.println(max);
+    	System.out.println("id :" + serverId + " max: " + max);
 
     	if(brd.sentready == false ) {
     	    if(max > _f) {
@@ -262,6 +258,7 @@ public class Server implements ServerAPI{
 
 
     public void sendReady(Announcement a) {
+	ready(_id, a);
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
@@ -384,7 +381,6 @@ public class Server implements ServerAPI{
             }
         }
 
-	generateUrls();
     }
 
     private void generateUrls() {
@@ -395,7 +391,7 @@ public class Server implements ServerAPI{
             String[] words;
             while (line != null) {
                 words = line.split(" ");
-		if(!words[0].equals(_id))
+		if(!words[0].equals(Integer.toString(_id)))
 		    _servers.put(words[0], words[1]);
                 line = reader.readLine();
             }
@@ -412,13 +408,13 @@ public class Server implements ServerAPI{
 
     public Server(int id) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
 	this("server" + id, "server" + id);
-  _id = id;
-  _broadcast = true;
+  	_id = id;
+	_broadcast = true;
+	generateUrls();
     }
 
     public Server(int id, int N, int f) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
 	this(id);
-  	_id = id;
 	_N = N;
 	_f = f;
     }

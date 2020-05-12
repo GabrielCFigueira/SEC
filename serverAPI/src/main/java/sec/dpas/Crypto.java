@@ -37,14 +37,12 @@ import java.util.UUID;
 public class Crypto {
 
 	public static PrivateKey readPrivateKey(String keystore, String keyname, String keystorePassword, String keyPassword) throws KeyStoreException, IOException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
-		System.out.println("Reading key from file " + keystore + " ...");
 		KeyStore keyStore = KeyStore.getInstance("JKS");
 		keyStore.load(new FileInputStream(keystore), keystorePassword.toCharArray());
 		return (PrivateKey) keyStore.getKey(keyname, keyPassword.toCharArray());
 	}
 
 	public static PublicKey readPublicKey(String keypath) throws FileNotFoundException, IOException {
-		System.out.println("Reading key from file " + keypath + " ...");
 		FileInputStream fis = new FileInputStream(keypath);
 		byte[] encoded = new byte[fis.available()];
 		fis.read(encoded);
