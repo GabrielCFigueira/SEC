@@ -64,15 +64,15 @@ public class Server implements ServerAPI{
 	private boolean aborted = false;
 
 	//private int echos = 0;
-	private int readys = 0;
-	private int aborts = 0;
+	//private int readys = 0;
+	//private int aborts = 0;
 
 	//private ConcurrentHashMap<Integer, Integer> echos = new ConcurrentHashMap<Integer, Integer>();
 	//private ConcurrentHashMap<Integer, Integer> readys = new ConcurrentHashMap<Integer, Integer>();
 	//private ConcurrentHashMap<Integer, Integer> aborts = new ConcurrentHashMap<Integer, Integer>();
   private Set<Integer> echos = new HashSet<Integer>();
-  //private Set<Integer> readys = new HashSet<Integer>();
-  //private Set<Integer> aborts = new HashSet<Integer>();
+  private Set<Integer> readys = new HashSet<Integer>();
+  private Set<Integer> aborts = new HashSet<Integer>();
 
     }
 
@@ -196,15 +196,15 @@ public class Server implements ServerAPI{
     	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
     	    brd = _broadcastTable.get(new String(a.getSignature()));
 
-    	//if(!brd.readys.contains(serverId) && !brd.aborts.contains(serverId)) {
+    	if(!brd.readys.contains(serverId) && !brd.aborts.contains(serverId)) {
     	    if(abort)
-    		    brd.aborts++;
+    		    brd.aborts.add(serverId);
     	    else
-    	    	brd.readys++;
-    //	}
+    	    	brd.readys.add(serverId);
+      }
 
 
-    	int max = brd.readys;
+    	int max = brd.readys.size();
 
     	System.out.println(max);
 
@@ -229,7 +229,7 @@ public class Server implements ServerAPI{
     		System.out.println("1" + e.getMessage());
     		System.exit(-1);
     	    }
-    	} else if(_N - brd.aborts < 2 * _f + 1) {
+    	} else if(_N - brd.aborts.size() < 2 * _f + 1) {
     	    brd.delivered = true;
     	    brd.aborted = true;
     	    if(!brd.sentAbort)
