@@ -27,7 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.util.Arrays;
-
+import java.util.Base64;
 import java.util.UUID;
 
 /**
@@ -128,5 +128,11 @@ public class Crypto {
 		//UUID.randomUUID()
 		//System.out.println();
 		return UUID.randomUUID().toString();
+	}
+
+	public static String getBase64(Key key) {
+		byte[] encodedPublicKey = key.getEncoded();
+		String b64PublicKey = Base64.getEncoder().encodeToString(encodedPublicKey);
+		return b64PublicKey;
 	}
 }

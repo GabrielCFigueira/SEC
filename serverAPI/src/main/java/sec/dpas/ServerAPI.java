@@ -33,6 +33,6 @@ public interface ServerAPI extends Remote {
 
     void echo(int serverId, Announcement a, byte[] signature, boolean gen) throws RemoteException;
 
-    void ready(int serverId, Announcement a, boolean abort, byte[] signature, boolean gen) throws RemoteException;
+    void ready(int serverId, Announcement a, byte[] signature, boolean gen) throws RemoteException;
 
 }

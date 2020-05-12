@@ -38,6 +38,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.TreeSet;
+import java.util.Comparator;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -60,19 +62,8 @@ public class Server implements ServerAPI{
 	private boolean sentready = false;
 	private boolean delivered = false;
 
-	private boolean sentAbort = false;
-	private boolean aborted = false;
-
-	//private int echos = 0;
-	//private int readys = 0;
-	//private int aborts = 0;
-
-	//private ConcurrentHashMap<Integer, Integer> echos = new ConcurrentHashMap<Integer, Integer>();
-	//private ConcurrentHashMap<Integer, Integer> readys = new ConcurrentHashMap<Integer, Integer>();
-	//private ConcurrentHashMap<Integer, Integer> aborts = new ConcurrentHashMap<Integer, Integer>();
-  private Set<Integer> echos = new HashSet<Integer>();
-  private Set<Integer> readys = new HashSet<Integer>();
-  private Set<Integer> aborts = new HashSet<Integer>();
+  	private Set<Integer> echos = new HashSet<Integer>();
+  	private Set<Integer> readys = new HashSet<Integer>();
 
     }
 
@@ -117,7 +108,6 @@ public class Server implements ServerAPI{
         else
             echo(serverId, a);
       }
-      //echo(serverId, a);
     }
 
 
@@ -134,15 +124,9 @@ public class Server implements ServerAPI{
           if(brd.sentready == false) {
               //int max = brd.echos;
               int max = brd.echos.size();
-              if(_pendingWrites.get(a.getKey())) {
-            brd.sentready = true;
-            brd.sentAbort = true;
-            sendReady(a, true, false);
-              }
-              else if(max >= Math.round((((float) _N) + _f) / 2)) {
-            brd.sentready = true;
-            _pendingWrites.put(a.getKey(), true);
-            sendReady(a, false, false);
+              if(max >= Math.round((((float) _N) + _f) / 2)) {
+                  brd.sentready = true;
+            	  sendReady(a, false);
               }
           }
         }
@@ -164,15 +148,9 @@ public class Server implements ServerAPI{
           if(brd.sentready == false) {
               //int max = brd.echos;
               int max = brd.echos.size();
-              if(_pendingGeneralWrite) {
+              if(max >= Math.round((((float) _N) + _f) / 2)) {
             brd.sentready = true;
-            brd.sentAbort = true;
-            sendReady(a, true, true);
-              }
-              else if(max >= Math.round((((float) _N) + _f) / 2)) {
-            brd.sentready = true;
-            _pendingGeneralWrite = true;
-            sendReady(a, false, true);
+            sendReady(a, true);
               }
           }
         }
@@ -181,7 +159,7 @@ public class Server implements ServerAPI{
 
     }
 
-    public void ready(int serverId, Announcement a, boolean abort, byte[] signature, boolean gen) {
+    public void ready(int serverId, Announcement a, byte[] signature, boolean gen) {
     // signature verification
     boolean s1 = false;
     boolean s2 = false;
@@ -215,9 +193,9 @@ public class Server implements ServerAPI{
 
     if(s1 == true && s2 == true){
       if(gen == true)
-        readyGen(serverId, a, abort);
+        readyGen(serverId, a);
       else
-        ready(serverId, a, abort);
+        ready(serverId, a);
     }
 
     }
@@ -225,19 +203,15 @@ public class Server implements ServerAPI{
 
 
 
-    public void ready (int serverId, Announcement a, boolean abort){
+    public void ready (int serverId, Announcement a){
       Broadcast brd;
     	synchronized(_broadcastTable) {
     	    if(!_broadcastTable.containsKey(new String(a.getSignature())))
     	    	_broadcastTable.put(new String(a.getSignature()), new Broadcast());
     	    brd = _broadcastTable.get(new String(a.getSignature()));
 
-    	if(!brd.readys.contains(serverId) && !brd.aborts.contains(serverId)) {
-    	    if(abort)
-    		    brd.aborts.add(serverId);
-    	    else
-    	    	brd.readys.add(serverId);
-      }
+    	if(!brd.readys.contains(serverId))
+    	    brd.readys.add(serverId);
 
 
     	int max = brd.readys.size();
@@ -245,33 +219,15 @@ public class Server implements ServerAPI{
     	System.out.println(max);
 
     	if(brd.sentready == false ) {
-    	    if(_pendingWrites.get(a.getKey())) {
-    		brd.sentready = true;
-    		brd.sentAbort = true;
-    		sendReady(a, true, false);
-    	    }
-    	    else if(max > _f) {
+    	    if(max > _f) {
     	    	brd.sentready = true;
-    	    	sendReady(a, false, false);
+    	    	sendReady(a, false);
     	    }
     	} else if(max > 2 * _f && brd.delivered == false) {
     	    brd.delivered = true;
-    	    System.out.println("delivered");
     	    getUserAnnouncements(a.getKey()).add(a);
-    	    _pendingWrites.put(a.getKey(), false);
     	    try {
     	    	_broadcastTable.notifyAll();
-    	    } catch (Exception e) {
-    		System.out.println("1" + e.getMessage());
-    		System.exit(-1);
-    	    }
-    	} else if(_N - brd.aborts.size() < 2 * _f + 1) {
-    	    brd.delivered = true;
-    	    brd.aborted = true;
-    	    if(!brd.sentAbort)
-    		_pendingWrites.put(a.getKey(), false);
-    	    try {
-    	    	brd.notifyAll();
     	    } catch (Exception e) {
     		System.out.println(e.getMessage());
     		System.exit(-1);
@@ -280,19 +236,15 @@ public class Server implements ServerAPI{
     	}
     }
 
-    public void readyGen (int serverId, Announcement a, boolean abort){
+    public void readyGen (int serverId, Announcement a){
       Broadcast brd;
       synchronized(_broadcastTable) {
           if(!_broadcastTable.containsKey(new String(a.getSignature())))
             _broadcastTable.put(new String(a.getSignature()), new Broadcast());
           brd = _broadcastTable.get(new String(a.getSignature()));
 
-      if(!brd.readys.contains(serverId) && !brd.aborts.contains(serverId)) {
-          if(abort)
-            brd.aborts.add(serverId);
-          else
-            brd.readys.add(serverId);
-      }
+      if(!brd.readys.contains(serverId))
+          brd.readys.add(serverId);
 
 
       int max = brd.readys.size();
@@ -300,49 +252,31 @@ public class Server implements ServerAPI{
       System.out.println(max);
 
       if(brd.sentready == false ) {
-          if(_pendingGeneralWrite) {
-        brd.sentready = true;
-        brd.sentAbort = true;
-        sendReady(a, true, true);
-          }
-          else if(max > _f) {
+          if(max > _f) {
             brd.sentready = true;
-            sendReady(a, false, true);
+            sendReady(a, true);
           }
       } else if(max > 2 * _f && brd.delivered == false) {
           brd.delivered = true;
-          System.out.println("delivered");
           getUserAnnouncements(a.getKey()).add(a);
-          _pendingGeneralWrite = false;
           try {
             _broadcastTable.notifyAll();
-          } catch (Exception e) {
-        System.out.println("1" + e.getMessage());
-        System.exit(-1);
-          }
-      } else if(_N - brd.aborts.size() < 2 * _f + 1) {
-          brd.delivered = true;
-          brd.aborted = true;
-          if(!brd.sentAbort)
-         _pendingGeneralWrite = false;
-          try {
-            brd.notifyAll();
           } catch (Exception e) {
         System.out.println(e.getMessage());
         System.exit(-1);
           }
       }
-      }
+    }
     }
 
 
-    public void sendReady(Announcement a, boolean abort, boolean gen) {
+    public void sendReady(Announcement a, boolean gen) {
 	//create signature
 	ExecutorService threadpool = Executors.newCachedThreadPool();
 	for (String id : _servers.keySet()) {
 	    threadpool.submit(() -> { try {
 	    	    ServerAPI stub = (ServerAPI) Naming.lookup(_servers.get(id));
-		    stub.ready(_id, a, abort, signBroadcast(a), gen);
+		    stub.ready(_id, a, signBroadcast(a), gen);
 	    } catch (Exception e) {
 		    System.out.println(e.getMessage());
 	    }});
@@ -381,7 +315,7 @@ public class Server implements ServerAPI{
     private ConcurrentHashMap<String, Broadcast> _broadcastTable = new ConcurrentHashMap<String, Broadcast>();
     private Hashtable<PublicKey, ArrayList<Announcement>> _announcementB;
     private Hashtable<PublicKey, String> _nonceTable;
-    private ArrayList<Announcement> _generalB;
+    private TreeSet<Announcement> _generalB;
     private Key _serverKey;
     private PublicKey _serverPubKey;
     private int _id = 1;
@@ -389,14 +323,30 @@ public class Server implements ServerAPI{
     private int _f = 1;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
-    private Hashtable<PublicKey, Boolean> _pendingWrites = new Hashtable<PublicKey, Boolean>();
-    private boolean _pendingGeneralWrite = false;
+    public class AnnouncementComparer implements Comparator<Announcement> {
+	@Override
+	public int compare(Announcement a1, Announcement a2) {
+	    if(a1.getTimeStamp() > a2.getTimeStamp())
+	    	return 1;
+	    else if(a1.getTimeStamp() < a2.getTimeStamp())
+	    	return -1;
+	    else {
+	    	String key1, key2;
+	    	key1 = Crypto.getBase64(a1.getKey());
+	    	key2 = Crypto.getBase64(a2.getKey());
+	    	return key1.compareTo(key2);
+	    }
+	}
+    }
+
+    private Comparator<Announcement> _comparator = new  AnnouncementComparer();
+
     private boolean _broadcast = false;
 
     public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
         _nonceTable = new Hashtable<PublicKey, String>();
-        _generalB = new ArrayList<Announcement>();
+        _generalB = new TreeSet<Announcement>(_comparator);
         _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
         _serverPubKey = Crypto.readPublicKey("../resources/server" + _id + ".pub");
 
@@ -421,7 +371,7 @@ public class Server implements ServerAPI{
             }
             catch(ClassNotFoundException e){
                 System.out.println(e.getMessage());
-                _generalB = new ArrayList<Announcement>();
+                _generalB = new TreeSet<Announcement>(_comparator);
             }
         }
 
@@ -477,7 +427,7 @@ public class Server implements ServerAPI{
 
                     _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
                     _nonceTable = new Hashtable<PublicKey, String>();
-                    _generalB = new ArrayList<Announcement>();
+                    _generalB = new TreeSet<Announcement>(_comparator);
                 }
             }
         }
@@ -558,7 +508,6 @@ public class Server implements ServerAPI{
 
         synchronized(_announcementB) {
             synchronized(_nonceTable) {
-		_pendingWrites.put(pubkey, false);
                 if(hasPublicKey(pubkey))
                     return constructResponse("User was already registered", clientNonce);
                 _announcementB.put(pubkey,new ArrayList<Announcement>());
@@ -621,20 +570,20 @@ public class Server implements ServerAPI{
                 return constructResponse("Invalid nonce", clientNonce);
             _nonceTable.replace(pubkey,  "0");
 	}
-	int boardSize;
+	int maxTimeStamp;
 
 	synchronized(_announcementB) {
-	    boardSize = getUserAnnouncements(a.getKey()).size();
+	    maxTimeStamp = getUserAnnouncements(a.getKey()).size();
 	}
-	if (boardSize < a.getTimeStamp() - 1)
+	if (maxTimeStamp < a.getTimeStamp() - 1)
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
 
 
 	String status = "Announcement posted";
 
-	if(boardSize == a.getTimeStamp() - 1) {
+	if(maxTimeStamp == a.getTimeStamp() - 1) {
 	    if(_broadcast) {
-        echo(_id, a);
+        	echo(_id, a);
 	    	sendEcho(a, false);
 
 	    	try {
@@ -642,8 +591,6 @@ public class Server implements ServerAPI{
         	    	Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
 	    	    	while(!brd.delivered)
 		    	     _broadcastTable.wait();
-	    	    	if(brd.aborted)
-		    	    status = "Announcement aborted";
 	    	    }
 	    	} catch (InterruptedException e) {
 		    System.out.println(e.getMessage());
@@ -708,48 +655,47 @@ public class Server implements ServerAPI{
           if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
                 return constructResponse("Invalid nonce", clientNonce);
           _nonceTable.replace(pubkey, "0");
-          if(getGenAnnouncements().size() == a.getTimeStamp() - 1)
-              getGenAnnouncements().add(a);
-          else if (getGenAnnouncements().size() < a.getTimeStamp() - 1)
-                return constructResponse("Invalid Announcement TimeStamp", clientNonce);
           }
   }
-  int boardSize;
+  int maxTimeStamp;
 
 	synchronized(_generalB) {
-	    boardSize = getGenAnnouncements().size();
+	    maxTimeStamp = getMaxStamp(getGenAnnouncements());
 	}
-  if (boardSize < a.getTimeStamp() - 1)
+    if (maxTimeStamp < a.getTimeStamp() - 1)
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
 
-  String status = "General announcement posted";
+    String status = "General announcement posted";
 
-  if(boardSize == a.getTimeStamp() - 1) {
-	    if(_broadcast) {
-            	echoGen(_id, a);
-	    	sendEcho(a, true);
+    if(_broadcast) {
+	if(getGenAnnouncements().contains(a))
+		status = "Invalid Announcement TimeStamp";	
+	else {
+  	    echoGen(_id, a);
+	    sendEcho(a, true);
 
-    try {
-      synchronized(_broadcastTable) {
-          Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
-          while(!brd.delivered)
-            _broadcastTable.wait();
-          if(brd.aborted)
-              status = "General announcement aborted";
-      }
-      } catch (InterruptedException e) {
-          System.out.println(e.getMessage());
-          System.exit(-1);
-        }
-      }
-      else {
-          getGenAnnouncements().add(a);
-
-      try {saveToFile("genboard");}
-          	catch (IOException e){
-                System.out.println(e.getMessage());
+    	    try {
+      		synchronized(_broadcastTable) {
+          	    Broadcast brd = _broadcastTable.get(new String(a.getSignature()));
+	            while(!brd.delivered)
+            	    	_broadcastTable.wait();
+      		}
+      	    } catch (InterruptedException e) {
+          	System.out.println(e.getMessage());
+          	System.exit(-1);
             }
-      }
+	}
+    } else {	
+    	if(maxTimeStamp == a.getTimeStamp() - 1) {
+            getGenAnnouncements().add(a);
+	    try {
+    	    	saveToFile("genboard");}
+            catch (IOException e){
+            	System.out.println(e.getMessage());
+	    }
+	}
+	else
+	    status = "Invalid Announcement TimeStamp";
     }
 
       return constructResponse(status, clientNonce);
@@ -789,7 +735,7 @@ public class Server implements ServerAPI{
         return _announcementB.get(pubkey);
     }
 
-    private ArrayList<Announcement> getGenAnnouncements(){
+    private TreeSet<Announcement> getGenAnnouncements(){
         return _generalB;
     }
 
@@ -882,7 +828,7 @@ public class Server implements ServerAPI{
         }
 
         synchronized(_generalB) {
-            ArrayList<Announcement> genAnn = getGenAnnouncements();
+            ArrayList<Announcement> genAnn = getArray(getGenAnnouncements());
             return readFrom(genAnn, number, clientNonce);
         }
     }
@@ -904,6 +850,21 @@ public class Server implements ServerAPI{
             }
             return constructResponse("read successful", sublist, clientNonce);
         }
+    }
+
+    private ArrayList<Announcement> getArray(TreeSet<Announcement> set) {
+	ArrayList<Announcement> res = new ArrayList<Announcement>();    
+	for(Announcement a : set)
+	    res.add(a);
+	return res;
+    }
+
+    private int getMaxStamp(TreeSet<Announcement> set) {
+	int max = 0;
+	for(Announcement a : set)
+	    if (max < a.getTimeStamp())
+		max = a.getTimeStamp();	
+	return max;
     }
 
     public Response constructResponse(String statusCode, String clientNonce, String serverNonce) {
@@ -1001,7 +962,7 @@ public class Server implements ServerAPI{
                 _announcementB = (Hashtable<PublicKey, ArrayList<Announcement>>) input.readObject();
             }
             else{
-                _generalB = (ArrayList<Announcement>) input.readObject();
+                _generalB = (TreeSet<Announcement>) input.readObject();
             }
 
             input.close();
