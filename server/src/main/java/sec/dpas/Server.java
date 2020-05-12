@@ -140,7 +140,7 @@ public class Server implements ServerAPI{
               }
           }
         }
-
+    }
     }
 
     public void ready(int serverId, Announcement a, byte[] signature) {

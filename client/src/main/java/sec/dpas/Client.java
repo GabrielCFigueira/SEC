@@ -578,8 +578,6 @@ public class Client {
 	
 	List<Announcement> anns = getMaxTimeStampList((ArrayList<ArrayList<Announcement>>) readList.clone());
 
-        List<Announcement> anns = getMaxTimeStamp(readList);
-
         this.printAnnouncements(anns);
         for(int i = 0; i < anns.size(); i++)
             post(anns.get(i), Math.round((((float) _N) + _f) / 2));
