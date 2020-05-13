@@ -68,7 +68,7 @@ public class Client {
             reader.close();
 
             String[] words;
-            for(int i = 0; i < _N || i < lines.size() ; ++i) {
+            for(int i = 0; i < _N && i < lines.size() ; ++i) {
                 words = lines.get(i).split(" ");
                 _servers.put(words[0], words[1]);
             }
@@ -473,8 +473,8 @@ public class Client {
             try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
-                e.printStackTrace();
-                continue;
+                System.out.println("Connection lost to: " + url);
+		continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
             responses.put(id, threadpool.submit(() -> registerOption(stub, serverpubkey)));
@@ -496,7 +496,7 @@ public class Client {
             try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Connection lost to: " + url);
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
@@ -521,7 +521,7 @@ public class Client {
             try {
                 stub = (ServerAPI) Naming.lookup(url);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Connection lost to: " + url);
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
@@ -549,7 +549,7 @@ public class Client {
             try {
                 stub = (ServerAPI) Naming.lookup(url);
 	    } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Connection lost to: " + url);
                 continue;
             }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
@@ -603,7 +603,7 @@ public class Client {
             try {
                 stub = (ServerAPI) Naming.lookup(url);
 	    } catch (Exception e) {
-                e.printStackTrace();
+		System.out.println("Connection lost to " + url);
                 continue;
 	    }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
@@ -743,9 +743,11 @@ public class Client {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             Client cli;
 
-            if(args.length > 0)
+            if(args.length == 2)
                 cli = new Client(args[0], args[1]);
-            else
+            else if(args.length == 4)
+		cli = new Client(args[0], args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]));
+	    else
                 cli = new Client();
             Announcement a = null;
             int option = 0;
