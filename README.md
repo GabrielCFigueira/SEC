@@ -18,4 +18,14 @@ Maven version: 3.6.3
 
 ## After running the interface
 
-Remove the .txt files to avoid conflicts with the automatic tests: rm resources/*.txt
+Remove the .txt files to avoid conflicts with the automatic tests: rm resources/genboard*_temp.txt
+
+
+## N Servers
+
+On the Server directory:$ mvn exec:java -Dexec.mainClass="sec.dpas.Server" -Dexec.args="_id_ _N_ _f_"
+
+
+## N Clients
+
+On the Client directory:$ mvn exec:java -Dexec.mainClass="sec.dpas.Client" -Dexec.args="_key_ _password_  _f_ _N_"
