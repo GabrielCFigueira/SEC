@@ -39,7 +39,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
-import java.util.Comparator;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -342,9 +341,11 @@ public class Server implements ServerAPI{
       } else if(max > 2 * _f && brd.delivered == false) {
           brd.delivered = true;
           getGenAnnouncements().add(a);
-	      try {saveToFile("genboard");}
-              catch (IOException e){
-                  System.out.println(e.getMessage());
+	      synchronized(_generalB) {
+	        try {saveToFile("genboard");}
+                catch (IOException e){
+                    System.out.println(e.getMessage());
+	      	}
 	      }
           try {
             _broadcastTable.notifyAll();
@@ -447,30 +448,13 @@ public class Server implements ServerAPI{
     private int _f = 1;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
 
-    private class AnnouncementComparer implements Comparator<Announcement> {
-	@Override
-	public int compare(Announcement a1, Announcement a2) {
-	    if(a1.getTimeStamp() > a2.getTimeStamp())
-	    	return 1;
-	    else if(a1.getTimeStamp() < a2.getTimeStamp())
-	    	return -1;
-	    else {
-	    	String key1, key2;
-	    	key1 = Crypto.getBase64(a1.getKey());
-	    	key2 = Crypto.getBase64(a2.getKey());
-	    	return key1.compareTo(key2);
-	    }
-	}
-    }
-
-    private Comparator<Announcement> _comparator = new  AnnouncementComparer();
 
     private boolean _broadcast = false;
 
     public Server(String keyName, String keyPass) throws IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException {
         _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
         _nonceTable = new Hashtable<PublicKey, String>();
-        _generalB = new TreeSet<Announcement>(_comparator);
+        _generalB = new TreeSet<Announcement>();
         _serverKey = Crypto.readPrivateKey("../resources/key.store", keyName, "keystore", keyPass);
         _serverPubKey = Crypto.readPublicKey("../resources/server" + _id + ".pub");
 
@@ -495,7 +479,7 @@ public class Server implements ServerAPI{
             }
             catch(ClassNotFoundException e){
                 System.out.println(e.getMessage());
-                _generalB = new TreeSet<Announcement>(_comparator);
+                _generalB = new TreeSet<Announcement>();
             }
         }
 
@@ -555,7 +539,7 @@ public class Server implements ServerAPI{
 
                     _announcementB = new Hashtable<PublicKey, ArrayList<Announcement>>();
                     _nonceTable = new Hashtable<PublicKey, String>();
-                    _generalB = new TreeSet<Announcement>(_comparator);
+                    _generalB = new TreeSet<Announcement>();
                 }
             }
         }
@@ -824,11 +808,13 @@ public class Server implements ServerAPI{
 	}
     } else {	
     	if(maxTimeStamp == a.getTimeStamp() - 1) {
-            getGenAnnouncements().add(a);
-	    try {
-    	    	saveToFile("genboard");}
-            catch (IOException e){
-            	System.out.println(e.getMessage());
+	    synchronized(_generalB) {
+            	getGenAnnouncements().add(a);
+	    	try {
+    	    	    saveToFile("genboard");}
+            	catch (IOException e){
+            		System.out.println(e.getMessage());
+	    	}
 	    }
 	}
 	else
@@ -839,30 +825,6 @@ public class Server implements ServerAPI{
     }
 
 
-
-
-	/*synchronized(_generalB) {
-            synchronized(_nonceTable) {
-                if(!hasPublicKey(pubkey) || !hasPublicKey(a.getKey())){
-                    return constructResponse("No such user registered", clientNonce);
-                }
-                if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
-                    return constructResponse("Invalid nonce", clientNonce);
-                _nonceTable.replace(pubkey, "0");
-		if(getGenAnnouncements().size() == a.getTimeStamp() - 1)
-                    getGenAnnouncements().add(a);
-		else if (getGenAnnouncements().size() < a.getTimeStamp() - 1)
-	            return constructResponse("Invalid Announcement TimeStamp", clientNonce);
-            }
-
-            try {saveToFile("genboard");}
-            catch (IOException e){
-                System.out.println(e.getMessage());
-            }
-        }
-
-        return constructResponse("General announcement posted", clientNonce);
-    }*/
 
     public boolean hasPublicKey(PublicKey key) {
         return _announcementB.containsKey(key);
