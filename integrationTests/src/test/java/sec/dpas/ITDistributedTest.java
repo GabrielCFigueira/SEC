@@ -44,6 +44,7 @@ public class ITDistributedTest {
     static ServerAPI stub1, stub2, stub3, stub4;
     private Server server1, server2, server3, server4;
     private Client client1, client2;
+    private PublicKey pubkey1, pubkey2;
 
     @Before
     public void init() throws IOException, RemoteException, KeyStoreException, AlreadyBoundException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, NotBoundException, SigningException {
@@ -65,7 +66,10 @@ public class ITDistributedTest {
         registry4 = LocateRegistry.createRegistry(8004);
         registry4.bind("ServerAPI", stub4);
 
-        client1 = new Client("test", "testtest", 1, 4);
+        pubkey1 = Crypto.readPublicKey("../resources/test.pub");
+        pubkey2 = Crypto.readPublicKey("../resources/test1.pub");
+        
+	client1 = new Client("test", "testtest", 1, 4);
         client2 = new Client("test1", "testtest1", 1, 4);
 
         client1.register();
@@ -147,8 +151,6 @@ public class ITDistributedTest {
 	assertEquals("General announcement posted", client2.postGeneral("Ola".toCharArray(),null));
 	
 	
-        PublicKey pubkey1 = Crypto.readPublicKey("../resources/test.pub");
-        PublicKey pubkey2 = Crypto.readPublicKey("../resources/test1.pub");
 	assertEquals("read successful", client1.read(0, pubkey1));
 	assertEquals("read successful", client2.read(0, pubkey1));
 	assertEquals("read successful", client2.read(0, pubkey2));
@@ -159,8 +161,9 @@ public class ITDistributedTest {
     }
 
     @Test
-    public void SimpleTestWithMocks() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
-
+    public void WriteBack() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception, InterruptedException {
+	// kick server1
+        
         Server mockedServer = mock(Server.class);
         registry1.unbind("ServerAPI");
         UnicastRemoteObject.unexportObject(registry1, true);
@@ -176,11 +179,23 @@ public class ITDistributedTest {
         when(mockedServer.post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
             return server1.constructResponse("Announcement posted", (String) i.getArgument(2));
         });
-
+	    
+	    
         assertEquals("Announcement posted", client1.post(a));
-
+	assertEquals("read successful", client1.read(0, pubkey1));
+	verify(mockedServer, times(2)).post(any(PublicKey.class), any(Announcement.class), any(String.class), any(String.class), any(byte[].class));
     }
 
 
+    @Test
+    public void ReadBeforeWrite() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {	
+	assertEquals("General announcement posted", client1.postGeneral("Ola".toCharArray(),null));
+	assertEquals("General announcement posted", client1.postGeneral("Ola".toCharArray(),null));
+	assertEquals("General announcement posted", client1.postGeneral("Ola".toCharArray(),null));
+
+
+	assertEquals("read successful", client2.readGeneral(0));
+	assertEquals(4, client2.getGeneralBoardStamp());
+    }
 
 }
