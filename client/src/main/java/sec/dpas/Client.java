@@ -581,8 +581,8 @@ public class Client {
 	ArrayList<Announcement> max = new ArrayList<Announcement>();
 	int stamp = 0;
 	for(ArrayList<Announcement> read : readList) {
-	    if(read.get(read.size() - 1).getTimeStamp() > stamp) {
-	        stamp = read.get(read.size() - 1).getTimeStamp();
+	    if(getMaxTimeStamp(read) > stamp) {
+	        stamp = getMaxTimeStamp(read);
 	    	max = read;
 	    }
 	}
