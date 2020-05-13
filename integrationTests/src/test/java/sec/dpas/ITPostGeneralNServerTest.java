@@ -108,7 +108,7 @@ public class ITPostGeneralNServerTest {
 		assertEquals("General announcement posted", client1.postGeneral("Boas".toCharArray(), null));
 
 		assertEquals("Boas", new String(server1.getGenAnnouncements().first().getMessage()));
-        //assertEquals("Boas", new String(server2.getGenAnnouncements().first().getMessage()));
+        assertEquals("Boas", new String(server2.getGenAnnouncements().first().getMessage()));
         assertEquals("Boas", new String(server3.getGenAnnouncements().first().getMessage()));
         assertEquals("Boas", new String(server4.getGenAnnouncements().first().getMessage()));
 
