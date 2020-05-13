@@ -18,7 +18,7 @@ Maven version: 3.6.3
 
 ## After running the interface
 
-Remove the boards .txt files to avoid conflicts with the automatic tests: rm resources/*board*
+Remove the boards .txt files to avoid conflicts with the automatic tests: rm resources/\*board\*
 
 ## N Servers
 
