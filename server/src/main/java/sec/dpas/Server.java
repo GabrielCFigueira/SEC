@@ -128,12 +128,16 @@ public class Server implements ServerAPI{
     	    	brd.delivered = true;
         	synchronized(_announcementB) {
             	    synchronized(_nonceTable) {
-                	_announcementB.put(pubkey,new ArrayList<Announcement>());
-                	_nonceTable.put(pubkey, "0");
-			try {saveToFile("board");}
-            		catch (IOException e) {
-                	    System.out.println(e.getMessage());
-	    		}
+            	    	synchronized(_pendingWrites) {
+			    _pendingWrites.put(pubkey, false);
+			    _pendingGeneralWrites.put(pubkey, false);
+                	    _announcementB.put(pubkey,new ArrayList<Announcement>());
+                	    _nonceTable.put(pubkey, "0");
+			    try {saveToFile("board");}
+            		    catch (IOException e) {
+                	    	System.out.println(e.getMessage());
+	    		    }
+			}
 		    }
 		}
     	    	try {
@@ -427,7 +431,9 @@ public class Server implements ServerAPI{
 	message.appendObject(a.isGeneralBoard());
 	if(a.getReferences() != null)
 	    for(Announcement an : a.getReferences()) {
-		if(an.getTimeStamp() > a.getTimeStamp())
+		if(a.isGeneralBoard() && an.isGeneralBoard() && an.getTimeStamp() >= a.getTimeStamp())
+		    return false;
+		else if(!a.isGeneralBoard() && !an.isGeneralBoard() && a.getKey().equals(an.getKey()) && an.getTimeStamp() >= a.getTimeStamp())
 		    return false;
 		else if(!verifyAnnouncement(an, an.getKey()))
 		    return false;
@@ -447,6 +453,8 @@ public class Server implements ServerAPI{
     private int _N = 4;
     private int _f = 1;
     private Hashtable<String, String> _servers = new Hashtable<String, String>();
+    private Hashtable<PublicKey, Boolean> _pendingWrites = new Hashtable<PublicKey, Boolean>();
+    private Hashtable<PublicKey, Boolean> _pendingGeneralWrites = new Hashtable<PublicKey, Boolean>();
 
 
     private boolean _broadcast = false;
@@ -621,18 +629,22 @@ public class Server implements ServerAPI{
 
         synchronized(_announcementB) {
             synchronized(_nonceTable) {
-                if(hasPublicKey(pubkey))
-                    return constructResponse("User was already registered", clientNonce);
-		if(!_broadcast) {
-                    _announcementB.put(pubkey,new ArrayList<Announcement>());
-                    _nonceTable.put(pubkey, "0");
+            	synchronized(_pendingWrites) {
+                    if(hasPublicKey(pubkey))
+                    	return constructResponse("User was already registered", clientNonce);
+		    if(!_broadcast) {
+		    	_pendingWrites.put(pubkey, false);
+		    	_pendingGeneralWrites.put(pubkey, false);
+                    	_announcementB.put(pubkey,new ArrayList<Announcement>());
+                    	_nonceTable.put(pubkey, "0");
 		
 
-            	    try {saveToFile("board");}
-            	    catch (IOException e){
-                	System.out.println(e.getMessage());
-            	    }
-        	}
+            	    	try {saveToFile("board");}
+            	    	catch (IOException e){
+                	    System.out.println(e.getMessage());
+            	    	}
+        	    }
+		}
 	    }
 	}
 
@@ -700,6 +712,17 @@ public class Server implements ServerAPI{
 	synchronized(_announcementB) {
 	    maxTimeStamp = getUserAnnouncements(a.getKey()).size();
 	}
+	
+    	try {	
+	    synchronized(_pendingWrites) {
+	    	while(_pendingWrites.get(a.getKey()))
+	            _pendingWrites.wait();
+	    	_pendingWrites.put(a.getKey(), true);
+	    }
+	} catch (InterruptedException e) {
+	    System.out.println(e.getMessage());
+	    System.exit(-1);
+	}
 	if (maxTimeStamp < a.getTimeStamp() - 1)
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
 
@@ -707,6 +730,7 @@ public class Server implements ServerAPI{
         String status = "Announcement posted";
 
 	if(maxTimeStamp == a.getTimeStamp() - 1) {
+	    
 	    if(_broadcast) {
         	echo(_id, a);
 	    	sendEcho(a);
@@ -733,7 +757,12 @@ public class Server implements ServerAPI{
 	    
 	}
 
-        return constructResponse(status, clientNonce);
+	synchronized(_pendingWrites) {
+	    _pendingWrites.put(a.getKey(), false);
+	    _pendingWrites.notify();
+	}
+        
+	return constructResponse(status, clientNonce);
     }
 
     public Response postGeneral(PublicKey pubkey, Announcement a, String clientNonce, String serverNonce, byte[] signature){
@@ -786,6 +815,17 @@ public class Server implements ServerAPI{
     if (maxTimeStamp < a.getTimeStamp() - 1)
 	    return constructResponse("Invalid Announcement TimeStamp", clientNonce);
 
+    	try {	
+	    synchronized(_pendingGeneralWrites) {
+	    	while(_pendingGeneralWrites.get(a.getKey()))
+	            _pendingGeneralWrites.wait();
+	    	_pendingGeneralWrites.put(a.getKey(), true);
+	    }
+	} catch (InterruptedException e) {
+	    System.out.println(e.getMessage());
+	    System.exit(-1);
+	}
+
     String status = "General announcement posted";
 
     if(_broadcast) {
@@ -807,8 +847,8 @@ public class Server implements ServerAPI{
             }
 	}
     } else {	
-    	if(maxTimeStamp == a.getTimeStamp() - 1) {
-	    synchronized(_generalB) {
+	synchronized(_generalB) {
+    	    if(maxTimeStamp == a.getTimeStamp() - 1) {
             	getGenAnnouncements().add(a);
 	    	try {
     	    	    saveToFile("genboard");}
@@ -816,11 +856,16 @@ public class Server implements ServerAPI{
             		System.out.println(e.getMessage());
 	    	}
 	    }
+	    else
+	    	status = "Invalid Announcement TimeStamp";
 	}
-	else
-	    status = "Invalid Announcement TimeStamp";
     }
     
+    synchronized(_pendingGeneralWrites) {
+    	_pendingGeneralWrites.put(a.getKey(), false);
+	_pendingGeneralWrites.notify();
+    }
+
     return constructResponse(status, clientNonce);
     }
 
