@@ -298,7 +298,6 @@ public class Server implements ServerAPI{
 
             int max = brd.readys.size();
 
-    	System.out.println("id :" + serverId + " max: " + max);
 
     	if(brd.sentready == false ) {
     	    if(max > _f) {
@@ -333,9 +332,7 @@ public class Server implements ServerAPI{
           brd.readys.add(serverId);
 
 
-            int max = brd.readys.size();
-
-            System.out.println(max);
+      int max = brd.readys.size();
 
       if(brd.sentready == false ) {
           if(max > _f) {
@@ -867,11 +864,11 @@ public class Server implements ServerAPI{
         return constructResponse("General announcement posted", clientNonce);
     }*/
 
-    private boolean hasPublicKey(PublicKey key) {
+    public boolean hasPublicKey(PublicKey key) {
         return _announcementB.containsKey(key);
     }
 
-    private ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
+    public ArrayList<Announcement> getUserAnnouncements(PublicKey pubkey){
         return _announcementB.get(pubkey);
     }
 
