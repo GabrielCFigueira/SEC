@@ -929,7 +929,7 @@ public class Server implements ServerAPI{
 	}
 
         synchronized(_nonceTable) {
-            if(_nonceTable.get(pubkey).equals("0") || !_nonceTable.get(pubkey).equals(serverNonce))
+            if(_nonceTable.get(senderKey).equals("0") || !_nonceTable.get(senderKey).equals(serverNonce))
                 return constructResponse("Invalid nonce", clientNonce);
             _nonceTable.replace(senderKey, "0");
         }

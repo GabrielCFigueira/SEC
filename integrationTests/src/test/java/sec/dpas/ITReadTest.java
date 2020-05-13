@@ -229,9 +229,9 @@ public class ITReadTest {
         // get server nonce
         messageServerNonce = new Message();
         clientNonce = Crypto.generateNonce();
-        messageServerNonce.appendObject(pubkey2);
+        messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
-        responseNonce = stub.getNonce(pubkey2, clientNonce, Crypto.sign(privkey2, messageServerNonce.getByteArray()));
+        responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 
@@ -325,9 +325,9 @@ public class ITReadTest {
         // get server nonce
         messageServerNonce = new Message();
         clientNonce = Crypto.generateNonce();
-        messageServerNonce.appendObject(pubkey2);
+        messageServerNonce.appendObject(pubkey);
         messageServerNonce.appendObject(clientNonce);
-        responseNonce = stub.getNonce(pubkey2, clientNonce, Crypto.sign(privkey2, messageServerNonce.getByteArray()));
+        responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
         this.signatureVerificationNonce(responseNonce, "Nonce generated");
 

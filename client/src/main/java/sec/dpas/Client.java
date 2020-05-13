@@ -607,7 +607,7 @@ public class Client {
                 continue;
 	    }
             final PublicKey serverpubkey = Crypto.readPublicKey("../resources/server" + id + ".pub");
-            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, 0, readList)));
+            responses.put(id, threadpool.submit(() -> readGeneralOption(stub, serverpubkey, number, readList)));
 	}
         status = asyncCall(responses, "read successful", threadpool);
 
