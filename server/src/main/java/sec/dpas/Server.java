@@ -875,7 +875,7 @@ public class Server implements ServerAPI{
         return _announcementB.get(pubkey);
     }
 
-    private TreeSet<Announcement> getGenAnnouncements(){
+    protected TreeSet<Announcement> getGenAnnouncements(){
         return _generalB;
     }
 
@@ -898,7 +898,7 @@ public class Server implements ServerAPI{
         return null;
     }
 
-    private Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
+    protected Hashtable<PublicKey, ArrayList<Announcement>> getAnnouncements(){
         return _announcementB;
     }
 
