@@ -102,7 +102,7 @@ public class ITReadGeneralNServerTest {
         assertEquals("Boas", new String(read1.get(0).getMessage()));
         assertEquals("Boas2", new String(read1.get(1).getMessage()));
 	}
-	
+
 	@Test
     public void ReadGeneral2Client4Server() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
 
@@ -116,9 +116,9 @@ public class ITReadGeneralNServerTest {
         assertEquals("Boas", new String(read2.get(0).getMessage()));
         assertEquals("Boas2", new String(read2.get(1).getMessage()));
 	}
-	
+
 	@Test
-    public void ReadGeneral1Client4Server1F() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
+    public void ReadGeneral2Client4Server1F() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
 
 		Server mockedServer = mock(Server.class);
         registry1.unbind("ServerAPI");
@@ -143,5 +143,40 @@ public class ITReadGeneralNServerTest {
         assertEquals("Boas", new String(read2.get(0).getMessage()));
         assertEquals("Boas2", new String(read2.get(1).getMessage()));
 	}
+
+
+  @Test
+    public void ReadGeneral2Client4Server1FRecover() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {
+
+    Server mockedServer = mock(Server.class);
+        registry1.unbind("ServerAPI");
+        UnicastRemoteObject.unexportObject(registry1, true);
+        stub1 = (ServerAPI) UnicastRemoteObject.exportObject(mockedServer, 0);
+        registry1 = LocateRegistry.createRegistry(8001);
+        registry1.bind("ServerAPI", stub1);
+
+        ArrayList<Announcement> anns = new ArrayList<Announcement>();
+
+        when(mockedServer.readGeneral(any(Integer.class), any(PublicKey.class), any(String.class), any(String.class), any(byte[].class))).thenAnswer(i -> {
+            return server1.constructResponse("Invalid arguments", anns, (String) i.getArgument(3));
+        });
+
+    assertEquals("read successful", client1.readGeneral(0));
+        ArrayList<Announcement> read1 = client1.getLastRead();
+        assertEquals("Boas", new String(read1.get(0).getMessage()));
+        assertEquals("Boas2", new String(read1.get(1).getMessage()));
+
+        registry1.unbind("ServerAPI");
+        UnicastRemoteObject.unexportObject(registry1, true);
+        server1 = new Server(1);
+        stub1 = (ServerAPI) UnicastRemoteObject.exportObject(server1, 0);
+        registry1 = LocateRegistry.createRegistry(8001);
+        registry1.bind("ServerAPI", stub1);        
+
+    assertEquals("read successful", client2.readGeneral(0));
+        ArrayList<Announcement> read2 = client2.getLastRead();
+        assertEquals("Boas", new String(read2.get(0).getMessage()));
+        assertEquals("Boas2", new String(read2.get(1).getMessage()));
+  }
 
 }
