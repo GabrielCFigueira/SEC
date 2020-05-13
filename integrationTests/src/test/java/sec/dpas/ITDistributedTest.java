@@ -1,6 +1,7 @@
 package sec.dpas;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.After;
@@ -129,10 +130,6 @@ public class ITDistributedTest {
 	assertEquals("Announcement posted", client2.post(a10));
 	assertEquals("Announcement posted", client2.post(a11));
 	assertEquals("Announcement posted", client2.post(a12));
-	assertEquals("Announcement posted", client1.post("Ola".toCharArray(),null));
-	assertEquals("Announcement posted", client1.post("Ola".toCharArray(),null));
-	assertEquals("Announcement posted", client2.post("Ola".toCharArray(),null));
-	assertEquals("Announcement posted", client2.post("Ola".toCharArray(),null));
 
 	
 	assertEquals("General announcement posted", client1.postGeneral("Ola".toCharArray(),null));
@@ -152,12 +149,16 @@ public class ITDistributedTest {
 	
 	
 	assertEquals("read successful", client1.read(0, pubkey1));
+	assertEquals(6, client1.getLastRead().size());
 	assertEquals("read successful", client2.read(0, pubkey1));
-	assertEquals("read successful", client2.read(0, pubkey2));
-	
+	assertEquals(6, client2.getLastRead().size());
+	assertEquals("read successful", client2.read(0, pubkey2));	
+	assertEquals(6, client2.getLastRead().size());
 	
 	assertEquals("read successful", client1.readGeneral(0));
+	assertEquals(14, client1.getLastRead().size());
 	assertEquals("read successful", client2.readGeneral(0));
+	assertEquals(14, client1.getLastRead().size());
     }
 
     @Test
@@ -198,4 +199,33 @@ public class ITDistributedTest {
 	assertEquals(4, client2.getGeneralBoardStamp());
     }
 
+    
+    @Test
+    public void TestRegisterBroadcast() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {		
+	client1 = new Client("server30", "server30", 2, 3);
+        assertEquals("User registered", client1.register());
+
+        PublicKey pubkey3 = Crypto.readPublicKey("../resources/server30.pub");
+	assertTrue(server4.hasPublicKey(pubkey3));
+
+    }
+
+    @Test
+    public void TestPostBroadcast() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {		
+	client1 = new Client("test", "testtest", 2, 3);
+        final Announcement a = client1.createAnnouncement("Boas".toCharArray(), null, 1, false);
+        assertEquals("Announcement posted", client1.post(a));
+
+	assertEquals(1, server4.getUserAnnouncements(pubkey1).size());
+
+    }
+
+    @Test
+    public void TestGeneralPostBroadcast() throws IOException, RemoteException, SigningException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, CertificateException, Exception {		
+	client1 = new Client("test", "testtest", 2, 3);
+        assertEquals("General announcement posted", client1.postGeneral("Bom dia".toCharArray(), null));
+
+	assertEquals(1, server4.getGenAnnouncements().size());
+
+    }
 }

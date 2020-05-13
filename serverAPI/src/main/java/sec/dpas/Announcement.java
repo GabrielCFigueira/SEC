@@ -6,9 +6,9 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 
 import java.io.Serializable;
+import java.lang.Comparable;
 
-
-public class Announcement implements Serializable{
+public class Announcement implements Serializable, Comparable<Announcement>{
 
   private PublicKey _pubkey;
   private String _id;
@@ -26,6 +26,19 @@ public class Announcement implements Serializable{
     _timeStamp = timeStamp;
     _generalBoard = generalBoard;
     _signature = signature;
+  }
+
+  public int compareTo(Announcement a) {
+    if(this.getTimeStamp() > a.getTimeStamp())
+      return 1;
+    else if(this.getTimeStamp() < a.getTimeStamp())    
+      return -1;
+    else {
+      String key1, key2;
+      key1 = Crypto.getBase64(this.getKey());
+      key2 = Crypto.getBase64(a.getKey());
+      return key1.compareTo(key2);
+    }
   }
 
   public PublicKey getKey(){ return _pubkey; }
