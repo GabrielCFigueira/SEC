@@ -231,6 +231,7 @@ public class Client {
         // verificacao da assinatura da response
         Message messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getAnnouncements());
         messageReceived.appendObject(response.getClientNonce());
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
@@ -283,6 +284,7 @@ public class Client {
         // response signature verification
         messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getAnnouncements());
         messageReceived.appendObject(response.getClientNonce());
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
@@ -333,6 +335,7 @@ public class Client {
         // response signature verification
         messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
+        messageReceived.appendObject(response.getAnnouncements());
         messageReceived.appendObject(response.getClientNonce());
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
@@ -382,8 +385,8 @@ public class Client {
         // response signature verification
         messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getAnnouncements());
+        messageReceived.appendObject(response.getClientNonce());
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
@@ -439,8 +442,8 @@ public class Client {
         // response signature verification
         messageReceived = new Message();
         messageReceived.appendObject(response.getStatusCode());
-        messageReceived.appendObject(response.getClientNonce());
         messageReceived.appendObject(response.getAnnouncements());
+        messageReceived.appendObject(response.getClientNonce());
 
         if(!Crypto.verifySignature(serverpubkey, messageReceived.getByteArray(), response.getSignature()))
             return "Signature verification failed";
@@ -639,7 +642,7 @@ public class Client {
                         if(responses.get(id).get().equals(expectedCode) || status.equals(""))
 			    status = responses.get(id).get(); 
                     } catch (Exception e) {
-                        System.out.println(e.getMessage() + " :Our Async got exception.");
+                        System.out.println(e.getMessage() + " : Our Async got exception.");
                     }
                     responses.remove(id);
                 }

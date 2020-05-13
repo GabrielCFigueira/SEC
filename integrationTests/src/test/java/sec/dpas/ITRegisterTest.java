@@ -157,10 +157,10 @@ public class ITRegisterTest {
 
         Message message = new Message();
         message.appendObject(response.getStatusCode());
+        message.appendObject(response.getAnnouncements());
         message.appendObject(response.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
         assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
     }
 }

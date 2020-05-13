@@ -108,8 +108,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -157,8 +157,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -212,8 +212,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -247,8 +247,8 @@ public class ITReadGeneralTest {
         // VERIFICATION
         message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -303,8 +303,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -341,8 +341,8 @@ public class ITReadGeneralTest {
         // VERIFICATION
         message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -387,8 +387,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
 	message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("Tried to read with a negative number.", responseRead.getStatusCode());
     }
@@ -433,8 +433,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         //FIXME assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("Tried to read with a number bigger than the number of announcements for that board.", responseRead.getStatusCode());
@@ -483,8 +483,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
         compareAnnouncements(anns, responseRead.getAnnouncements());
@@ -540,8 +540,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
         compareAnnouncements(anns, responseRead.getAnnouncements());;
@@ -576,6 +576,7 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
+        message.appendObject(responseRead.getAnnouncements());
         message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
@@ -625,8 +626,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -674,8 +675,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -729,8 +730,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -784,8 +785,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -841,8 +842,8 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(responseRead.getStatusCode());
-        message.appendObject(responseRead.getClientNonce());
         message.appendObject(responseRead.getAnnouncements());
+        message.appendObject(responseRead.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), responseRead.getSignature()));
         assertEquals("read successful", responseRead.getStatusCode());
@@ -954,11 +955,11 @@ public class ITReadGeneralTest {
 
         Message message = new Message();
         message.appendObject(response.getStatusCode());
+        message.appendObject(response.getAnnouncements());
         message.appendObject(response.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
         assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
     }
 
     public void signatureVerificationNonce(Response response, String statusCode) throws Exception {
@@ -971,7 +972,6 @@ public class ITReadGeneralTest {
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
         assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
     }
 
     public void announcementVerification(Announcement ann1, Announcement ann2) throws Exception {

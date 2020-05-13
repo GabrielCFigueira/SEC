@@ -593,7 +593,7 @@ public class Server implements ServerAPI{
     public Response getNonce(PublicKey pubkey, String clientNonce, byte[] signature) {
 
         if(!verifyArguments(pubkey, signature))
-            return constructResponse("Invalid arguments", clientNonce);
+            return constructResponse("Invalid arguments", clientNonce, "0");
 
         //verify signature
         try {
@@ -601,10 +601,10 @@ public class Server implements ServerAPI{
             message.appendObject(pubkey);
             message.appendObject(clientNonce);
             if(!Crypto.verifySignature(pubkey, message.getByteArray(), signature)) {
-                return constructResponse("Signature verification failed", clientNonce);
+                return constructResponse("Signature verification failed", clientNonce, "0");
             }
         } catch(IOException e) {
-            return constructResponse(e.getMessage(), clientNonce);
+            return constructResponse(e.getMessage(), clientNonce, "0");
         }
 
         String serverNonce;
@@ -612,7 +612,7 @@ public class Server implements ServerAPI{
         synchronized(_announcementB) {
             synchronized(_nonceTable) {
                 if(!hasPublicKey(pubkey))
-                    return constructResponse("No such user registered", clientNonce);
+                    return constructResponse("No such user registered", clientNonce, "0");
                 serverNonce = Crypto.generateNonce();
                 _nonceTable.put(pubkey, serverNonce);
             }
@@ -923,7 +923,7 @@ public class Server implements ServerAPI{
         }
 
         synchronized(_announcementB) {
-            if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)){
+            if(!hasPublicKey(pubkey) || !hasPublicKey(senderKey)) {
             	return constructResponse("No such user registered", clientNonce);
             }
 	}
@@ -980,9 +980,9 @@ public class Server implements ServerAPI{
     private Response readFrom(ArrayList<Announcement> ann, int number, String clientNonce) {
 
         if (number < 0)
-            return constructResponse("Tried to read with a negative number.", (ArrayList<Announcement>) null, clientNonce);
+            return constructResponse("Tried to read with a negative number.", clientNonce);
         else if (number > ann.size())
-            return constructResponse("Tried to read with a number bigger than the number of announcements for that board.", (ArrayList<Announcement>) null, clientNonce);
+            return constructResponse("Tried to read with a number bigger than the number of announcements for that board.", clientNonce);
         else if (number == 0)
             return constructResponse("read successful", ann, clientNonce);
         else {
@@ -990,7 +990,7 @@ public class Server implements ServerAPI{
             try {
                 sublist = new ArrayList<Announcement>(ann.subList(ann.size() - number, ann.size()));
             } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-                return constructResponse("Thanos has snapped and the Universe stopped making sense", (ArrayList<Announcement>) null, clientNonce);
+                return constructResponse("Thanos has snapped and the Universe stopped making sense", clientNonce);
             }
             return constructResponse("read successful", sublist, clientNonce);
         }
@@ -1035,8 +1035,10 @@ public class Server implements ServerAPI{
 
     public Response constructResponse(String statusCode, String clientNonce) {
         Message message = new Message();
+	ArrayList<Announcement> ann = new ArrayList<Announcement>();
         try {
             message.appendObject(statusCode);
+	    message.appendObject(ann);
             message.appendObject(clientNonce);
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -1047,11 +1049,13 @@ public class Server implements ServerAPI{
         byte[] serverSignature = null;
         try {
             serverSignature = Crypto.sign(_serverKey, message.getByteArray());
+
         } catch (SigningException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
-        return new Response(statusCode,(ArrayList<Announcement>) null, clientNonce, serverSignature);
+
+        return new Response(statusCode,ann, clientNonce, serverSignature);
     }
 
     public Response constructResponse(String statusCode, ArrayList<Announcement> an, String clientNonce) {
@@ -1059,8 +1063,8 @@ public class Server implements ServerAPI{
 
         try {
             message.appendObject(statusCode);
-            message.appendObject(clientNonce);
             message.appendObject(an);
+            message.appendObject(clientNonce);
         } catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();

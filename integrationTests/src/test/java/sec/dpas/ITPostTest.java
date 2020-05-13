@@ -157,7 +157,7 @@ public class ITPostTest {
         messageServerNonce.appendObject(clientNonce);
         Response responseNonce = stub.getNonce(pubkey, clientNonce, Crypto.sign(privkey, messageServerNonce.getByteArray()));
 
-        this.signatureVerification(responseNonce, "No such user registered");
+        this.signatureVerificationNonce(responseNonce, "No such user registered");
 
         String serverNonce = responseNonce.getServerNonce();
 
@@ -460,11 +460,11 @@ public class ITPostTest {
 
         Message message = new Message();
         message.appendObject(response.getStatusCode());
+        message.appendObject(response.getAnnouncements());
         message.appendObject(response.getClientNonce());
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
         assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
     }
 
     public void signatureVerificationNonce(Response response, String statusCode) throws Exception {
@@ -477,6 +477,5 @@ public class ITPostTest {
 
         assertEquals(true, Crypto.verifySignature(serverpubkey, message.getByteArray(), response.getSignature()));
         assertEquals(statusCode, response.getStatusCode());
-        assertEquals(null, response.getAnnouncements());
     }
 }
