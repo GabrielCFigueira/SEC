@@ -2,3 +2,6 @@
 2 //localhost:8002/ServerAPI
 3 //localhost:8003/ServerAPI
 4 //localhost:8004/ServerAPI
+5 //localhost:8005/ServerAPI
+6 //localhost:8006/ServerAPI
+7 //localhost:8007/ServerAPI

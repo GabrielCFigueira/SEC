@@ -498,7 +498,7 @@ public class Server implements ServerAPI{
             reader.close();
 
             String[] words;
-            for(int i = 0; i < _N || i < lines.size() ; ++i) {
+            for(int i = 0; i < _N && i < lines.size() ; ++i) {
                 words = lines.get(i).split(" ");
                 if(!words[0].equals(_id))
                     _servers.put(words[0], words[1]);
